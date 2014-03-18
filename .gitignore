@@ -50,9 +50,11 @@ pip-log.txt
 .mr.developer.cfg
 
 #############
-## Linux tmp files
+## Linux files
 #############
 
 *.*~
+*(copy).*
+
 
 
