@@ -17,7 +17,7 @@ import csv
 import datetime
 
 
-VERSION = ' V0.4.0.1'
+VERSION = ' V0.0.0.2'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -185,8 +185,7 @@ def backgroundScanThread(title, key, sectiontype):
 	Log.Debug("*******  Starting backgroundScanThread  ***********")
 	global bScanStatus
 	global bScanStatusCount
-	global bScanStatusCountOf
-	
+	global bScanStatusCountOf	
 	try:
 		bScanStatus = 1
 		Log.Debug("Section type is %s" %(sectiontype))
@@ -196,10 +195,6 @@ def backgroundScanThread(title, key, sectiontype):
 		timestr = time.strftime("%Y%m%d-%H%M%S")
 		myCSVFile = os.path.join(Prefs['Export_Path'], 'Plex2CSV', title + '-' + timestr + '.csv')
 		Log.Debug('Output file is named %s' %(myCSVFile))
-		with io.open(myCSVFile, 'wb') as csvfile:
-			writer = csv.DictWriter(csvfile, fieldnames = ["Media ID", "Studio", "Title", "Original Title", "Content Rating", "Summary", "Rating", "Year", "Tagline", "Originally Available At"], delimiter = ',')
-			writer.writeheader()
-		csvfile.close()
 		# Scan the database based on the type of section
 		if sectiontype == "movie":
 			scanMovieDB(myMediaURL, myCSVFile)
@@ -215,7 +210,6 @@ def backgroundScanThread(title, key, sectiontype):
 		if bScanStatus >= 90: return
 		# Stop scanner on error
 		if bScanStatus >= 90: return
-
 		Log.Debug("*******  Ending backgroundScanThread  ***********")
 		return
 	except:
@@ -237,7 +231,6 @@ def scanMovieDB(myMediaURL, myCSVFile):
 	try:
 		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Video')
 		bScanStatusCountOf = len(myMedias)
-		myfile = io.open(myCSVFile,'ab')
 		fieldnames = ('Media ID', 
 				'Studio',
 				'title',
@@ -247,8 +240,14 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				'Rating',
 				'Year',
 				'Tagline',
-				'Originally Available At')
-		myWriter = csv.DictWriter(myfile, fieldnames=fieldnames)
+				'Originally Available At',
+				'Writer',
+				'Genres',
+				'Directors',
+				'Roles')
+		csvfile = io.open(myCSVFile,'wb')
+		csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
+		csvwriter.writeheader()
 		for myMedia in myMedias:
 			title = myMedia.get('title')
 			if not title:
@@ -280,38 +279,48 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			originallyAvailableAt = myMedia.get('originallyAvailableAt')
 			if not originallyAvailableAt:
 				originallyAvailableAt = ''
-
+			# Get Authors
 			Writer = myMedia.xpath('Writer/@tag')
-#			if not Writer:
-#				Writer = []
-#			myWriter = ''
-			print len(Writer)
+			if not Writer:
+				Writer = ['']
+			Author = ''
 			for myWriter in Writer:
-				myWriter = '-' + myWriter
-
-
-			print myWriter
-			print 'NEXT'
-			
-
-
-
-
-
-
-
-
-
-
-#			duration = myMedia.get('duration')
-#			if not duration:
-#				duration = ''
-#			duration = datetime.timedelta(0, float(duration))
-#			print duration
-
-
+				if Author == '':
+					Author = myWriter
+				else:
+					Author = Author + ' - ' + myWriter
+			# Get Genres
+			Genres = myMedia.xpath('Genre/@tag')
+			if not Genres:
+				Genres = ['']
+			Genre = ''
+			for myGenre in Genres:
+				if Genre == '':
+					Genre = myGenre
+				else:
+					Genre = Genre + ' - ' + myGenre
+			# Get Directors
+			Directors = myMedia.xpath('Director/@tag')
+			if not Directors:
+				Directors = ['']
+			Director = ''
+			for myDirector in Directors:
+				if Director == '':
+					Director = myDirector
+				else:
+					Director = Director + ' - ' + myDirector
+			# Get Roles
+			Roles = myMedia.xpath('Role/@tag')
+			if not Roles:
+				Roles = ['']
+			Role = ''
+			for myRole in Roles:
+				if Role == '':
+					Role = myRole
+				else:
+					Role = Role + ' - ' + myRole
 			bScanStatusCount += 1
-			myWriter.writerow({'Media ID' : ratingKey.encode('utf8'),
+			csvwriter.writerow({'Media ID' : ratingKey.encode('utf8'),
 					'Studio' : studio.encode('utf8'),
 					'title' : title.encode('utf8'),
 					'Original Title' : originalTitle.encode('utf8'),
@@ -320,8 +329,11 @@ def scanMovieDB(myMediaURL, myCSVFile):
 					'Rating' : rating.encode('utf8'),
 					'Year' : year.encode('utf8'),
 					'Tagline' : tagline.encode('utf8'),
-					'Originally Available At' : originallyAvailableAt.encode('utf8')})
-
+					'Originally Available At' : originallyAvailableAt.encode('utf8'),
+					'Writer' : Author.encode('utf8'),
+					'Genres' : Genre.encode('utf8'),
+					'Directors' : Director.encode('utf8'),
+					'Roles' : Role.encode('utf8')})
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))
 		return
 	except:
