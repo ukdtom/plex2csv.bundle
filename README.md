@@ -3,8 +3,13 @@ plex2csv.bundle
 
 Export Plex Library to a CSV file
 
-NOTHING HERE YET!!!!
+To get futher info about this plugin, check out the wiki:
 
-MOVE ALONG
+https://github.com/ukdtom/plex2csv.bundle/wiki
 
+To see known issues:
+
+https://github.com/ukdtom/plex2csv.bundle/issues
+
+/Tommy
 
