@@ -1,5 +1,9 @@
+V0.0.0.3:
+- TV Series can now be exported
+- Fixed issue with running a new export right after the first had finished
+
 V0.0.0.2:
 - Movie section can now be exported
+
 V0.0.0.1:
 - Initial version
-

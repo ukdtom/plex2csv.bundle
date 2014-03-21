@@ -17,7 +17,7 @@ import csv
 import datetime
 
 
-VERSION = ' V0.0.0.2'
+VERSION = ' V0.0.0.3'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -25,7 +25,7 @@ PREFIX = '/applications/Plex2csv'
 
 
 bScanStatus = 0			# Current status of the background scan
-initialTimeOut = 10		# When starting a scan, how long in seconds to wait before displaying a status page. Needs to be at least 1.
+initialTimeOut = 3		# When starting a scan, how long in seconds to wait before displaying a status page. Needs to be at least 1.
 
 ####################################################################################################
 # Start function
@@ -57,8 +57,6 @@ def MainMenu(random=0):
 				title = section.get('title')
 				key = section.get('key')
 				Log.Debug('Title of section is %s with a key of %s' %(title, key))
-#				oc.add(DirectoryObject(key=Callback(DoExport, title=title, key=key, sectiontype=sectiontype), title='Export from section "' + title + '"', summary='Export media in section "' + title + '"'))
-
 				oc.add(DirectoryObject(key=Callback(backgroundScan, title=title, sectiontype=sectiontype, key=key, random=time.clock()), title='Look in section "' + title + '"', summary='Look for unmatched files in "' + title + '"'))
 	except:
 		Log.Critical("Exception happened in MainMenu")
@@ -89,6 +87,21 @@ def ValidatePrefs():
 	except:
 		Log.Critical('Bad export path')		
 		print 'Bad export path'
+
+####################################################################################################
+# Display the results.
+####################################################################################################
+@route(PREFIX + '/results')
+def results(title=''):
+	global bScanStatus
+	Log.Debug("*******  All done, tell my Master  ***********")
+	title = ('Export Completed for section %s' %(title))
+	message = 'Check the directory: %s' %(os.path.join(Prefs['Export_Path'], 'Plex2CSV')) 
+	oc2 = ObjectContainer(title1=title, no_cache=True, message=message)
+	# Reset the scanner status
+	bScanStatus = 0
+	Log.Debug("*******  Ending results  ***********")
+	return oc2
 		
 ####################################################################################################
 # Start the scanner in a background thread and provide status while running
@@ -145,6 +158,13 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 			summary = "Scan complete, click here to get the results."
 			oc2 = ObjectContainer(title1="Results", no_history=True)
 			oc2.add(DirectoryObject(key=Callback(results, title=title), title="*** Get the Results. ***", summary=summary))
+
+			title = ('Export Completed')
+			message = 'Check the directory: %s' %(os.path.join(Prefs['Export_Path'], 'Plex2CSV')) 
+			ObjectContainer(title1=title, no_cache=True, message=message)
+
+
+
 		elif bScanStatus == 90:
 			# scanFiles returned no files
 			summary = "The filesystem scan returned no files."
@@ -193,6 +213,7 @@ def backgroundScanThread(title, key, sectiontype):
 		Log.Debug("Path to medias in section is %s" %(myMediaURL))
 		# Get current date and time
 		timestr = time.strftime("%Y%m%d-%H%M%S")
+		# Generate Output FileName
 		myCSVFile = os.path.join(Prefs['Export_Path'], 'Plex2CSV', title + '-' + timestr + '.csv')
 		Log.Debug('Output file is named %s' %(myCSVFile))
 		# Scan the database based on the type of section
@@ -200,9 +221,9 @@ def backgroundScanThread(title, key, sectiontype):
 			scanMovieDB(myMediaURL, myCSVFile)
 			filecount = bScanStatusCount
 		elif sectiontype == "artist":
-			myMediaPaths, filecount = scanArtistDB(myMediaURL)
+			filecount = scanArtistDB(myMediaURL, myCSVFile)
 		elif sectiontype == "show":
-			myMediaPaths, filecount = scanShowDB(myMediaURL)
+			filecount = scanShowDB(myMediaURL, myCSVFile)
 		else:
 			Log.Debug("Error: unknown section type: %s" %(sectiontype))
 			bScanStatus = 91		
@@ -211,6 +232,7 @@ def backgroundScanThread(title, key, sectiontype):
 		# Stop scanner on error
 		if bScanStatus >= 90: return
 		Log.Debug("*******  Ending backgroundScanThread  ***********")
+		bScanStatus = 2
 		return
 	except:
 		Log.Critical("Exception happened in backgroundScanThread")
@@ -334,11 +356,153 @@ def scanMovieDB(myMediaURL, myCSVFile):
 					'Genres' : Genre.encode('utf8'),
 					'Directors' : Director.encode('utf8'),
 					'Roles' : Role.encode('utf8')})
-			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))
+			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))		
 		return
 	except:
 		Log.Critical("Detected an exception in scanMovieDB")
 		bScanStatus = 99
 		raise
+	
 	Log.Debug("******* Ending scanMovieDB ***********")
+
+####################################################################################################
+# This function will scan a TV-Show section for filepaths in medias
+####################################################################################################
+@route(PREFIX + '/scanShowDB')
+def scanShowDB(myMediaURL, myCSVFile):
+	Log.Debug("******* Starting scanShowDB with an URL of %s***********" %(myMediaURL))
+	global bScanStatusCount
+	global bScanStatusCountOf
+	myMediaPaths = []
+	bScanStatusCount = 0
+	filecount = 0
+
+	try:
+		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Directory')
+		bScanStatusCountOf = len(myMedias)
+		bScanStatusCountOf = len(myMedias)
+		fieldnames = ('Media ID', 
+				'Serie Title',
+				'Episode Title',
+				'Studio',
+				'Content Rating',
+				'Summary',
+				'Season',
+				'Episode',
+				'Rating',
+				'Year',
+				'Originally Available At',
+				'Authors',
+				'Genres',
+				'Directors',
+				'Roles')
+		csvfile = io.open(myCSVFile,'wb')
+		csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
+		csvwriter.writeheader()
+		for myMedia in myMedias:
+			bScanStatusCount += 1
+			ratingKey = myMedia.get("ratingKey")
+			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves"
+			Log.Debug("Show %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))
+			myMedias2 = XML.ElementFromURL(myURL).xpath('//Video')
+			for myMedia2 in myMedias2:
+				ratingKey = myMedia2.get('ratingKey')
+				if not ratingKey:
+					ratingKey = ''
+				SerieTitle = myMedia2.get('grandparentTitle')
+				if not SerieTitle:
+					SerieTitle = ''
+				EpisodeTitle = myMedia2.get("title")
+				if not EpisodeTitle:
+					EpisodeTitle = ''
+				studio = myMedia2.get("studio")
+				if not studio:
+					studio = ''
+				contentRating = myMedia2.get("contentRating")
+				if not contentRating:
+					contentRating = ''
+				summary = myMedia2.get("summary")
+				if not summary:
+					summary = ''
+				season = myMedia2.get("parentIndex")
+				if not season:
+					season = ''
+				episode = myMedia2.get("index")
+				if not episode:
+					episode = ''
+				rating = myMedia2.get("rating")
+				if not rating:
+					rating = ''
+				year = myMedia2.get("year")
+				if not year:
+					year = ''
+				originallyAvailableAt = myMedia2.get("originallyAvailableAt")
+				if not originallyAvailableAt:
+					originallyAvailableAt = ''				
+				# Get Authors
+				Writer = myMedia.xpath('Writer/@tag')
+				if not Writer:
+					Writer = ['']
+				Author = ''
+				for myWriter in Writer:
+					if Author == '':
+						Author = myWriter
+					else:
+						Author = Author + ' - ' + myWriter
+				# Get Genres
+				Genres = myMedia.xpath('Genre/@tag')
+				if not Genres:
+					Genres = ['']
+				Genre = ''
+				for myGenre in Genres:
+					if Genre == '':
+						Genre = myGenre
+					else:
+						Genre = Genre + ' - ' + myGenre
+				# Get Directors
+				Directors = myMedia.xpath('Director/@tag')
+				if not Directors:
+					Directors = ['']
+				Director = ''
+				for myDirector in Directors:
+					if Director == '':
+						Director = myDirector
+					else:
+						Director = Director + ' - ' + myDirector
+				# Get Roles
+				Roles = myMedia.xpath('Role/@tag')
+				if not Roles:
+					Roles = ['']
+				Role = ''
+				for myRole in Roles:
+					if Role == '':
+						Role = myRole
+					else:
+						Role = Role + ' - ' + myRole
+
+
+
+				filecount += 1
+				csvwriter.writerow({'Media ID' : ratingKey.encode('utf8'),
+					'Studio' : studio.encode('utf8'),
+					'Roles' : Role.encode('utf8'),
+					'Directors' : Director.encode('utf8'),
+					'Genres' : Genre.encode('utf8'),
+					'Originally Available At' : originallyAvailableAt.encode('utf8'),
+					'Year' : year.encode('utf8'),
+					'Authors' : Author.encode('utf8'),
+					'Rating' : rating.encode('utf8'),
+					'Season' : season.encode('utf8'),
+					'Episode' : episode.encode('utf8'),
+					'Summary' : summary.encode('utf8'),
+					'Content Rating' : contentRating.encode('utf8'),
+					'Serie Title' : SerieTitle.encode('utf8'),
+					'Episode Title' : EpisodeTitle.encode('utf8')})
+			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, SerieTitle + '-' + EpisodeTitle))
+		return filecount
+	except:
+		Log.Critical("Detected an exception in scanShowDB")
+		bScanStatus = 99
+		raise # Dumps the error so you can see what the problem is
+	Log.Debug("******* Ending scanShowDB ***********")
 
