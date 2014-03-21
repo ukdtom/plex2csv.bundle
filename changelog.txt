@@ -1,3 +1,6 @@
+V0.0.0.4:
+- Added menu option to go to main menu
+
 V0.0.0.3:
 - TV Series can now be exported
 - Fixed issue with running a new export right after the first had finished

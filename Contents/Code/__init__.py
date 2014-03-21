@@ -17,7 +17,7 @@ import csv
 import datetime
 
 
-VERSION = ' V0.0.0.3'
+VERSION = ' V0.0.0.4'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -98,6 +98,7 @@ def results(title=''):
 	title = ('Export Completed for section %s' %(title))
 	message = 'Check the directory: %s' %(os.path.join(Prefs['Export_Path'], 'Plex2CSV')) 
 	oc2 = ObjectContainer(title1=title, no_cache=True, message=message)
+	oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="Go to the Main Menu"))
 	# Reset the scanner status
 	bScanStatus = 0
 	Log.Debug("*******  Ending results  ***********")
@@ -111,7 +112,7 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 	Log.Debug("******* Starting backgroundScan *********")
 	# Current status of the Background Scanner:
 	# 0=not running, 1=db, 2=complete
-	# Errors: 90=filesystem empty, 91=unknown section type, 99=Other Error
+	# Errors: 91=unknown section type, 99=Other Error
 	global bScanStatus
 	# Current status count (ex. "Show 2 of 31")
 	global bScanStatusCount
@@ -162,17 +163,8 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 			title = ('Export Completed')
 			message = 'Check the directory: %s' %(os.path.join(Prefs['Export_Path'], 'Plex2CSV')) 
 			ObjectContainer(title1=title, no_cache=True, message=message)
-
-
-
-		elif bScanStatus == 90:
-			# scanFiles returned no files
-			summary = "The filesystem scan returned no files."
-			oc2 = ObjectContainer(title1="Results", no_history=True)
-			oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="*** The filesystem is empty. ***", summary=summary))
-			bScanStatus = 0
 		elif bScanStatus == 91:
-			# scanFiles returned no files
+			# Unknown section type
 			summary = "Unknown section type returned."
 			oc2 = ObjectContainer(title1="Results", no_history=True)
 			oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="*** Unknown section type. ***", summary=summary))
