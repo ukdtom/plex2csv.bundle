@@ -12,7 +12,7 @@ import io
 import csv
 import datetime
 
-VERSION = ' V0.0.0.6'
+VERSION = ' V0.0.0.7'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -34,7 +34,6 @@ def Start():
 	ObjectContainer.view_group = 'List'
 	DirectoryObject.thumb = R(ICON)
 	HTTP.CacheTime = 0
-#	ValidatePrefs()
 
 ####################################################################################################
 # Main menu
@@ -301,14 +300,23 @@ def scanMovieDBExtended(myMediaURL, myCSVFile):
 					Genre = Genre + ' - ' + myGenre
 			# Get Roles
 			myRoles = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video//Role')
-			if not myRoles:
-				myRoles = ['']
 			Role = ''
-			for myRole in myRoles:
-				if Role == '':
-					Role = 'Actor: ' + myRole.get('tag') + ' as: ' + myRole.get('role')
-				else:
-					Role = Role + ' - ' + 'Actor: ' + myRole.get('tag') + ' as: ' + myRole.get('role')
+			if myRoles:
+				for myRole in myRoles:
+					myActor = myRole.get('tag')
+					myActorRole = myRole.get('role')
+					if myActor:
+						# Found an Actor
+						if myActorRole:
+							if Role == '':
+								Role = 'Actor: ' + myActor + ' as: ' + myActorRole
+							else:
+								Role = Role + ' - ' + 'Actor: ' + myActor + ' as: ' + myActorRole
+						else:
+							if Role == '':
+								Role = 'Actor: ' + myActor
+							else:
+								Role = Role + ' - ' + 'Actor: ' + myActor
 			# Get title
 			title = myMedia.get('title')
 			if not title:
