@@ -7,17 +7,12 @@
 
 import os
 import unicodedata
-import string
-import urllib
 import time
-import fnmatch
 import io
-import itertools
 import csv
 import datetime
 
-
-VERSION = ' V0.0.0.5'
+VERSION = ' V0.0.0.6'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -39,7 +34,7 @@ def Start():
 	ObjectContainer.view_group = 'List'
 	DirectoryObject.thumb = R(ICON)
 	HTTP.CacheTime = 0
-	ValidatePrefs()
+#	ValidatePrefs()
 
 ####################################################################################################
 # Main menu
@@ -238,6 +233,169 @@ def backgroundScanThread(title, key, sectiontype):
 @route(PREFIX + '/scanMovieDB')
 def scanMovieDB(myMediaURL, myCSVFile):
 	Log.Debug("******* Starting scanMovieDB with an URL of %s***********" %(myMediaURL))
+	if Prefs['Extended_Info']:
+		print 'Need extended info'
+		scanMovieDBExtended(myMediaURL, myCSVFile)
+	else:
+		print 'Need basic info'
+		scanMovieDBBasic(myMediaURL, myCSVFile)	
+	Log.Debug("******* Ending scanMovieDB ***********")
+
+####################################################################################################
+# This function will export extended movie information
+####################################################################################################
+@route(PREFIX + '/scanMovieDBExtended')
+def scanMovieDBExtended(myMediaURL, myCSVFile):
+	Log.Debug("******* Starting scanMovieDB Extended with an URL of %s***********" %(myMediaURL))
+	global bScanStatusCount
+	global bScanStatusCountOf
+	bScanStatusCount = 0
+	bScanStatusCountOf = 0
+	try:
+		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Video')
+		bScanStatusCountOf = len(myMedias)
+		fieldnames = ('Media ID', 
+				'Title',
+				'Original Title',
+				'Studio',
+				'Content Rating',
+				'Summary',
+				'Rating',
+				'Year',
+				'Tagline',
+				'Release Date',
+				'Writer',
+				'Genres',
+				'Directors',
+				'Roles',
+				'Duration',
+				'Collections')
+		csvfile = io.open(myCSVFile,'wb')
+		csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
+		csvwriter.writeheader()
+		for myMedia in myMedias:
+			ratingKey = myMedia.get('ratingKey')
+			if not ratingKey:
+				ratingKey = ''
+			myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + ratingKey		
+			ExtInfo = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
+			# Get Collections
+			Collections = ExtInfo.xpath('Collection/@tag')
+			if not Collections:
+				Collections = ['']
+			Collection = ''
+			for myCollection in Collections:
+				if Collection == '':
+					Collection = myCollection
+				else:
+					Collection = Collection + ' - ' + myCollection
+			# Get Genres
+			Genres = ExtInfo.xpath('Genre/@tag')
+			if not Genres:
+				Genres = ['']
+			Genre = ''
+			for myGenre in Genres:
+				if Genre == '':
+					Genre = myGenre
+				else:
+					Genre = Genre + ' - ' + myGenre
+			# Get Roles
+			myRoles = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video//Role')
+			if not myRoles:
+				myRoles = ['']
+			Role = ''
+			for myRole in myRoles:
+				if Role == '':
+					Role = 'Actor: ' + myRole.get('tag') + ' as: ' + myRole.get('role')
+				else:
+					Role = Role + ' - ' + 'Actor: ' + myRole.get('tag') + ' as: ' + myRole.get('role')
+			# Get title
+			title = myMedia.get('title')
+			if not title:
+				title = ''
+			studio = myMedia.get('studio')
+			if not studio:
+				studio = ''
+			summary = myMedia.get('summary')
+			if not summary:
+				summary = ''
+			rating = myMedia.get('rating')
+			if not rating:
+				rating = ''
+			contentRating = myMedia.get('contentRating')
+			if not contentRating:
+				contentRating = ''
+			originalTitle = myMedia.get('originalTitle')
+			if not originalTitle:
+				originalTitle = ''
+			year = myMedia.get('year')
+			if not year:
+				year = ''
+			tagline = myMedia.get('tagline')
+			if not tagline:
+				tagline = ''
+			originallyAvailableAt = myMedia.get('originallyAvailableAt')
+			if not originallyAvailableAt:
+				originallyAvailableAt = ''
+			# Get Authors
+			Writer = myMedia.xpath('Writer/@tag')
+			if not Writer:
+				Writer = ['']
+			Author = ''
+			for myWriter in Writer:
+				if Author == '':
+					Author = myWriter
+				else:
+					Author = Author + ' - ' + myWriter
+			
+			# Get Directors
+			Directors = myMedia.xpath('Director/@tag')
+			if not Directors:
+				Directors = ['']
+			Director = ''
+			for myDirector in Directors:
+				if Director == '':
+					Director = myDirector
+				else:
+					Director = Director + ' - ' + myDirector
+
+			# Get the duration of the movie
+			duration = myMedia.get('duration')
+			if not duration:
+				duration = '0'
+			duration = ConvertTimeStamp(duration)
+			bScanStatusCount += 1
+			csvwriter.writerow({'Media ID' : ratingKey.encode('utf8'),					
+					'Title' : title.encode('utf8'),
+					'Original Title' : originalTitle.encode('utf8'),
+					'Studio' : studio.encode('utf8'),
+					'Content Rating' : contentRating.encode('utf8'),
+					'Summary' : summary.encode('utf8'),
+					'Rating' : rating.encode('utf8'),
+					'Year' : year.encode('utf8'),
+					'Tagline' : tagline.encode('utf8'),
+					'Release Date' : originallyAvailableAt.encode('utf8'),
+					'Writer' : Author.encode('utf8'),
+					'Genres' : Genre.encode('utf8'),
+					'Directors' : Director.encode('utf8'),
+					'Roles' : Role.encode('utf8'),
+					'Duration' : duration.encode('utf8'),
+					'Collections' : Collection.encode('utf8')})
+			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))		
+		return
+	except:
+		Log.Critical("Detected an exception in scanMovieDB Extended")
+		bScanStatus = 99
+		raise
+	
+	Log.Debug("******* Ending scanMovieDB Extended ***********")
+
+####################################################################################################
+# This function will export basic movie information
+####################################################################################################
+@route(PREFIX + '/scanMovieDBBasic')
+def scanMovieDBBasic(myMediaURL, myCSVFile):
+	Log.Debug("******* Starting scanMovieDB Basic with an URL of %s***********" %(myMediaURL))
 	global bScanStatusCount
 	global bScanStatusCountOf
 	bScanStatusCount = 0
@@ -264,12 +422,12 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
 		csvwriter.writeheader()
 		for myMedia in myMedias:
-			title = myMedia.get('title')
-			if not title:
-				title = ''
 			ratingKey = myMedia.get('ratingKey')
 			if not ratingKey:
 				ratingKey = ''
+			title = myMedia.get('title')
+			if not title:
+				title = ''
 			studio = myMedia.get('studio')
 			if not studio:
 				studio = ''
@@ -358,11 +516,11 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))		
 		return
 	except:
-		Log.Critical("Detected an exception in scanMovieDB")
+		Log.Critical("Detected an exception in scanMovieDB Basic")
 		bScanStatus = 99
 		raise
 	
-	Log.Debug("******* Ending scanMovieDB ***********")
+	Log.Debug("******* Ending scanMovieDB Basic ***********")
 
 ####################################################################################################
 # This function will scan a TV-Show section for filepaths in medias
@@ -507,7 +665,6 @@ def scanShowDB(myMediaURL, myCSVFile):
 		bScanStatus = 99
 		raise # Dumps the error so you can see what the problem is
 	Log.Debug("******* Ending scanShowDB ***********")
-
 
 ####################################################################################################
 # This function will return a string in hh:mm from a millisecond timestamp
