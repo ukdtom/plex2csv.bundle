@@ -1,3 +1,8 @@
+V0.0.0.8
+- Added srazer as developer in the credits
+- Added "Added At" field to both movies, movies extended and TV-Shows
+- Added "Updated At" field to both movies, movies extended and TV-Shows
+
 V0.0.0.7
 - Fixed issue with exception in extended mode, when a movie is missing either Actor or Cast
 
