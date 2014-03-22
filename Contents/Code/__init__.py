@@ -1,9 +1,13 @@
 ####################################################################################################
 #	This plugin will create a list of medias in a section of Plex as a csv file
 #
-#	Made by dane22....A Plex Community member
+#	Made by 
+#	dane22....A Plex Community member
+#	srazer....A Plex Community member
 #	
 ####################################################################################################
+
+# To find Work in progress, search this file for the word ToDo
 
 import os
 import unicodedata
@@ -12,7 +16,7 @@ import io
 import csv
 import datetime
 
-VERSION = ' V0.0.0.7'
+VERSION = ' V0.0.0.8'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -268,7 +272,10 @@ def scanMovieDBExtended(myMediaURL, myCSVFile):
 				'Directors',
 				'Roles',
 				'Duration',
-				'Collections')
+				'Collections',				
+				'Added At',
+				'Updated At'
+				)
 		csvfile = io.open(myCSVFile,'wb')
 		csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
 		csvwriter.writeheader()
@@ -372,6 +379,8 @@ def scanMovieDBExtended(myMediaURL, myCSVFile):
 			if not duration:
 				duration = '0'
 			duration = ConvertTimeStamp(duration)
+			addedAt = (Datetime.FromTimestamp(float(myMedia.get('addedAt')))).strftime('%m/%d/%Y')
+			updatedAt = (Datetime.FromTimestamp(float(myMedia.get('updatedAt')))).strftime('%m/%d/%Y')
 			bScanStatusCount += 1
 			csvwriter.writerow({'Media ID' : ratingKey.encode('utf8'),					
 					'Title' : title.encode('utf8'),
@@ -388,7 +397,10 @@ def scanMovieDBExtended(myMediaURL, myCSVFile):
 					'Directors' : Director.encode('utf8'),
 					'Roles' : Role.encode('utf8'),
 					'Duration' : duration.encode('utf8'),
-					'Collections' : Collection.encode('utf8')})
+					'Collections' : Collection.encode('utf8'),
+					'Added At' : addedAt.encode('utf8'),
+					'Updated At' : updatedAt.encode('utf8')					
+					})
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))		
 		return
 	except:
@@ -425,7 +437,10 @@ def scanMovieDBBasic(myMediaURL, myCSVFile):
 				'Genres',
 				'Directors',
 				'Roles',
-				'Duration')
+				'Duration',
+				'Added At',
+				'Updated At'
+				)
 		csvfile = io.open(myCSVFile,'wb')
 		csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
 		csvwriter.writeheader()
@@ -505,6 +520,8 @@ def scanMovieDBBasic(myMediaURL, myCSVFile):
 			if not duration:
 				duration = '0'
 			duration = ConvertTimeStamp(duration)
+			addedAt = (Datetime.FromTimestamp(float(myMedia.get('addedAt')))).strftime('%m/%d/%Y')
+			updatedAt = (Datetime.FromTimestamp(float(myMedia.get('updatedAt')))).strftime('%m/%d/%Y')
 			bScanStatusCount += 1
 			csvwriter.writerow({'Media ID' : ratingKey.encode('utf8'),					
 					'Title' : title.encode('utf8'),
@@ -520,7 +537,10 @@ def scanMovieDBBasic(myMediaURL, myCSVFile):
 					'Genres' : Genre.encode('utf8'),
 					'Directors' : Director.encode('utf8'),
 					'Roles' : Role.encode('utf8'),
-					'Duration' : duration.encode('utf8')})
+					'Duration' : duration.encode('utf8'),
+					'Added At' : addedAt.encode('utf8'),
+					'Updated At' : updatedAt.encode('utf8')					
+					})
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))		
 		return
 	except:
@@ -560,7 +580,9 @@ def scanShowDB(myMediaURL, myCSVFile):
 				'Genres',
 				'Directors',
 				'Roles',
-				'Duration')
+				'Duration',
+				'Added At',
+				'Updated At')
 		csvfile = io.open(myCSVFile,'wb')
 		csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
 		csvwriter.writeheader()
@@ -649,6 +671,8 @@ def scanShowDB(myMediaURL, myCSVFile):
 				if not duration:
 					duration = '0'
 				duration = ConvertTimeStamp(duration)
+				addedAt = (Datetime.FromTimestamp(float(myMedia2.get('addedAt')))).strftime('%m/%d/%Y')
+				updatedAt = (Datetime.FromTimestamp(float(myMedia2.get('updatedAt')))).strftime('%m/%d/%Y')
 				filecount += 1
 				csvwriter.writerow({'Media ID' : ratingKey.encode('utf8'),
 					'Studio' : studio.encode('utf8'),
@@ -665,7 +689,10 @@ def scanShowDB(myMediaURL, myCSVFile):
 					'Content Rating' : contentRating.encode('utf8'),
 					'Series Title' : SerieTitle.encode('utf8'),
 					'Episode Title' : EpisodeTitle.encode('utf8'),
-					'Duration' : duration.encode('utf8')})
+					'Duration' : duration.encode('utf8'),
+					'Added At' : addedAt.encode('utf8'),
+					'Updated At' : updatedAt.encode('utf8')					
+					})
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, SerieTitle + '-' + EpisodeTitle))
 		return filecount
 	except:
