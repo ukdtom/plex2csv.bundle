@@ -17,7 +17,7 @@ import csv
 import datetime
 
 
-VERSION = ' V0.0.0.4'
+VERSION = ' V0.0.0.5'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -246,19 +246,20 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Video')
 		bScanStatusCountOf = len(myMedias)
 		fieldnames = ('Media ID', 
-				'Studio',
-				'title',
+				'Title',
 				'Original Title',
+				'Studio',
 				'Content Rating',
 				'Summary',
 				'Rating',
 				'Year',
 				'Tagline',
-				'Originally Available At',
+				'Release Date',
 				'Writer',
 				'Genres',
 				'Directors',
-				'Roles')
+				'Roles',
+				'Duration')
 		csvfile = io.open(myCSVFile,'wb')
 		csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
 		csvwriter.writeheader()
@@ -333,21 +334,27 @@ def scanMovieDB(myMediaURL, myCSVFile):
 					Role = myRole
 				else:
 					Role = Role + ' - ' + myRole
+			# Get the duration of the movie
+			duration = myMedia.get('duration')
+			if not duration:
+				duration = '0'
+			duration = ConvertTimeStamp(duration)
 			bScanStatusCount += 1
-			csvwriter.writerow({'Media ID' : ratingKey.encode('utf8'),
-					'Studio' : studio.encode('utf8'),
-					'title' : title.encode('utf8'),
+			csvwriter.writerow({'Media ID' : ratingKey.encode('utf8'),					
+					'Title' : title.encode('utf8'),
 					'Original Title' : originalTitle.encode('utf8'),
+					'Studio' : studio.encode('utf8'),
 					'Content Rating' : contentRating.encode('utf8'),
 					'Summary' : summary.encode('utf8'),
 					'Rating' : rating.encode('utf8'),
 					'Year' : year.encode('utf8'),
 					'Tagline' : tagline.encode('utf8'),
-					'Originally Available At' : originallyAvailableAt.encode('utf8'),
+					'Release Date' : originallyAvailableAt.encode('utf8'),
 					'Writer' : Author.encode('utf8'),
 					'Genres' : Genre.encode('utf8'),
 					'Directors' : Director.encode('utf8'),
-					'Roles' : Role.encode('utf8')})
+					'Roles' : Role.encode('utf8'),
+					'Duration' : duration.encode('utf8')})
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))		
 		return
 	except:
@@ -368,26 +375,26 @@ def scanShowDB(myMediaURL, myCSVFile):
 	myMediaPaths = []
 	bScanStatusCount = 0
 	filecount = 0
-
 	try:
 		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Directory')
 		bScanStatusCountOf = len(myMedias)
 		bScanStatusCountOf = len(myMedias)
 		fieldnames = ('Media ID', 
-				'Serie Title',
+				'Series Title',
 				'Episode Title',
+				'Year',
+				'Season',
+				'Episode',
 				'Studio',
 				'Content Rating',
 				'Summary',
-				'Season',
-				'Episode',
 				'Rating',
-				'Year',
-				'Originally Available At',
+				'Originally Aired',
 				'Authors',
 				'Genres',
 				'Directors',
-				'Roles')
+				'Roles',
+				'Duration')
 		csvfile = io.open(myCSVFile,'wb')
 		csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
 		csvwriter.writeheader()
@@ -432,7 +439,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 				if not originallyAvailableAt:
 					originallyAvailableAt = ''				
 				# Get Authors
-				Writer = myMedia.xpath('Writer/@tag')
+				Writer = myMedia2.xpath('Writer/@tag')
 				if not Writer:
 					Writer = ['']
 				Author = ''
@@ -452,7 +459,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 					else:
 						Genre = Genre + ' - ' + myGenre
 				# Get Directors
-				Directors = myMedia.xpath('Director/@tag')
+				Directors = myMedia2.xpath('Director/@tag')
 				if not Directors:
 					Directors = ['']
 				Director = ''
@@ -471,16 +478,18 @@ def scanShowDB(myMediaURL, myCSVFile):
 						Role = myRole
 					else:
 						Role = Role + ' - ' + myRole
-
-
-
+				# Get the duration of the movie
+				duration = myMedia2.get('duration')
+				if not duration:
+					duration = '0'
+				duration = ConvertTimeStamp(duration)
 				filecount += 1
 				csvwriter.writerow({'Media ID' : ratingKey.encode('utf8'),
 					'Studio' : studio.encode('utf8'),
 					'Roles' : Role.encode('utf8'),
 					'Directors' : Director.encode('utf8'),
 					'Genres' : Genre.encode('utf8'),
-					'Originally Available At' : originallyAvailableAt.encode('utf8'),
+					'Originally Aired' : originallyAvailableAt.encode('utf8'),
 					'Year' : year.encode('utf8'),
 					'Authors' : Author.encode('utf8'),
 					'Rating' : rating.encode('utf8'),
@@ -488,8 +497,9 @@ def scanShowDB(myMediaURL, myCSVFile):
 					'Episode' : episode.encode('utf8'),
 					'Summary' : summary.encode('utf8'),
 					'Content Rating' : contentRating.encode('utf8'),
-					'Serie Title' : SerieTitle.encode('utf8'),
-					'Episode Title' : EpisodeTitle.encode('utf8')})
+					'Series Title' : SerieTitle.encode('utf8'),
+					'Episode Title' : EpisodeTitle.encode('utf8'),
+					'Duration' : duration.encode('utf8')})
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, SerieTitle + '-' + EpisodeTitle))
 		return filecount
 	except:
@@ -497,4 +507,19 @@ def scanShowDB(myMediaURL, myCSVFile):
 		bScanStatus = 99
 		raise # Dumps the error so you can see what the problem is
 	Log.Debug("******* Ending scanShowDB ***********")
+
+
+####################################################################################################
+# This function will return a string in hh:mm from a millisecond timestamp
+####################################################################################################
+@route(PREFIX + '/ConvertTimeStamp')
+def ConvertTimeStamp(timeStamp):
+	seconds=str(int(timeStamp)/(1000)%60)
+	if len(seconds)<2:
+		seconds = '0' + seconds	
+	minutes=str((int(timeStamp)/(1000*60))%60)
+	if len(minutes)<2:
+		minutes = '0' + minutes	
+	hours=str((int(timeStamp)/(1000*60*60))%24)
+	return hours + ':' + minutes + ':' + seconds
 

@@ -3,6 +3,6 @@
 		"id":"Export_Path",
 		"label":"Path to export media to",
 		"type":"text",
-		"default":""
+		"default":"None"
 	}
 ]

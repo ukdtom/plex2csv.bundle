@@ -1,3 +1,10 @@
+V0.0.0.5:
+- Corrected a bug in TV-Shows for not exporting Directors and Authors
+- Added duration for both Movies and TV-Shows
+- Corrected a Spelling error in TV-Shows header
+- Changed some header values to more meaningful names
+- Reordered the columes
+
 V0.0.0.4:
 - Added menu option to go to main menu
 
