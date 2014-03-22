@@ -4,5 +4,11 @@
 		"label":"Path to export media to",
 		"type":"text",
 		"default":"None"
-	}
+	},
+	{
+		"id":"Extended_Info",
+		"label":"Export extended info",
+		"type":"bool",
+		"default":"false"
+	}	
 ]
