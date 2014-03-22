@@ -1,3 +1,6 @@
+V0.0.0.7
+- Fixed issue with exception in extended mode, when a movie is missing either Actor or Cast
+
 V0.0.0.6:
 - Internal cleanup in imported modules
 - Added extended info export for movies
