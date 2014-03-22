@@ -1,3 +1,9 @@
+V0.0.0.6:
+- Internal cleanup in imported modules
+- Added extended info export for movies
+- Added Collection export (Only in extended mode)
+- Added export of all actors as well as their role (Only in extended mode)
+
 V0.0.0.5:
 - Corrected a bug in TV-Shows for not exporting Directors and Authors
 - Added duration for both Movies and TV-Shows
