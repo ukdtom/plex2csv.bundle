@@ -6,9 +6,23 @@
 		"default":"None"
 	},
 	{
-		"id":"Extended_Info",
-		"label":"Export extended info",
+		"id":"Line_Wrap",
+		"label":"Wrap lines",
 		"type":"bool",
 		"default":"false"
-	}	
+	},
+	{
+		"id":"Line_Length",
+		"label":"Max lines length",
+		"type":"text",
+		"default":"40"
+	},	
+	{
+		"id": "Movie_Level",
+		"label": "Movie Export Level",
+		"type": "enum",
+		"values" : ["Simple","Basic","Extended"],
+		"default": "Basic"
+	}
+
 ]

@@ -1,9 +1,15 @@
-V0.0.0.8
+V0.0.0.9:
+- Removed un-needed console print
+- Switched away from Extended mode, and into 'Simple'-'Basic'-'Extended'
+- Internal clean-up of Movie export functions
+- Added 'Line Wrap' option, with adj. length in preferrences
+
+V0.0.0.8:
 - Added srazer as developer in the credits
 - Added "Added At" field to both movies, movies extended and TV-Shows
 - Added "Updated At" field to both movies, movies extended and TV-Shows
 
-V0.0.0.7
+V0.0.0.7:
 - Fixed issue with exception in extended mode, when a movie is missing either Actor or Cast
 
 V0.0.0.6:

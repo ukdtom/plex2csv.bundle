@@ -15,8 +15,9 @@ import time
 import io
 import csv
 import datetime
+from textwrap import wrap, fill
 
-VERSION = ' V0.0.0.8'
+VERSION = ' V0.0.0.9'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -231,262 +232,111 @@ def backgroundScanThread(title, key, sectiontype):
 	Log.Debug("*******  Ending backgroundScanThread  ***********")
 
 ####################################################################################################
+# This function will return the header for the CSV file for movies
+####################################################################################################
+@route(PREFIX + '/getMovieHeader')
+def getMovieHeader():
+	fieldnames = ('Media ID', 
+			'Title',				
+			'Studio',
+			'Content Rating',
+			'Summary',
+			'Rating',
+			'Year',
+			'Genres',
+			)
+	if ((Prefs['Movie_Level'] == 'Basic') or (Prefs['Movie_Level'] == 'Extended')):
+		fieldnames = fieldnames + (
+			'Tagline',
+			'Release Date',				
+			'Writers',
+			'Directors',
+			'Roles',
+			'Duration',
+			)
+	if Prefs['Movie_Level'] == 'Extended':
+		fieldnames = fieldnames + (
+			'Original Title',			
+			'Collections',				
+			'Added At',
+			'Updated At',
+			)
+	return fieldnames
+
+####################################################################################################
+# This function will wrap a string if needed
+####################################################################################################
+@route(PREFIX + '/WrapStr')
+def WrapStr(myStr):
+	LineWrap = int(Prefs['Line_Length'])
+	if Prefs['Line_Wrap']:		
+		Log.Debug('Wrapped Output is: %s' %(fill(myStr, LineWrap)))
+		return fill(myStr, LineWrap)
+	else:
+		return myStr
+
+####################################################################################################
 # This function will scan a movie section for filepaths in medias
 ####################################################################################################
 @route(PREFIX + '/scanMovieDB')
 def scanMovieDB(myMediaURL, myCSVFile):
 	Log.Debug("******* Starting scanMovieDB with an URL of %s***********" %(myMediaURL))
-	if Prefs['Extended_Info']:
-		print 'Need extended info'
-		scanMovieDBExtended(myMediaURL, myCSVFile)
-	else:
-		print 'Need basic info'
-		scanMovieDBBasic(myMediaURL, myCSVFile)	
-	Log.Debug("******* Ending scanMovieDB ***********")
-
-####################################################################################################
-# This function will export extended movie information
-####################################################################################################
-@route(PREFIX + '/scanMovieDBExtended')
-def scanMovieDBExtended(myMediaURL, myCSVFile):
-	Log.Debug("******* Starting scanMovieDB Extended with an URL of %s***********" %(myMediaURL))
+	Log.Debug('Movie Export level is %s' %(Prefs['Movie_Level']))
 	global bScanStatusCount
 	global bScanStatusCountOf
 	bScanStatusCount = 0
 	bScanStatusCountOf = 0
 	try:
+		mySepChar = ' - '
 		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Video')
 		bScanStatusCountOf = len(myMedias)
-		fieldnames = ('Media ID', 
-				'Title',
-				'Original Title',
-				'Studio',
-				'Content Rating',
-				'Summary',
-				'Rating',
-				'Year',
-				'Tagline',
-				'Release Date',
-				'Writer',
-				'Genres',
-				'Directors',
-				'Roles',
-				'Duration',
-				'Collections',				
-				'Added At',
-				'Updated At'
-				)
 		csvfile = io.open(myCSVFile,'wb')
-		csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
+		# Create output file, and print the header
+		csvwriter = csv.DictWriter(csvfile, fieldnames=getMovieHeader())
 		csvwriter.writeheader()
-		for myMedia in myMedias:
+		for myMedia in myMedias:				
+			myRow = {}
+			# Add all for Simple Export
+			# Get Media ID
 			ratingKey = myMedia.get('ratingKey')
 			if not ratingKey:
 				ratingKey = ''
-			myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + ratingKey		
-			ExtInfo = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
-			# Get Collections
-			Collections = ExtInfo.xpath('Collection/@tag')
-			if not Collections:
-				Collections = ['']
-			Collection = ''
-			for myCollection in Collections:
-				if Collection == '':
-					Collection = myCollection
-				else:
-					Collection = Collection + ' - ' + myCollection
-			# Get Genres
-			Genres = ExtInfo.xpath('Genre/@tag')
-			if not Genres:
-				Genres = ['']
-			Genre = ''
-			for myGenre in Genres:
-				if Genre == '':
-					Genre = myGenre
-				else:
-					Genre = Genre + ' - ' + myGenre
-			# Get Roles
-			myRoles = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video//Role')
-			Role = ''
-			if myRoles:
-				for myRole in myRoles:
-					myActor = myRole.get('tag')
-					myActorRole = myRole.get('role')
-					if myActor:
-						# Found an Actor
-						if myActorRole:
-							if Role == '':
-								Role = 'Actor: ' + myActor + ' as: ' + myActorRole
-							else:
-								Role = Role + ' - ' + 'Actor: ' + myActor + ' as: ' + myActorRole
-						else:
-							if Role == '':
-								Role = 'Actor: ' + myActor
-							else:
-								Role = Role + ' - ' + 'Actor: ' + myActor
+			# Get Extended info if needed
+			if Prefs['Movie_Level'] == 'Extended':
+				myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + ratingKey		
+				ExtInfo = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
+			myRow['Media ID'] = ratingKey.encode('utf8')
 			# Get title
 			title = myMedia.get('title')
 			if not title:
 				title = ''
+			myRow['Title'] = title.encode('utf8')
+			# Get Studio
 			studio = myMedia.get('studio')
 			if not studio:
 				studio = ''
-			summary = myMedia.get('summary')
-			if not summary:
-				summary = ''
-			rating = myMedia.get('rating')
-			if not rating:
-				rating = ''
+			myRow['Studio'] = studio.encode('utf8')
+			# Get contentRating
 			contentRating = myMedia.get('contentRating')
 			if not contentRating:
 				contentRating = ''
-			originalTitle = myMedia.get('originalTitle')
-			if not originalTitle:
-				originalTitle = ''
+			myRow['Content Rating'] = contentRating.encode('utf8')
+			# Get Year
 			year = myMedia.get('year')
 			if not year:
 				year = ''
-			tagline = myMedia.get('tagline')
-			if not tagline:
-				tagline = ''
-			originallyAvailableAt = myMedia.get('originallyAvailableAt')
-			if not originallyAvailableAt:
-				originallyAvailableAt = ''
-			# Get Authors
-			Writer = myMedia.xpath('Writer/@tag')
-			if not Writer:
-				Writer = ['']
-			Author = ''
-			for myWriter in Writer:
-				if Author == '':
-					Author = myWriter
-				else:
-					Author = Author + ' - ' + myWriter
-			
-			# Get Directors
-			Directors = myMedia.xpath('Director/@tag')
-			if not Directors:
-				Directors = ['']
-			Director = ''
-			for myDirector in Directors:
-				if Director == '':
-					Director = myDirector
-				else:
-					Director = Director + ' - ' + myDirector
-
-			# Get the duration of the movie
-			duration = myMedia.get('duration')
-			if not duration:
-				duration = '0'
-			duration = ConvertTimeStamp(duration)
-			addedAt = (Datetime.FromTimestamp(float(myMedia.get('addedAt')))).strftime('%m/%d/%Y')
-			updatedAt = (Datetime.FromTimestamp(float(myMedia.get('updatedAt')))).strftime('%m/%d/%Y')
-			bScanStatusCount += 1
-			csvwriter.writerow({'Media ID' : ratingKey.encode('utf8'),					
-					'Title' : title.encode('utf8'),
-					'Original Title' : originalTitle.encode('utf8'),
-					'Studio' : studio.encode('utf8'),
-					'Content Rating' : contentRating.encode('utf8'),
-					'Summary' : summary.encode('utf8'),
-					'Rating' : rating.encode('utf8'),
-					'Year' : year.encode('utf8'),
-					'Tagline' : tagline.encode('utf8'),
-					'Release Date' : originallyAvailableAt.encode('utf8'),
-					'Writer' : Author.encode('utf8'),
-					'Genres' : Genre.encode('utf8'),
-					'Directors' : Director.encode('utf8'),
-					'Roles' : Role.encode('utf8'),
-					'Duration' : duration.encode('utf8'),
-					'Collections' : Collection.encode('utf8'),
-					'Added At' : addedAt.encode('utf8'),
-					'Updated At' : updatedAt.encode('utf8')					
-					})
-			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))		
-		return
-	except:
-		Log.Critical("Detected an exception in scanMovieDB Extended")
-		bScanStatus = 99
-		raise
-	
-	Log.Debug("******* Ending scanMovieDB Extended ***********")
-
-####################################################################################################
-# This function will export basic movie information
-####################################################################################################
-@route(PREFIX + '/scanMovieDBBasic')
-def scanMovieDBBasic(myMediaURL, myCSVFile):
-	Log.Debug("******* Starting scanMovieDB Basic with an URL of %s***********" %(myMediaURL))
-	global bScanStatusCount
-	global bScanStatusCountOf
-	bScanStatusCount = 0
-	bScanStatusCountOf = 0
-	try:
-		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Video')
-		bScanStatusCountOf = len(myMedias)
-		fieldnames = ('Media ID', 
-				'Title',
-				'Original Title',
-				'Studio',
-				'Content Rating',
-				'Summary',
-				'Rating',
-				'Year',
-				'Tagline',
-				'Release Date',
-				'Writer',
-				'Genres',
-				'Directors',
-				'Roles',
-				'Duration',
-				'Added At',
-				'Updated At'
-				)
-		csvfile = io.open(myCSVFile,'wb')
-		csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
-		csvwriter.writeheader()
-		for myMedia in myMedias:
-			ratingKey = myMedia.get('ratingKey')
-			if not ratingKey:
-				ratingKey = ''
-			title = myMedia.get('title')
-			if not title:
-				title = ''
-			studio = myMedia.get('studio')
-			if not studio:
-				studio = ''
+			myRow['Year'] = year.encode('utf8')
+			# Get Summery
 			summary = myMedia.get('summary')
 			if not summary:
 				summary = ''
-			rating = myMedia.get('rating')
-			if not rating:
-				rating = ''
-			contentRating = myMedia.get('contentRating')
-			if not contentRating:
-				contentRating = ''
-			originalTitle = myMedia.get('originalTitle')
-			if not originalTitle:
-				originalTitle = ''
-			year = myMedia.get('year')
-			if not year:
-				year = ''
-			tagline = myMedia.get('tagline')
-			if not tagline:
-				tagline = ''
-			originallyAvailableAt = myMedia.get('originallyAvailableAt')
-			if not originallyAvailableAt:
-				originallyAvailableAt = ''
-			# Get Authors
-			Writer = myMedia.xpath('Writer/@tag')
-			if not Writer:
-				Writer = ['']
-			Author = ''
-			for myWriter in Writer:
-				if Author == '':
-					Author = myWriter
-				else:
-					Author = Author + ' - ' + myWriter
+			summary = WrapStr(summary)
+			myRow['Summary'] = summary.encode('utf8')
 			# Get Genres
-			Genres = myMedia.xpath('Genre/@tag')
+			if Prefs['Movie_Level'] == 'Extended':
+				Genres = ExtInfo.xpath('Genre/@tag')
+			else:
+				Genres = myMedia.xpath('Genre/@tag')
 			if not Genres:
 				Genres = ['']
 			Genre = ''
@@ -494,61 +344,128 @@ def scanMovieDBBasic(myMediaURL, myCSVFile):
 				if Genre == '':
 					Genre = myGenre
 				else:
-					Genre = Genre + ' - ' + myGenre
-			# Get Directors
-			Directors = myMedia.xpath('Director/@tag')
-			if not Directors:
-				Directors = ['']
-			Director = ''
-			for myDirector in Directors:
-				if Director == '':
-					Director = myDirector
-				else:
-					Director = Director + ' - ' + myDirector
-			# Get Roles
-			Roles = myMedia.xpath('Role/@tag')
-			if not Roles:
-				Roles = ['']
-			Role = ''
-			for myRole in Roles:
-				if Role == '':
-					Role = myRole
-				else:
-					Role = Role + ' - ' + myRole
-			# Get the duration of the movie
-			duration = myMedia.get('duration')
-			if not duration:
-				duration = '0'
-			duration = ConvertTimeStamp(duration)
-			addedAt = (Datetime.FromTimestamp(float(myMedia.get('addedAt')))).strftime('%m/%d/%Y')
-			updatedAt = (Datetime.FromTimestamp(float(myMedia.get('updatedAt')))).strftime('%m/%d/%Y')
+					Genre = Genre + mySepChar + myGenre
+			Genre = WrapStr(Genre)
+			myRow['Genres'] = Genre.encode('utf8')
+			# Get Rating
+			rating = myMedia.get('rating')
+			if not rating:
+				rating = ''
+			myRow['Rating'] = rating.encode('utf8')
+			# And now for Basic Export
+			if ((Prefs['Movie_Level'] == 'Basic') or (Prefs['Movie_Level'] == 'Extended')):
+				# Get the Tag Line
+				tagline = myMedia.get('tagline')
+				if not tagline:
+					tagline = ''
+				tagline = WrapStr(tagline)
+				myRow['Tagline'] = tagline.encode('utf8')
+				# Get the Release Date
+				originallyAvailableAt = myMedia.get('originallyAvailableAt')
+				if not originallyAvailableAt:
+					originallyAvailableAt = ''
+				myRow['Release Date'] = originallyAvailableAt.encode('utf8')
+				# Get the Writers
+				Writer = myMedia.xpath('Writer/@tag')
+				if not Writer:
+					Writer = ['']
+				Author = ''
+				for myWriter in Writer:
+					if Author == '':
+						Author = myWriter
+					else:
+						Author = Author + mySepChar + myWriter
+				Author = WrapStr(Author)
+				myRow['Writers'] = Author.encode('utf8')
+				# Get the duration of the movie
+				duration = myMedia.get('duration')
+				if not duration:
+					duration = '0'
+				duration = ConvertTimeStamp(duration)
+				myRow['Duration'] = duration.encode('utf8')
+				# Get the Directors
+				Directors = myMedia.xpath('Director/@tag')
+				if not Directors:
+					Directors = ['']
+				Director = ''
+				for myDirector in Directors:
+					if Director == '':
+						Director = myDirector
+					else:
+						Director = Director + mySepChar + myDirector
+				Director = WrapStr(Director)
+				myRow['Directors'] = Director.encode('utf8')
+				# Only if basic, and not Extended
+				if Prefs['Movie_Level'] == 'Basic':
+					# Get Roles Basic
+					Roles = myMedia.xpath('Role/@tag')
+					if not Roles:
+						Roles = ['']
+					Role = ''
+					for myRole in Roles:
+						if Role == '':
+							Role = myRole
+						else:
+							Role = Role + mySepChar + myRole
+				elif Prefs['Movie_Level'] == 'Extended':
+					# Get Roles Extended
+					myRoles = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video//Role')
+					Role = ''
+					if myRoles:
+						for myRole in myRoles:
+							myActor = myRole.get('tag')
+							myActorRole = myRole.get('role')
+							if myActor:
+								# Found an Actor
+								if myActorRole:
+									if Role == '':
+										Role = 'Actor: ' + myActor + ' as: ' + myActorRole
+									else:
+										Role = Role + mySepChar + 'Actor: ' + myActor + ' as: ' + myActorRole
+								else:
+									if Role == '':
+										Role = 'Actor: ' + myActor
+									else:
+										Role = Role + mySepChar + 'Actor: ' + myActor
+				Role = WrapStr(Role)
+				myRow['Roles'] = Role.encode('utf8')
+			# Here goes extended stuff, not part of basic or simple
+			if Prefs['Movie_Level'] == 'Extended':
+				# Get Collections
+				Collections = ExtInfo.xpath('Collection/@tag')
+				if not Collections:
+					Collections = ['']
+				Collection = ''
+				for myCollection in Collections:
+					if Collection == '':
+						Collection = myCollection
+					else:
+						Collection = Collection + mySepChar + myCollection
+				Collection = WrapStr(Collection)
+				myRow['Collections'] = Collection.encode('utf8')
+				# Get the original title
+				originalTitle = myMedia.get('originalTitle')
+				if not originalTitle:
+					originalTitle = ''
+				myRow['Original Title'] = originalTitle.encode('utf8')
+				# Get Added at
+				addedAt = (Datetime.FromTimestamp(float(myMedia.get('addedAt')))).strftime('%m/%d/%Y')
+				myRow['Added At'] = addedAt.encode('utf8')
+				# Get Updated at
+				updatedAt = (Datetime.FromTimestamp(float(myMedia.get('updatedAt')))).strftime('%m/%d/%Y')
+				myRow['Updated At'] = updatedAt.encode('utf8')
+			# Everything is gathered, so let's write the row
+			csvwriter.writerow(myRow)
 			bScanStatusCount += 1
-			csvwriter.writerow({'Media ID' : ratingKey.encode('utf8'),					
-					'Title' : title.encode('utf8'),
-					'Original Title' : originalTitle.encode('utf8'),
-					'Studio' : studio.encode('utf8'),
-					'Content Rating' : contentRating.encode('utf8'),
-					'Summary' : summary.encode('utf8'),
-					'Rating' : rating.encode('utf8'),
-					'Year' : year.encode('utf8'),
-					'Tagline' : tagline.encode('utf8'),
-					'Release Date' : originallyAvailableAt.encode('utf8'),
-					'Writer' : Author.encode('utf8'),
-					'Genres' : Genre.encode('utf8'),
-					'Directors' : Director.encode('utf8'),
-					'Roles' : Role.encode('utf8'),
-					'Duration' : duration.encode('utf8'),
-					'Added At' : addedAt.encode('utf8'),
-					'Updated At' : updatedAt.encode('utf8')					
-					})
-			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))		
-		return
+			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))
+		return	
 	except:
-		Log.Critical("Detected an exception in scanMovieDB Basic")
+		Log.Critical("Detected an exception in scanMovieDB Extended")
 		bScanStatus = 99
-		raise
-	
-	Log.Debug("******* Ending scanMovieDB Basic ***********")
+		raise	
+	finally:
+		print "******* Ending scanMovieDB ***********"
+		Log.Debug("******* Ending scanMovieDB ***********")
 
 ####################################################################################################
 # This function will scan a TV-Show section for filepaths in medias
