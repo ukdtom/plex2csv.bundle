@@ -17,7 +17,7 @@ import csv
 import datetime
 from textwrap import wrap, fill
 
-VERSION = ' V0.0.0.10'
+VERSION = ' V0.0.0.11'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -49,14 +49,17 @@ def MainMenu(random=0):
 	Log.Debug("**********  Starting MainMenu  **********")
 	oc = ObjectContainer()
 	try:
-		sections = XML.ElementFromURL('http://127.0.0.1:32400/library/sections/').xpath('//Directory')
-		for section in sections:
-			sectiontype = section.get('type')
-			if sectiontype != "photo" and sectiontype != 'artist': # ToDo: Remove artist when code is in place for it.
-				title = section.get('title')
-				key = section.get('key')
-				Log.Debug('Title of section is %s with a key of %s' %(title, key))
-				oc.add(DirectoryObject(key=Callback(backgroundScan, title=title, sectiontype=sectiontype, key=key, random=time.clock()), title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
+		if ValidateExportPath():
+			sections = XML.ElementFromURL('http://127.0.0.1:32400/library/sections/').xpath('//Directory')
+			for section in sections:
+				sectiontype = section.get('type')
+				if sectiontype != "photo" and sectiontype != 'artist': # ToDo: Remove artist when code is in place for it.
+					title = section.get('title')
+					key = section.get('key')
+					Log.Debug('Title of section is %s with a key of %s' %(title, key))
+					oc.add(DirectoryObject(key=Callback(backgroundScan, title=title, sectiontype=sectiontype, key=key, random=time.clock()), title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
+		else:
+			oc.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="Select Preferences to set the export path"))
 	except:
 		Log.Critical("Exception happened in MainMenu")
 		raise
@@ -65,10 +68,11 @@ def MainMenu(random=0):
 	return oc
 
 ####################################################################################################
-# Called by the framework every time a user changes the prefs
+# Validate Export Path
 ####################################################################################################
-@route(PREFIX + '/ValidatePrefs')
-def ValidatePrefs():
+@route(PREFIX + '/ValidateExportPath')
+def ValidateExportPath():
+	Log.Debug('Entering ValidateExportPath')
 	# Let's check that the provided path is actually valid
 	myPath = Prefs['Export_Path']
 	Log.Debug('My master set the Export path to: %s' %(myPath))
@@ -79,13 +83,24 @@ def ValidatePrefs():
 			if not os.path.exists(os.path.join(myPath, 'Plex2CSV')):
 				os.makedirs(os.path.join(myPath, 'Plex2CSV'))
 				Log.Debug('Created directory named: %s' %(os.path.join(myPath, 'Plex2CSV')))
+				return True
 			else:
 				Log.Debug('Path verified as already present')
+				return True
 		else:
 			raise Exception("Wrong path specified as export path")
+			return False
 	except:
 		Log.Critical('Bad export path')
-		print 'Bad export path'
+		return False
+
+####################################################################################################
+# Called by the framework every time a user changes the prefs
+####################################################################################################
+@route(PREFIX + '/ValidatePrefs')
+def ValidatePrefs():
+	# Dummy function to satisfy the framework
+	return
 
 ####################################################################################################
 # Export Complete.
