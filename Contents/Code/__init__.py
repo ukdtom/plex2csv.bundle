@@ -434,7 +434,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 							Role = myRole
 						else:
 							Role = Role + mySepChar + myRole
-				elif Prefs['Movie_Level'] in ['Basic','Extended','Extreme']:
+				elif Prefs['Movie_Level'] in ['Extended','Extreme']:
 					# Get Roles Extended
 					myRoles = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video//Role')
 					Role = ''
