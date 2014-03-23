@@ -1,3 +1,6 @@
+V0.0.0.11:
+- Will now check if a valid export path is set, and if not, only prefs is avail
+
 V0.0.0.10:
 - Removed some undeeded code.
 - Don't show music sections until code for it is added.
