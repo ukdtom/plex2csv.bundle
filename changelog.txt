@@ -1,3 +1,11 @@
+V0.0.0.10:
+- Removed some undeeded code.
+- Don't show music sections until code for it is added.
+- Tweaked some wording.
+- Renamed results() to complete()
+- Got rid of "Click to get results" screen.
+- Fixed a crash when myMedia.get('updatedAt') returned a null value.
+
 V0.0.0.9:
 - Removed un-needed console print
 - Switched away from Extended mode, and into 'Simple'-'Basic'-'Extended'
