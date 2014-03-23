@@ -4,7 +4,7 @@
 #	Made by 
 #	dane22....A Plex Community member
 #	srazer....A Plex Community member
-#	
+#
 ####################################################################################################
 
 # To find Work in progress, search this file for the word ToDo
@@ -17,7 +17,7 @@ import csv
 import datetime
 from textwrap import wrap, fill
 
-VERSION = ' V0.0.0.9'
+VERSION = ' V0.0.0.10'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -52,11 +52,11 @@ def MainMenu(random=0):
 		sections = XML.ElementFromURL('http://127.0.0.1:32400/library/sections/').xpath('//Directory')
 		for section in sections:
 			sectiontype = section.get('type')
-			if sectiontype != "photo":
+			if sectiontype != "photo" and sectiontype != 'artist': # ToDo: Remove artist when code is in place for it.
 				title = section.get('title')
 				key = section.get('key')
 				Log.Debug('Title of section is %s with a key of %s' %(title, key))
-				oc.add(DirectoryObject(key=Callback(backgroundScan, title=title, sectiontype=sectiontype, key=key, random=time.clock()), title='Look in section "' + title + '"', summary='Look for unmatched files in "' + title + '"'))
+				oc.add(DirectoryObject(key=Callback(backgroundScan, title=title, sectiontype=sectiontype, key=key, random=time.clock()), title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
 	except:
 		Log.Critical("Exception happened in MainMenu")
 		raise
@@ -74,9 +74,9 @@ def ValidatePrefs():
 	Log.Debug('My master set the Export path to: %s' %(myPath))
 	try:
 		#Let's see if we can add out subdirectory below this
-		if os.path.exists(myPath):	
+		if os.path.exists(myPath):
 			Log.Debug('Master entered a path that already existed as: %s' %(myPath))
-			if not os.path.exists(os.path.join(myPath, 'Plex2CSV')):		
+			if not os.path.exists(os.path.join(myPath, 'Plex2CSV')):
 				os.makedirs(os.path.join(myPath, 'Plex2CSV'))
 				Log.Debug('Created directory named: %s' %(os.path.join(myPath, 'Plex2CSV')))
 			else:
@@ -84,25 +84,25 @@ def ValidatePrefs():
 		else:
 			raise Exception("Wrong path specified as export path")
 	except:
-		Log.Critical('Bad export path')		
+		Log.Critical('Bad export path')
 		print 'Bad export path'
 
 ####################################################################################################
-# Display the results.
+# Export Complete.
 ####################################################################################################
-@route(PREFIX + '/results')
-def results(title=''):
+@route(PREFIX + '/complete')
+def complete(title=''):
 	global bScanStatus
 	Log.Debug("*******  All done, tell my Master  ***********")
-	title = ('Export Completed for section %s' %(title))
+	title = ('Export Completed for %s' %(title))
 	message = 'Check the directory: %s' %(os.path.join(Prefs['Export_Path'], 'Plex2CSV')) 
 	oc2 = ObjectContainer(title1=title, no_cache=True, message=message)
 	oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="Go to the Main Menu"))
 	# Reset the scanner status
 	bScanStatus = 0
-	Log.Debug("*******  Ending results  ***********")
+	Log.Debug("*******  Ending complete  ***********")
 	return oc2
-		
+
 ####################################################################################################
 # Start the scanner in a background thread and provide status while running
 ####################################################################################################
@@ -129,7 +129,7 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 				x += 1
 				if bScanStatus == 2:
 					Log.Debug("************** Scan Done, stopping wait **************")
-					oc2 = results(title=title)
+					oc2 = complete(title=title)
 					return oc2
 					break
 				if bScanStatus >= 90:
@@ -139,7 +139,6 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 		elif bScanStatus == 0 and statusCheck:
 			Log.Debug("backgroundScan statusCheck is set and no scan is running")
 			oc2 = ObjectContainer(title1="Scan is not running.", no_history=True)
-			oc2.add(DirectoryObject(key=Callback(results, title=title), title="Get the last results."))
 			oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="Go to the Main Menu"))
 			return oc2
 
@@ -147,21 +146,15 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 		summary = "The Plex client will only wait a few seconds for us to work, so we run it in the background. This requires you to keep checking on the status until it is complete. \n\n"
 		if bScanStatus == 1:
 			# Scanning Database
-			summary = summary + "The Database is being scanned. \nScanning " + str(bScanStatusCount) + " of " + str(bScanStatusCountOf) + ". \nPlease wait a few seconds and check the status again."
-			oc2 = ObjectContainer(title1="Scanning Database " + str(bScanStatusCount) + " of " + str(bScanStatusCountOf) + ".", no_history=True)
-			oc2.add(DirectoryObject(key=Callback(backgroundScan, random=time.clock(), statusCheck=1), title="Scanning the database. Check Status.", summary=summary))
-			oc2.add(DirectoryObject(key=Callback(backgroundScan, random=time.clock(), statusCheck=1), title="Scanning " + str(bScanStatusCount) + " of " + str(bScanStatusCountOf), summary=summary))
-
+			summary = summary + "The Database is being exported. \nExporting " + str(bScanStatusCount) + " of " + str(bScanStatusCountOf) + ". \nPlease wait a few seconds and check the status again."
+			oc2 = ObjectContainer(title1="Exporting the Database " + str(bScanStatusCount) + " of " + str(bScanStatusCountOf) + ".", no_history=True)
+			oc2.add(DirectoryObject(key=Callback(backgroundScan, random=time.clock(), statusCheck=1, title=title), title="Exporting the database. Check Status.", summary=summary))
+			oc2.add(DirectoryObject(key=Callback(backgroundScan, random=time.clock(), statusCheck=1, title=title), title="Exporting " + str(bScanStatusCount) + " of " + str(bScanStatusCountOf), summary=summary))
 
 		elif bScanStatus == 2:
-			# See Results
-			summary = "Scan complete, click here to get the results."
-			oc2 = ObjectContainer(title1="Results", no_history=True)
-			oc2.add(DirectoryObject(key=Callback(results, title=title), title="*** Get the Results. ***", summary=summary))
-
-			title = ('Export Completed')
-			message = 'Check the directory: %s' %(os.path.join(Prefs['Export_Path'], 'Plex2CSV')) 
-			ObjectContainer(title1=title, no_cache=True, message=message)
+			# Show complete screen.
+			oc2 = complete(title=title)
+			return oc2
 		elif bScanStatus == 91:
 			# Unknown section type
 			summary = "Unknown section type returned."
@@ -187,7 +180,7 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 		raise
 	Log.Debug("******* Ending backgroundScan ***********")
 	return oc2
-	
+
 ####################################################################################################
 # Background scanner thread.
 ####################################################################################################
@@ -196,7 +189,7 @@ def backgroundScanThread(title, key, sectiontype):
 	Log.Debug("*******  Starting backgroundScanThread  ***********")
 	global bScanStatus
 	global bScanStatusCount
-	global bScanStatusCountOf	
+	global bScanStatusCountOf
 	try:
 		bScanStatus = 1
 		Log.Debug("Section type is %s" %(sectiontype))
@@ -210,14 +203,13 @@ def backgroundScanThread(title, key, sectiontype):
 		# Scan the database based on the type of section
 		if sectiontype == "movie":
 			scanMovieDB(myMediaURL, myCSVFile)
-			filecount = bScanStatusCount
 		elif sectiontype == "artist":
-			filecount = scanArtistDB(myMediaURL, myCSVFile)
+			scanArtistDB(myMediaURL, myCSVFile)
 		elif sectiontype == "show":
-			filecount = scanShowDB(myMediaURL, myCSVFile)
+			scanShowDB(myMediaURL, myCSVFile)
 		else:
 			Log.Debug("Error: unknown section type: %s" %(sectiontype))
-			bScanStatus = 91		
+			bScanStatus = 91
 		# Stop scanner on error
 		if bScanStatus >= 90: return
 		# Stop scanner on error
@@ -237,7 +229,7 @@ def backgroundScanThread(title, key, sectiontype):
 @route(PREFIX + '/getMovieHeader')
 def getMovieHeader():
 	fieldnames = ('Media ID', 
-			'Title',				
+			'Title',
 			'Studio',
 			'Content Rating',
 			'Summary',
@@ -248,7 +240,7 @@ def getMovieHeader():
 	if ((Prefs['Movie_Level'] == 'Basic') or (Prefs['Movie_Level'] == 'Extended')):
 		fieldnames = fieldnames + (
 			'Tagline',
-			'Release Date',				
+			'Release Date',
 			'Writers',
 			'Directors',
 			'Roles',
@@ -256,10 +248,10 @@ def getMovieHeader():
 			)
 	if Prefs['Movie_Level'] == 'Extended':
 		fieldnames = fieldnames + (
-			'Original Title',			
-			'Collections',				
-			'Added At',
-			'Updated At',
+			'Original Title',
+			'Collections',
+			'Added',
+			'Updated',
 			)
 	return fieldnames
 
@@ -276,7 +268,7 @@ def WrapStr(myStr):
 		return myStr
 
 ####################################################################################################
-# This function will scan a movie section for filepaths in medias
+# This function will scan a movie section.
 ####################################################################################################
 @route(PREFIX + '/scanMovieDB')
 def scanMovieDB(myMediaURL, myCSVFile):
@@ -450,10 +442,12 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				myRow['Original Title'] = originalTitle.encode('utf8')
 				# Get Added at
 				addedAt = (Datetime.FromTimestamp(float(myMedia.get('addedAt')))).strftime('%m/%d/%Y')
-				myRow['Added At'] = addedAt.encode('utf8')
+				myRow['Added'] = addedAt.encode('utf8')
 				# Get Updated at
-				updatedAt = (Datetime.FromTimestamp(float(myMedia.get('updatedAt')))).strftime('%m/%d/%Y')
-				myRow['Updated At'] = updatedAt.encode('utf8')
+				# If myMedia.get('updatedAt') has a value then change the time format else set it to blank.
+				if myMedia.get('updatedAt'): updatedAt = (Datetime.FromTimestamp(float(myMedia.get('updatedAt')))).strftime('%m/%d/%Y')
+				else: updatedAt = ""
+				myRow['Updated'] = updatedAt.encode('utf8')
 			# Everything is gathered, so let's write the row
 			csvwriter.writerow(myRow)
 			bScanStatusCount += 1
@@ -468,7 +462,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		Log.Debug("******* Ending scanMovieDB ***********")
 
 ####################################################################################################
-# This function will scan a TV-Show section for filepaths in medias
+# This function will scan a TV-Show section.
 ####################################################################################################
 @route(PREFIX + '/scanShowDB')
 def scanShowDB(myMediaURL, myCSVFile):
@@ -477,7 +471,6 @@ def scanShowDB(myMediaURL, myCSVFile):
 	global bScanStatusCountOf
 	myMediaPaths = []
 	bScanStatusCount = 0
-	filecount = 0
 	try:
 		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Directory')
 		bScanStatusCountOf = len(myMedias)
@@ -498,8 +491,8 @@ def scanShowDB(myMediaURL, myCSVFile):
 				'Directors',
 				'Roles',
 				'Duration',
-				'Added At',
-				'Updated At')
+				'Added',
+				'Updated')
 		csvfile = io.open(myCSVFile,'wb')
 		csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
 		csvwriter.writeheader()
@@ -542,7 +535,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 					year = ''
 				originallyAvailableAt = myMedia2.get("originallyAvailableAt")
 				if not originallyAvailableAt:
-					originallyAvailableAt = ''				
+					originallyAvailableAt = ''
 				# Get Authors
 				Writer = myMedia2.xpath('Writer/@tag')
 				if not Writer:
@@ -589,8 +582,9 @@ def scanShowDB(myMediaURL, myCSVFile):
 					duration = '0'
 				duration = ConvertTimeStamp(duration)
 				addedAt = (Datetime.FromTimestamp(float(myMedia2.get('addedAt')))).strftime('%m/%d/%Y')
-				updatedAt = (Datetime.FromTimestamp(float(myMedia2.get('updatedAt')))).strftime('%m/%d/%Y')
-				filecount += 1
+				# If myMedia.get('updatedAt') has a value then change the time format else set it to blank.
+				if myMedia.get('updatedAt'): updatedAt = (Datetime.FromTimestamp(float(myMedia.get('updatedAt')))).strftime('%m/%d/%Y')
+				else: updatedAt = ""
 				csvwriter.writerow({'Media ID' : ratingKey.encode('utf8'),
 					'Studio' : studio.encode('utf8'),
 					'Roles' : Role.encode('utf8'),
@@ -607,11 +601,11 @@ def scanShowDB(myMediaURL, myCSVFile):
 					'Series Title' : SerieTitle.encode('utf8'),
 					'Episode Title' : EpisodeTitle.encode('utf8'),
 					'Duration' : duration.encode('utf8'),
-					'Added At' : addedAt.encode('utf8'),
-					'Updated At' : updatedAt.encode('utf8')					
+					'Added' : addedAt.encode('utf8'),
+					'Updated' : updatedAt.encode('utf8')
 					})
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, SerieTitle + '-' + EpisodeTitle))
-		return filecount
+		return
 	except:
 		Log.Critical("Detected an exception in scanShowDB")
 		bScanStatus = 99
@@ -625,10 +619,10 @@ def scanShowDB(myMediaURL, myCSVFile):
 def ConvertTimeStamp(timeStamp):
 	seconds=str(int(timeStamp)/(1000)%60)
 	if len(seconds)<2:
-		seconds = '0' + seconds	
+		seconds = '0' + seconds
 	minutes=str((int(timeStamp)/(1000*60))%60)
 	if len(minutes)<2:
-		minutes = '0' + minutes	
+		minutes = '0' + minutes
 	hours=str((int(timeStamp)/(1000*60*60))%24)
 	return hours + ':' + minutes + ':' + seconds
 
