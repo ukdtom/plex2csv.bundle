@@ -17,7 +17,7 @@ import csv
 import datetime
 from textwrap import wrap, fill
 
-VERSION = ' V0.0.0.11'
+VERSION = ' V0.0.0.12'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -252,7 +252,7 @@ def getMovieHeader():
 			'Year',
 			'Genres',
 			)
-	if ((Prefs['Movie_Level'] == 'Basic') or (Prefs['Movie_Level'] == 'Extended')):
+	if (Prefs['Movie_Level'] in ['Basic','Extended','Extreme']):
 		fieldnames = fieldnames + (
 			'Tagline',
 			'Release Date',
@@ -261,13 +261,33 @@ def getMovieHeader():
 			'Roles',
 			'Duration',
 			)
-	if Prefs['Movie_Level'] == 'Extended':
+	if Prefs['Movie_Level'] in ['Extended','Extreme']:
 		fieldnames = fieldnames + (
 			'Original Title',
 			'Collections',
 			'Added',
 			'Updated',
 			)
+	if Prefs['Movie_Level'] in ['Extreme']:
+		fieldnames = fieldnames + (
+			'Video Resolution',
+			'Bitrate',
+			'Width',
+			'Height',
+			'Aspect Ratio',
+			'Audio Channels',
+			'Audio Codec',
+			'Video Codec',
+			'Container',
+			'Video FrameRate',
+			# Part info
+# ToDo
+#			'File',
+#			'size',
+#			'indexes',
+# ToDo end
+			)
+
 	return fieldnames
 
 ####################################################################################################
@@ -309,7 +329,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			if not ratingKey:
 				ratingKey = ''
 			# Get Extended info if needed
-			if Prefs['Movie_Level'] == 'Extended':
+			if Prefs['Movie_Level'] in ['Extended','Extreme']:
 				myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + ratingKey		
 				ExtInfo = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
 			myRow['Media ID'] = ratingKey.encode('utf8')
@@ -360,7 +380,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				rating = ''
 			myRow['Rating'] = rating.encode('utf8')
 			# And now for Basic Export
-			if ((Prefs['Movie_Level'] == 'Basic') or (Prefs['Movie_Level'] == 'Extended')):
+			if Prefs['Movie_Level'] in ['Basic','Extended','Extreme']:
 				# Get the Tag Line
 				tagline = myMedia.get('tagline')
 				if not tagline:
@@ -403,7 +423,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				Director = WrapStr(Director)
 				myRow['Directors'] = Director.encode('utf8')
 				# Only if basic, and not Extended
-				if Prefs['Movie_Level'] == 'Basic':
+				if Prefs['Movie_Level'] in ['Basic']:
 					# Get Roles Basic
 					Roles = myMedia.xpath('Role/@tag')
 					if not Roles:
@@ -414,7 +434,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 							Role = myRole
 						else:
 							Role = Role + mySepChar + myRole
-				elif Prefs['Movie_Level'] == 'Extended':
+				elif Prefs['Movie_Level'] in ['Basic','Extended','Extreme']:
 					# Get Roles Extended
 					myRoles = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video//Role')
 					Role = ''
@@ -437,7 +457,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				Role = WrapStr(Role)
 				myRow['Roles'] = Role.encode('utf8')
 			# Here goes extended stuff, not part of basic or simple
-			if Prefs['Movie_Level'] == 'Extended':
+			if Prefs['Movie_Level'] in ['Extended','Extreme']:
 				# Get Collections
 				Collections = ExtInfo.xpath('Collection/@tag')
 				if not Collections:
@@ -463,8 +483,52 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				if myMedia.get('updatedAt'): updatedAt = (Datetime.FromTimestamp(float(myMedia.get('updatedAt')))).strftime('%m/%d/%Y')
 				else: updatedAt = ""
 				myRow['Updated'] = updatedAt.encode('utf8')
+			if Prefs['Movie_Level'] == 'Extreme':
+				# Get Video Resolution
+				myRow['Video Resolution'] = GetExtInfo(ExtInfo, 'videoResolution')
+				# Get Bitrate
+				myRow['Bitrate'] = GetExtInfo(ExtInfo, 'bitrate')
+				# Get Width
+				myRow['Width'] = GetExtInfo(ExtInfo, 'width')
+				# Get Height
+				myRow['Height'] = GetExtInfo(ExtInfo, 'height')
+				# Get Aspect Ratio
+				myRow['Aspect Ratio'] = GetExtInfo(ExtInfo, 'aspectRatio')
+				# Get Audio Channels
+				myRow['Audio Channels'] = GetExtInfo(ExtInfo, 'audioChannels')
+				# Get Audio Codec
+				myRow['Audio Codec'] = GetExtInfo(ExtInfo, 'audioCodec')
+				# Get Video Codec
+				myRow['Video Codec'] = GetExtInfo(ExtInfo, 'videoCodec')
+				# Get Container
+				myRow['Container'] = GetExtInfo(ExtInfo, 'container')
+				# Get Video FrameRate
+				myRow['Video FrameRate'] = GetExtInfo(ExtInfo, 'videoFrameRate')
 			# Everything is gathered, so let's write the row
 			csvwriter.writerow(myRow)
+			# Now for parts info, on a seperate row
+
+
+
+
+# ToDo
+#			if Prefs['Movie_Level'] == 'Extreme':
+
+#				myRow = []
+#				parts = ExtInfo.xpath('//part')
+#				for part in parts:
+#					File = part.get('file')
+#					print File
+				
+
+
+
+
+#			'File',
+#			'size',
+#			'indexes',
+
+# ToDo end
 			bScanStatusCount += 1
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))
 		return	
@@ -475,6 +539,16 @@ def scanMovieDB(myMediaURL, myCSVFile):
 	finally:
 		print "******* Ending scanMovieDB ***********"
 		Log.Debug("******* Ending scanMovieDB ***********")
+
+####################################################################################################
+# This function will return info from extended page for movies
+####################################################################################################
+@route(PREFIX + '/GetExtInfo')
+def GetExtInfo(ExtInfo, myField):
+	myLookUp = ExtInfo.xpath('Media/@' + myField)[0]
+	if not myLookUp:
+		myLookUp = ''
+	return myLookUp.encode('utf8')
 
 ####################################################################################################
 # This function will scan a TV-Show section.
