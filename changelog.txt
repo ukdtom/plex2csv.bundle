@@ -1,3 +1,11 @@
+V0.0.0.14:
+- Added some code to do wrapping on extended fields, if needed
+- Added seperator to Prefs, that's used to seperate multiple info in the same field, like actors
+- Added "Simple" and "Basic levels to TV-Shows
+- Did a lot of Code clean-up for TV-Shows
+- Added wrapping for TV-Shows as well
+- Added round off of ratings to one digit
+
 V0.0.0.13:
 - Fixed exception in extreme mode, if data wasn't avail
 - Did some additional code clean-up
