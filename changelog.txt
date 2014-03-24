@@ -1,3 +1,7 @@
+V0.0.0.13:
+- Fixed exception in extreme mode, if data wasn't avail
+- Did some additional code clean-up
+
 V0.0.0.12:
 - Added Extreme as an output profile
 
