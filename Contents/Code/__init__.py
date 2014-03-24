@@ -17,7 +17,7 @@ import csv
 import datetime
 from textwrap import wrap, fill
 
-VERSION = ' V0.0.0.12'
+VERSION = ' V0.0.0.13'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -163,7 +163,7 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 			# Scanning Database
 			summary = summary + "The Database is being exported. \nExporting " + str(bScanStatusCount) + " of " + str(bScanStatusCountOf) + ". \nPlease wait a few seconds and check the status again."
 			oc2 = ObjectContainer(title1="Exporting the Database " + str(bScanStatusCount) + " of " + str(bScanStatusCountOf) + ".", no_history=True)
-			oc2.add(DirectoryObject(key=Callback(backgroundScan, random=time.clock(), statusCheck=1, title=title), title="Exporting the database. Check Status.", summary=summary))
+			oc2.add(DirectoryObject(key=Callback(backgroundScan, random=time.clock(), statusCheck=1, title=title), title="Exporting the database. To update Status, click here.", summary=summary))
 			oc2.add(DirectoryObject(key=Callback(backgroundScan, random=time.clock(), statusCheck=1, title=title), title="Exporting " + str(bScanStatusCount) + " of " + str(bScanStatusCountOf), summary=summary))
 
 		elif bScanStatus == 2:
@@ -325,42 +325,25 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			myRow = {}
 			# Add all for Simple Export
 			# Get Media ID
-			ratingKey = myMedia.get('ratingKey')
-			if not ratingKey:
-				ratingKey = ''
+			myRow['Media ID'] = GetRegInfo(myMedia, 'ratingKey')
 			# Get Extended info if needed
 			if Prefs['Movie_Level'] in ['Extended','Extreme']:
-				myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + ratingKey		
+				myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia, 'ratingKey')		
 				ExtInfo = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
-			myRow['Media ID'] = ratingKey.encode('utf8')
 			# Get title
-			title = myMedia.get('title')
-			if not title:
-				title = ''
-			myRow['Title'] = title.encode('utf8')
+			myRow['Title'] = GetRegInfo(myMedia, 'title')
 			# Get Studio
-			studio = myMedia.get('studio')
-			if not studio:
-				studio = ''
-			myRow['Studio'] = studio.encode('utf8')
+			myRow['Studio'] = GetRegInfo(myMedia, 'studio')
 			# Get contentRating
-			contentRating = myMedia.get('contentRating')
-			if not contentRating:
-				contentRating = ''
-			myRow['Content Rating'] = contentRating.encode('utf8')
+			myRow['Content Rating'] = GetRegInfo(myMedia, 'contentRating')
 			# Get Year
-			year = myMedia.get('year')
-			if not year:
-				year = ''
-			myRow['Year'] = year.encode('utf8')
+			myRow['Year'] = GetRegInfo(myMedia, 'year')
+			# Get Rating
+			myRow['Rating'] = GetRegInfo(myMedia, 'rating')
 			# Get Summery
-			summary = myMedia.get('summary')
-			if not summary:
-				summary = ''
-			summary = WrapStr(summary)
-			myRow['Summary'] = summary.encode('utf8')
+			myRow['Summary'] = GetRegInfo(myMedia, 'summary')
 			# Get Genres
-			if Prefs['Movie_Level'] == 'Extended':
+			if Prefs['Movie_Level'] in ['Extended','Extreme']:
 				Genres = ExtInfo.xpath('Genre/@tag')
 			else:
 				Genres = myMedia.xpath('Genre/@tag')
@@ -374,24 +357,14 @@ def scanMovieDB(myMediaURL, myCSVFile):
 					Genre = Genre + mySepChar + myGenre
 			Genre = WrapStr(Genre)
 			myRow['Genres'] = Genre.encode('utf8')
-			# Get Rating
-			rating = myMedia.get('rating')
-			if not rating:
-				rating = ''
-			myRow['Rating'] = rating.encode('utf8')
+
 			# And now for Basic Export
 			if Prefs['Movie_Level'] in ['Basic','Extended','Extreme']:
 				# Get the Tag Line
-				tagline = myMedia.get('tagline')
-				if not tagline:
-					tagline = ''
-				tagline = WrapStr(tagline)
-				myRow['Tagline'] = tagline.encode('utf8')
+				myRow['Tagline'] = GetRegInfo(myMedia, 'tagline')
 				# Get the Release Date
-				originallyAvailableAt = myMedia.get('originallyAvailableAt')
-				if not originallyAvailableAt:
-					originallyAvailableAt = ''
-				myRow['Release Date'] = originallyAvailableAt.encode('utf8')
+				myRow['Release Date'] = GetRegInfo(myMedia, 'originallyAvailableAt')
+
 				# Get the Writers
 				Writer = myMedia.xpath('Writer/@tag')
 				if not Writer:
@@ -405,10 +378,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				Author = WrapStr(Author)
 				myRow['Writers'] = Author.encode('utf8')
 				# Get the duration of the movie
-				duration = myMedia.get('duration')
-				if not duration:
-					duration = '0'
-				duration = ConvertTimeStamp(duration)
+				duration = ConvertTimeStamp(GetRegInfo(myMedia, 'duration', '0'))
 				myRow['Duration'] = duration.encode('utf8')
 				# Get the Directors
 				Directors = myMedia.xpath('Director/@tag')
@@ -471,10 +441,8 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				Collection = WrapStr(Collection)
 				myRow['Collections'] = Collection.encode('utf8')
 				# Get the original title
-				originalTitle = myMedia.get('originalTitle')
-				if not originalTitle:
-					originalTitle = ''
-				myRow['Original Title'] = originalTitle.encode('utf8')
+				myRow['Original Title'] = GetRegInfo(myMedia, 'originalTitle')
+
 				# Get Added at
 				addedAt = (Datetime.FromTimestamp(float(myMedia.get('addedAt')))).strftime('%m/%d/%Y')
 				myRow['Added'] = addedAt.encode('utf8')
@@ -530,24 +498,42 @@ def scanMovieDB(myMediaURL, myCSVFile):
 
 # ToDo end
 			bScanStatusCount += 1
-			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, title))
+			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, GetRegInfo(myMedia, 'title')))
 		return	
 	except:
 		Log.Critical("Detected an exception in scanMovieDB Extended")
 		bScanStatus = 99
 		raise	
 	finally:
-		print "******* Ending scanMovieDB ***********"
 		Log.Debug("******* Ending scanMovieDB ***********")
+		csvfile.close
 
 ####################################################################################################
 # This function will return info from extended page for movies
 ####################################################################################################
 @route(PREFIX + '/GetExtInfo')
 def GetExtInfo(ExtInfo, myField):
-	myLookUp = ExtInfo.xpath('Media/@' + myField)[0]
-	if not myLookUp:
+	try:
+		myLookUp = ExtInfo.xpath('Media/@' + myField)[0]
+		if not myLookUp:
+			myLookUp = ''
+	except:
 		myLookUp = ''
+		Log.Debug('Failed to lookup field %s' %(myField))
+	return myLookUp.encode('utf8')
+
+####################################################################################################
+# This function will return info from regular fields for a movies
+####################################################################################################
+@route(PREFIX + '/GetRegInfo')
+def GetRegInfo(myMedia, myField, default = ''):
+	try:
+		myLookUp = myMedia.get(WrapStr(myField))
+		if not myLookUp:
+			myLookUp = WrapStr(default)
+	except:
+		myLookUp = WrapStr(default)
+		Log.Debug('Failed to lookup field %s' %(myField))
 	return myLookUp.encode('utf8')
 
 ####################################################################################################
