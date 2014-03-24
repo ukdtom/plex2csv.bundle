@@ -18,11 +18,23 @@
 		"default":"40"
 	},	
 	{
+		"id":"Seperator",
+		"label":"Seperator, with multiple info in same field",
+		"type":"text",
+		"default":" - "
+	},	
+	{
 		"id": "Movie_Level",
 		"label": "Movie Export Level",
 		"type": "enum",
 		"values" : ["Simple","Basic","Extended", "Extreme"],
 		"default": "Basic"
+	},
+	{
+		"id": "TV_Level",
+		"label": "TV Export Level",
+		"type": "enum",
+		"values" : ["Simple","Basic"],
+		"default": "Basic"
 	}
-
 ]
