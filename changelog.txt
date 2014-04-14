@@ -1,3 +1,9 @@
+V0.0.0.15:
+- Added Extreme 2 level to movies
+-- This level will now export info about the different parts of a movie, 
+-- like indexes, duration of the different parts of the movie, as well as the filename 
+-- with the full path
+
 V0.0.0.14:
 - Added some code to do wrapping on extended fields, if needed
 - Added seperator to Prefs, that's used to seperate multiple info in the same field, like actors
