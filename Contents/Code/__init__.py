@@ -17,7 +17,7 @@ import csv
 import datetime
 from textwrap import wrap, fill
 
-VERSION = ' V0.0.0.15'
+VERSION = ' V0.0.0.16'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -285,18 +285,15 @@ def getMovieHeader():
 			'Container',
 			'Video FrameRate'
 			)
-	if Prefs['Movie_Level'] in ['Extreme 2']:
-			# Part info
+	# Part info
+	if Prefs['Movie_Level'] in ['Extreme 2']:			
 		fieldnames = fieldnames + (
-# ToDo
 			'Part File',
 			'Part Size',
 			'Part Indexed',
 			'Part Duration',
 			'Part Container'
-# ToDo end
 			)
-
 	return fieldnames
 
 ####################################################################################################
@@ -588,13 +585,16 @@ def getTVHeader():
 	# Extended fields
 	if Prefs['TV_Level'] in ['Extended','Extreme']:
 		fieldnames = fieldnames + (
-			
+			'Part Duration',
+			'Part File',
+			'Part Size',
+			'Part Indexed',
+			'Part Container'			
 			)
 	# Extreme fields
 	if Prefs['TV_Level'] in ['Extreme']:
 		fieldnames = fieldnames + (			
 			)
-
 	return fieldnames
 
 ####################################################################################################
@@ -707,7 +707,26 @@ def scanShowDB(myMediaURL, myCSVFile):
 					myRow['Updated'] = updatedAt.encode('utf8')
 				# Everything is gathered, so let's write the row
 				csvwriter.writerow(myRow)
-
+				# Now for parts info, on a seperate row
+				myRow = {}
+				if Prefs['TV_Level'] in ['Extended']:
+					myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia2, 'ratingKey')
+					myRow = {}
+					parts = XML.ElementFromURL(myExtendedInfoURL).xpath('//Part')
+					for part in parts:
+						# File Name of this Part
+						myRow['Part File'] = GetMoviePartInfo(part, 'file', 'N/A')
+						# File size of this part
+						myRow['Part Size'] = GetMoviePartInfo(part, 'size', 'N/A')
+						# Is This part Indexed
+						myRow['Part Indexed'] = GetMoviePartInfo(part, 'indexes', 'N/A')
+						# Part Container
+						myRow['Part Container'] = GetMoviePartInfo(part, 'container', 'N/A')
+						# Part Duration
+						partDuration = ConvertTimeStamp(GetMoviePartInfo(part, 'duration', '0'))
+						myRow['Part Duration'] = partDuration.encode('utf8')								
+						csvwriter.writerow(myRow)
+				# Extended ended
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, GetRegInfo(myMedia, 'grandparentTitle') + '-' + GetRegInfo(myMedia, 'title')))
 		return
 	except:
