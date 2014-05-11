@@ -34,7 +34,7 @@
 		"id": "TV_Level",
 		"label": "TV Export Level",
 		"type": "enum",
-		"values" : ["Simple","Basic","Extended"],
+		"values" : ["Simple","Basic","Extended", "Extreme"],
 		"default": "Basic"
 	}
 ]
