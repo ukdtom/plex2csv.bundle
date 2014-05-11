@@ -1,3 +1,8 @@
+V0.0.0.17:
+- Added Extreme level to TV-Seris
+-- This level was formerly known as the extended level
+-- The Extended level now instead adds resolution info etc. about a show
+
 V0.0.0.16:
 - Added Extended level to TV-Series
 -- This level will now export info about the different parts of an episode, 
