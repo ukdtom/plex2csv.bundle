@@ -17,7 +17,7 @@ import csv
 import datetime
 from textwrap import wrap, fill
 
-VERSION = ' V0.0.0.17'
+VERSION = ' V0.0.0.18'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -26,6 +26,7 @@ PREFIX = '/applications/Plex2csv'
 
 bScanStatus = 0			# Current status of the background scan
 initialTimeOut = 17		# When starting a scan, how long in seconds to wait before displaying a status page. Needs to be at least 1.
+sectiontype = ''		# Type of section been exported
 
 ####################################################################################################
 # Start function
@@ -47,6 +48,7 @@ def Start():
 @route(PREFIX + '/MainMenu')
 def MainMenu(random=0):
 	Log.Debug("**********  Starting MainMenu  **********")
+	global sectiontype
 	oc = ObjectContainer()
 	try:
 		if ValidateExportPath():
@@ -205,7 +207,7 @@ def backgroundScanThread(title, key, sectiontype):
 	Log.Debug("*******  Starting backgroundScanThread  ***********")
 	global bScanStatus
 	global bScanStatusCount
-	global bScanStatusCountOf
+	global bScanStatusCountOf	
 	try:
 		bScanStatus = 1
 		Log.Debug("Section type is %s" %(sectiontype))
@@ -214,7 +216,11 @@ def backgroundScanThread(title, key, sectiontype):
 		# Get current date and time
 		timestr = time.strftime("%Y%m%d-%H%M%S")
 		# Generate Output FileName
-		myCSVFile = os.path.join(Prefs['Export_Path'], 'Plex2CSV', title + '-' + timestr + '.csv')
+		if sectiontype == 'show':
+			myLevel = Prefs['TV_Level']
+		if sectiontype == 'movie':
+			myLevel = Prefs['Movie_Level']
+		myCSVFile = os.path.join(Prefs['Export_Path'], 'Plex2CSV', title + '-' + myLevel + '-' + timestr + '.csv')
 		Log.Debug('Output file is named %s' %(myCSVFile))
 		# Scan the database based on the type of section
 		if sectiontype == "movie":
@@ -330,7 +336,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		csvwriter.writeheader()
 		for myMedia in myMedias:				
 			myRow = {}
-			# Add all for Simple Export
+# Add all for Simple Export and above
 			# Get Media ID
 			myRow['Media ID'] = GetRegInfo(myMedia, 'ratingKey')
 			# Get Extended info if needed
@@ -364,8 +370,11 @@ def scanMovieDB(myMediaURL, myCSVFile):
 					Genre = Genre + mySepChar + myGenre
 			Genre = WrapStr(Genre)
 			myRow['Genres'] = Genre.encode('utf8')
-			# And now for Basic Export
-			if Prefs['Movie_Level'] in ['Basic','Extended','Extreme','Extreme 2']:
+			# And now for Basic Export or higher if needed, else write out the row
+			if Prefs['Movie_Level'] not in ['Basic','Extended','Extreme','Extreme 2']:
+				csvwriter.writerow(myRow)
+			else:
+# Basic and above
 				# Get the Tag Line
 				myRow['Tagline'] = GetRegInfo(myMedia, 'tagline')
 				# Get the Release Date
@@ -431,73 +440,80 @@ def scanMovieDB(myMediaURL, myCSVFile):
 										Role = Role + mySepChar + 'Actor: ' + myActor
 				Role = WrapStr(Role)
 				myRow['Roles'] = Role.encode('utf8')
-			# Here goes extended stuff, not part of basic or simple
-			if Prefs['Movie_Level'] in ['Extended','Extreme','Extreme 2']:
-				# Get Collections
-				Collections = ExtInfo.xpath('Collection/@tag')
-				if not Collections:
-					Collections = ['']
-				Collection = ''
-				for myCollection in Collections:
-					if Collection == '':
-						Collection = myCollection
-					else:
-						Collection = Collection + mySepChar + myCollection
-				Collection = WrapStr(Collection)
-				myRow['Collections'] = Collection.encode('utf8')
-				# Get the original title
-				myRow['Original Title'] = GetRegInfo(myMedia, 'originalTitle')
-
-				# Get Added at
-				addedAt = (Datetime.FromTimestamp(float(myMedia.get('addedAt')))).strftime('%m/%d/%Y')
-				myRow['Added'] = addedAt.encode('utf8')
-				# Get Updated at
-				# If myMedia.get('updatedAt') has a value then change the time format else set it to blank.
-				if myMedia.get('updatedAt'): updatedAt = (Datetime.FromTimestamp(float(myMedia.get('updatedAt')))).strftime('%m/%d/%Y')
-				else: updatedAt = ""
-				myRow['Updated'] = updatedAt.encode('utf8')
-			if Prefs['Movie_Level'] in ['Extreme','Extreme 2']:
-				# Get Video Resolution
-				myRow['Video Resolution'] = GetExtInfo(ExtInfo, 'videoResolution')
-				# Get Bitrate
-				myRow['Bitrate'] = GetExtInfo(ExtInfo, 'bitrate')
-				# Get Width
-				myRow['Width'] = GetExtInfo(ExtInfo, 'width')
-				# Get Height
-				myRow['Height'] = GetExtInfo(ExtInfo, 'height')
-				# Get Aspect Ratio
-				myRow['Aspect Ratio'] = GetExtInfo(ExtInfo, 'aspectRatio')
-				# Get Audio Channels
-				myRow['Audio Channels'] = GetExtInfo(ExtInfo, 'audioChannels')
-				# Get Audio Codec
-				myRow['Audio Codec'] = GetExtInfo(ExtInfo, 'audioCodec')
-				# Get Video Codec
-				myRow['Video Codec'] = GetExtInfo(ExtInfo, 'videoCodec')
-				# Get Container
-				myRow['Container'] = GetExtInfo(ExtInfo, 'container')
-				# Get Video FrameRate
-				myRow['Video FrameRate'] = GetExtInfo(ExtInfo, 'videoFrameRate')
-			# Everything is gathered, so let's write the row
-			csvwriter.writerow(myRow)
-			# Now for parts info, on a seperate row
-			myRow = {}
-			if Prefs['Movie_Level'] in ['Extreme 2']:
-				myRow = {}
-				parts = XML.ElementFromURL(myExtendedInfoURL).xpath('//Part')
-				for part in parts:
-					# File Name of this Part
-					myRow['Part File'] = GetMoviePartInfo(part, 'file', 'N/A')
-					# File size of this part
-					myRow['Part Size'] = GetMoviePartInfo(part, 'size', 'N/A')
-					# Is This part Indexed
-					myRow['Part Indexed'] = GetMoviePartInfo(part, 'indexes', 'N/A')
-					# Part Container
-					myRow['Part Container'] = GetMoviePartInfo(part, 'container', 'N/A')
-					# Part Duration
-					partDuration = ConvertTimeStamp(GetMoviePartInfo(part, 'duration', '0'))
-					myRow['Part Duration'] = partDuration.encode('utf8')								
+				# End here, or higher level selected by my master?
+				if Prefs['Movie_Level'] not in ['Extended','Extreme','Extreme 2']:
 					csvwriter.writerow(myRow)
-			# Extreme 2 ended
+				else:
+# Extended or higher
+					# Here goes extended stuff, not part of basic or simple
+					# Get Collections
+					Collections = ExtInfo.xpath('Collection/@tag')
+					if not Collections:
+						Collections = ['']
+					Collection = ''
+					for myCollection in Collections:
+						if Collection == '':
+							Collection = myCollection
+						else:
+							Collection = Collection + mySepChar + myCollection
+					Collection = WrapStr(Collection)
+					myRow['Collections'] = Collection.encode('utf8')
+					# Get the original title
+					myRow['Original Title'] = GetRegInfo(myMedia, 'originalTitle')
+					# Get Added at
+					addedAt = (Datetime.FromTimestamp(float(GetRegInfo(myMedia, 'addedAt', '0')))).strftime('%m/%d/%Y')
+					myRow['Added'] = addedAt.encode('utf8')
+					# Get Updated at
+					updatedAt = (Datetime.FromTimestamp(float(GetRegInfo(myMedia, 'updatedAt', '0')))).strftime('%m/%d/%Y')
+					myRow['Updated'] = updatedAt.encode('utf8')
+					if Prefs['Movie_Level'] not in ['Extreme','Extreme 2']:
+						csvwriter.writerow(myRow)
+					else:
+# Extreme or higher
+						# Get Video Resolution
+						myRow['Video Resolution'] = GetExtInfo(ExtInfo, 'videoResolution')
+						# Get Bitrate
+						myRow['Bitrate'] = GetExtInfo(ExtInfo, 'bitrate')
+						# Get Width
+						myRow['Width'] = GetExtInfo(ExtInfo, 'width')
+						# Get Height
+						myRow['Height'] = GetExtInfo(ExtInfo, 'height')
+						# Get Aspect Ratio
+						myRow['Aspect Ratio'] = GetExtInfo(ExtInfo, 'aspectRatio')
+						# Get Audio Channels
+						myRow['Audio Channels'] = GetExtInfo(ExtInfo, 'audioChannels')
+						# Get Audio Codec
+						myRow['Audio Codec'] = GetExtInfo(ExtInfo, 'audioCodec')
+						# Get Video Codec
+						myRow['Video Codec'] = GetExtInfo(ExtInfo, 'videoCodec')
+						# Get Container
+						myRow['Container'] = GetExtInfo(ExtInfo, 'container')
+						# Get Video FrameRate
+						myRow['Video FrameRate'] = GetExtInfo(ExtInfo, 'videoFrameRate')
+						# Everything is gathered, so let's write the row if needed
+						if Prefs['Movie_Level'] in ['Extreme 2']:									
+							parts = XML.ElementFromURL(myExtendedInfoURL).xpath('//Part')
+							if len(parts)>1:
+								csvwriter.writerow(myRow)
+								myRow = {}						
+						else:						
+							csvwriter.writerow(myRow)
+						if Prefs['Movie_Level'] in ['Extreme 2']:
+							parts = XML.ElementFromURL(myExtendedInfoURL).xpath('//Part')
+							for part in parts:
+								# File Name of this Part
+								myRow['Part File'] = GetMoviePartInfo(part, 'file', 'N/A')
+								# File size of this part
+								myRow['Part Size'] = GetMoviePartInfo(part, 'size', 'N/A')
+								# Is This part Indexed
+								myRow['Part Indexed'] = GetMoviePartInfo(part, 'indexes', 'N/A')
+								# Part Container
+								myRow['Part Container'] = GetMoviePartInfo(part, 'container', 'N/A')
+								# Part Duration
+								partDuration = ConvertTimeStamp(GetMoviePartInfo(part, 'duration', '0'))
+								myRow['Part Duration'] = partDuration.encode('utf8')								
+								csvwriter.writerow(myRow)
+						# Extreme 2 ended
 			bScanStatusCount += 1
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, GetRegInfo(myMedia, 'title')))
 		return	
@@ -543,7 +559,7 @@ def GetExtInfo(ExtInfo, myField, default = ''):
 @route(PREFIX + '/GetRegInfo')
 def GetRegInfo(myMedia, myField, default = ''):
 	try:
-		if myField == 'rating':			
+		if myField in ['rating']:			
 			myLookUp = "{0:.1f}".format(float(myMedia.get(myField)))
 		else:			
 			myLookUp = WrapStr(myMedia.get(myField))
@@ -634,6 +650,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 			Log.Debug("Show %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))
 			myMedias2 = XML.ElementFromURL(myURL).xpath('//Video')
 			for myMedia2 in myMedias2:
+# Simple and above
 				myRow = {}
 				# Get episode rating key
 				myRow['Id'] = GetRegInfo(myMedia2, 'ratingKey')
@@ -654,7 +671,10 @@ def scanShowDB(myMediaURL, myCSVFile):
 				# Get Rating
 				myRow['Rating'] = GetRegInfo(myMedia2, 'rating')
 				# And now for Basic Export
-				if Prefs['TV_Level'] in ['Basic','Extended','Extreme']:
+				if Prefs['TV_Level'] not in ['Basic','Extended','Extreme']:
+					csvwriter.writerow(myRow)
+				else:
+# Basic and above
 					# Get Studio
 					myRow['Studio'] = GetRegInfo(myMedia2, 'studio')
 					# Get Originally Aired
@@ -711,69 +731,70 @@ def scanShowDB(myMediaURL, myCSVFile):
 					duration = ConvertTimeStamp(GetRegInfo(myMedia2, 'duration', '0'))
 					myRow['Duration'] = duration.encode('utf8')
 					# Get Added at
-					addedAt = (Datetime.FromTimestamp(float(myMedia2.get('addedAt')))).strftime('%m/%d/%Y')
+					addedAt = (Datetime.FromTimestamp(float(GetRegInfo(myMedia2, 'addedAt', '0')))).strftime('%m/%d/%Y')
 					myRow['Added'] = addedAt.encode('utf8')
 					# Get Updated at
-					# If myMedia.get('updatedAt') has a value then change the time format else set it to blank.
-					if myMedia.get('updatedAt'): updatedAt = (Datetime.FromTimestamp(float(myMedia2.get('updatedAt')))).strftime('%m/%d/%Y')
-					else: updatedAt = ""
+					updatedAt = (Datetime.FromTimestamp(float(GetRegInfo(myMedia2, 'updatedAt', '0')))).strftime('%m/%d/%Y')
 					myRow['Updated'] = updatedAt.encode('utf8')
-				# Everything is gathered, so let's write the row
-				csvwriter.writerow(myRow)
-				# Now for media info, on a seperate row
-				myRow = {}
-				if Prefs['TV_Level'] in ['Extended','Extreme']:
-					myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia2, 'ratingKey')
-					myRow = {}
-					Medias2 = XML.ElementFromURL(myExtendedInfoURL).xpath('//Media')
-					for Media in Medias2:
-						# VideoResolution
-						myRow['Video Resolution'] = GetMoviePartInfo(Media, 'videoResolution', 'N/A')
-						# id
-						myRow['Media Id'] = GetMoviePartInfo(Media, 'id', 'N/A')
-						# Duration
-						Mediaduration = ConvertTimeStamp(GetRegInfo(Media, 'duration', '0'))
-						myRow['Media Duration'] = Mediaduration.encode('utf8')
-						# Bitrate
-						myRow['Bit Rate'] = GetMoviePartInfo(Media, 'bitrate', 'N/A')
-						# Width
-						myRow['Width'] = GetMoviePartInfo(Media, 'width', 'N/A')
-						# Height
-						myRow['Height'] = GetMoviePartInfo(Media, 'height', 'N/A')
-						# AspectRatio
-						myRow['Aspect Ratio'] = GetMoviePartInfo(Media, 'aspectRatio', 'N/A')
-						# AudioChannels
-						myRow['Audio Channels'] = GetMoviePartInfo(Media, 'audioChannels', 'N/A')
-						# AudioCodec
-						myRow['Audio Codec'] = GetMoviePartInfo(Media, 'audioCodec', 'N/A')
-						# VideoCodec
-						myRow['Video Codec'] = GetMoviePartInfo(Media, 'videoCodec', 'N/A')
-						# Container
-						myRow['Container'] = GetMoviePartInfo(Media, 'container', 'N/A')
-						# VideoFrameRate
-						myRow['Video FrameRate'] = GetMoviePartInfo(Media, 'videoFrameRate', 'N/A')
-				csvwriter.writerow(myRow)
-				# Extended ended
-				# Now for parts info, on a seperate row
-				myRow = {}
-				if Prefs['TV_Level'] in ['Extreme']:
-					myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia2, 'ratingKey')
-					myRow = {}
-					parts = XML.ElementFromURL(myExtendedInfoURL).xpath('//Part')
-					for part in parts:
-						# File Name of this Part
-						myRow['Part File'] = GetMoviePartInfo(part, 'file', 'N/A')
-						# File size of this part
-						myRow['Part Size'] = GetMoviePartInfo(part, 'size', 'N/A')
-						# Is This part Indexed
-						myRow['Part Indexed'] = GetMoviePartInfo(part, 'indexes', 'N/A')
-						# Part Container
-						myRow['Part Container'] = GetMoviePartInfo(part, 'container', 'N/A')
-						# Part Duration
-						partDuration = ConvertTimeStamp(GetMoviePartInfo(part, 'duration', '0'))
-						myRow['Part Duration'] = partDuration.encode('utf8')								
+					# Everything is gathered, so let's write the row if needed
+					if Prefs['TV_Level'] not in ['Extended','Extreme']:
 						csvwriter.writerow(myRow)
-				# Extended ended
+					else:		
+# Extended or above		
+						myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia2, 'ratingKey')
+						Medias2 = XML.ElementFromURL(myExtendedInfoURL).xpath('//Media')	
+						if len(Medias2)>1:
+							csvwriter.writerow(myRow)
+							myRow = {}										
+						for Media in Medias2:
+							# VideoResolution
+							myRow['Video Resolution'] = GetMoviePartInfo(Media, 'videoResolution', 'N/A')
+							# id
+							myRow['Media Id'] = GetMoviePartInfo(Media, 'id', 'N/A')
+							# Duration
+							Mediaduration = ConvertTimeStamp(GetRegInfo(Media, 'duration', '0'))
+							myRow['Media Duration'] = Mediaduration.encode('utf8')
+							# Bitrate
+							myRow['Bit Rate'] = GetMoviePartInfo(Media, 'bitrate', 'N/A')
+							# Width
+							myRow['Width'] = GetMoviePartInfo(Media, 'width', 'N/A')
+							# Height
+							myRow['Height'] = GetMoviePartInfo(Media, 'height', 'N/A')
+							# AspectRatio
+							myRow['Aspect Ratio'] = GetMoviePartInfo(Media, 'aspectRatio', 'N/A')
+							# AudioChannels
+							myRow['Audio Channels'] = GetMoviePartInfo(Media, 'audioChannels', 'N/A')
+							# AudioCodec
+							myRow['Audio Codec'] = GetMoviePartInfo(Media, 'audioCodec', 'N/A')
+							# VideoCodec
+							myRow['Video Codec'] = GetMoviePartInfo(Media, 'videoCodec', 'N/A')
+							# Container
+							myRow['Container'] = GetMoviePartInfo(Media, 'container', 'N/A')
+							# VideoFrameRate
+							myRow['Video FrameRate'] = GetMoviePartInfo(Media, 'videoFrameRate', 'N/A')
+						# Everything is gathered, so let's write the row if needed
+						if Prefs['TV_Level'] not in ['Extreme']:
+							csvwriter.writerow(myRow)
+						else:
+# Extreme level
+							parts = XML.ElementFromURL(myExtendedInfoURL).xpath('//Part')
+							if len(parts)>1:
+								csvwriter.writerow(myRow)
+								myRow = {}							
+							for part in parts:
+								# File Name of this Part
+								myRow['Part File'] = GetMoviePartInfo(part, 'file', 'N/A')
+								# File size of this part
+								myRow['Part Size'] = GetMoviePartInfo(part, 'size', 'N/A')
+								# Is This part Indexed
+								myRow['Part Indexed'] = GetMoviePartInfo(part, 'indexes', 'N/A')
+								# Part Container
+								myRow['Part Container'] = GetMoviePartInfo(part, 'container', 'N/A')
+								# Part Duration
+								partDuration = ConvertTimeStamp(GetMoviePartInfo(part, 'duration', '0'))
+								myRow['Part Duration'] = partDuration.encode('utf8')								
+								csvwriter.writerow(myRow)
+						# Extreme ended
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, GetRegInfo(myMedia, 'grandparentTitle') + '-' + GetRegInfo(myMedia, 'title')))
 		return
 	except:

@@ -13,3 +13,6 @@ https://github.com/ukdtom/plex2csv.bundle/issues
 
 /Tommy
 
+Huge thanks goes to srazer for helping with the code, and to 
+benadderson for all the testing of this
+
