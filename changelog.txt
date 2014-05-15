@@ -1,3 +1,9 @@
+V0.0.0.18:
+- Fixed a bug if timestam was missing
+- Added algorithm so when exporting media or part info, it would only
+  skip to a new line, if more than 1 item was present
+- Added export level to the exported filename
+
 V0.0.0.17:
 - Added Extreme level to TV-Seris
 -- This level was formerly known as the extended level
