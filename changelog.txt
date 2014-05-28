@@ -1,3 +1,6 @@
+V0.0.0.19:
+- Fixed a bug if a field was containing a CR, LF or CRLF caracters, since that would break the output
+
 V0.0.0.18:
 - Fixed a bug if timestam was missing
 - Added algorithm so when exporting media or part info, it would only

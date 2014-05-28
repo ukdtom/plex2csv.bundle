@@ -17,7 +17,7 @@ import csv
 import datetime
 from textwrap import wrap, fill
 
-VERSION = ' V0.0.0.18'
+VERSION = ' V0.0.0.19'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -32,7 +32,7 @@ sectiontype = ''		# Type of section been exported
 # Start function
 ####################################################################################################
 def Start():
-	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
+#	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
 	Log.Debug("*******  Started %s on %s  ***********" %(NAME  + VERSION, Platform.OS))
 	Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
 	ObjectContainer.art = R(ART)
@@ -353,7 +353,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			myRow['Year'] = GetRegInfo(myMedia, 'year')
 			# Get Rating
 			myRow['Rating'] = GetRegInfo(myMedia, 'rating')
-			# Get Summery
+			# Get Summary
 			myRow['Summary'] = GetRegInfo(myMedia, 'summary')
 			# Get Genres
 			if Prefs['Movie_Level'] in ['Extended','Extreme','Extreme 2']:
@@ -562,12 +562,15 @@ def GetRegInfo(myMedia, myField, default = ''):
 		if myField in ['rating']:			
 			myLookUp = "{0:.1f}".format(float(myMedia.get(myField)))
 		else:			
-			myLookUp = WrapStr(myMedia.get(myField))
+			myLookUp = WrapStr(fixCRLF(myMedia.get(myField)))
 		if not myLookUp:
 			myLookUp = WrapStr(default)
 	except:
 		myLookUp = WrapStr(default)
 		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
+	
+
+
 	return myLookUp.encode('utf8')
 
 ####################################################################################################
@@ -835,6 +838,18 @@ def getMusicHeader():
 			'Rating',			
 			)
 	return fieldnames
+
+####################################################################################################
+# This function will replace CRLF, CR and LF from a string with a space
+####################################################################################################
+@route(PREFIX + '/fixCRLF')
+def fixCRLF(myString):
+	Log.Debug('Fixing string: %s' %(myString))
+	myString = myString.decode('utf-8').replace('\r\n', ' ')
+	myString = myString.decode('utf-8').replace('\n', ' ')
+	myString = myString.decode('utf-8').replace('\r', ' ')
+	Log.Debug('Returning string: %s' %(myString))
+	return myString
 
 ####################################################################################################
 # This function will scan a Music section.
