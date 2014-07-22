@@ -16,8 +16,9 @@ import io
 import csv
 import datetime
 from textwrap import wrap, fill
+import re
 
-VERSION = ' V0.0.0.19'
+VERSION = ' V0.0.0.20'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -83,9 +84,9 @@ def ValidateExportPath():
 		#Let's see if we can add out subdirectory below this
 		if os.path.exists(myPath):
 			Log.Debug('Master entered a path that already existed as: %s' %(myPath))
-			if not os.path.exists(os.path.join(myPath, 'Plex2CSV')):
-				os.makedirs(os.path.join(myPath, 'Plex2CSV'))
-				Log.Debug('Created directory named: %s' %(os.path.join(myPath, 'Plex2CSV')))
+			if not os.path.exists(os.path.join(myPath, NAME)):
+				os.makedirs(os.path.join(myPath, NAME))
+				Log.Debug('Created directory named: %s' %(os.path.join(myPath, NAME)))
 				return True
 			else:
 				Log.Debug('Path verified as already present')
@@ -113,7 +114,7 @@ def complete(title=''):
 	global bScanStatus
 	Log.Debug("*******  All done, tell my Master  ***********")
 	title = ('Export Completed for %s' %(title))
-	message = 'Check the directory: %s' %(os.path.join(Prefs['Export_Path'], 'Plex2CSV')) 
+	message = 'Check the directory: %s' %(os.path.join(Prefs['Export_Path'], NAME)) 
 	oc2 = ObjectContainer(title1=title, no_cache=True, message=message)
 	oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="Go to the Main Menu"))
 	# Reset the scanner status
@@ -220,7 +221,12 @@ def backgroundScanThread(title, key, sectiontype):
 			myLevel = Prefs['TV_Level']
 		if sectiontype == 'movie':
 			myLevel = Prefs['Movie_Level']
-		myCSVFile = os.path.join(Prefs['Export_Path'], 'Plex2CSV', title + '-' + myLevel + '-' + timestr + '.csv')
+		# Remove invalid caracters, if on Windows......
+		print title
+		newtitle = re.sub('[\/[:#*?"<>|]', '_', title)
+		print newtitle
+		myCSVFile = os.path.join(Prefs['Export_Path'], NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
+		print myCSVFile
 		Log.Debug('Output file is named %s' %(myCSVFile))
 		# Scan the database based on the type of section
 		if sectiontype == "movie":
@@ -332,7 +338,10 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		bScanStatusCountOf = len(myMedias)
 		csvfile = io.open(myCSVFile,'wb')
 		# Create output file, and print the header
-		csvwriter = csv.DictWriter(csvfile, fieldnames=getMovieHeader())
+
+		print Prefs['Delimiter']
+
+		csvwriter = csv.DictWriter(csvfile, fieldnames=getMovieHeader(), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		csvwriter.writeheader()
 		for myMedia in myMedias:				
 			myRow = {}
@@ -644,7 +653,8 @@ def scanShowDB(myMediaURL, myCSVFile):
 		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Directory')
 		bScanStatusCountOf = len(myMedias)
 		csvfile = io.open(myCSVFile,'wb')
-		csvwriter = csv.DictWriter(csvfile, fieldnames=getTVHeader())
+
+		csvwriter = csv.DictWriter(csvfile, fieldnames=getTVHeader(), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		csvwriter.writeheader()
 		for myMedia in myMedias:
 			bScanStatusCount += 1

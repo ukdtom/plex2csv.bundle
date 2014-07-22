@@ -1,3 +1,8 @@
+V0.0.0.20:
+- Fixed issue 27: Added delimiter to the preferences, allowing user to specify which caracter to be used as field seperator
+- Added a forced quote for fields when exporting
+- Fixed issue 28: Section containing invalid caracters will not save
+
 V0.0.0.19:
 - Fixed a bug if a field was containing a CR, LF or CRLF caracters, since that would break the output
 

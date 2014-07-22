@@ -6,10 +6,16 @@
 		"default":"None"
 	},
 	{
+		"id":"Delimiter",
+		"label":"Delimiter between fields in CSV file....NOTE.....Only one character!!!",
+		"type":"text",
+		"default":","
+	}, 
+	{
 		"id":"Line_Wrap",
 		"label":"Wrap lines",
 		"type":"bool",
-		"default":"false"
+		"default":"true"
 	},
 	{
 		"id":"Line_Length",
