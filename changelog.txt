@@ -1,3 +1,6 @@
+V0.0.0.21:
+- Made an error, since I left some debug console printing in the code, that could cause the plug-in to fail
+
 V0.0.0.20:
 - Fixed issue 27: Added delimiter to the preferences, allowing user to specify which caracter to be used as field seperator
 - Added a forced quote for fields when exporting
