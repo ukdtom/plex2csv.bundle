@@ -18,7 +18,7 @@ import datetime
 from textwrap import wrap, fill
 import re
 
-VERSION = ' V0.0.0.20'
+VERSION = ' V0.0.0.21'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -222,11 +222,8 @@ def backgroundScanThread(title, key, sectiontype):
 		if sectiontype == 'movie':
 			myLevel = Prefs['Movie_Level']
 		# Remove invalid caracters, if on Windows......
-		print title
 		newtitle = re.sub('[\/[:#*?"<>|]', '_', title)
-		print newtitle
 		myCSVFile = os.path.join(Prefs['Export_Path'], NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
-		print myCSVFile
 		Log.Debug('Output file is named %s' %(myCSVFile))
 		# Scan the database based on the type of section
 		if sectiontype == "movie":
@@ -338,9 +335,6 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		bScanStatusCountOf = len(myMedias)
 		csvfile = io.open(myCSVFile,'wb')
 		# Create output file, and print the header
-
-		print Prefs['Delimiter']
-
 		csvwriter = csv.DictWriter(csvfile, fieldnames=getMovieHeader(), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		csvwriter.writeheader()
 		for myMedia in myMedias:				
