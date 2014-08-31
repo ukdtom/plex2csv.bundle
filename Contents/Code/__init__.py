@@ -33,7 +33,7 @@ sectiontype = ''		# Type of section been exported
 # Start function
 ####################################################################################################
 def Start():
-#	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
+	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
 	Log.Debug("*******  Started %s on %s  ***********" %(NAME  + VERSION, Platform.OS))
 	Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
 	ObjectContainer.art = R(ART)
@@ -256,6 +256,7 @@ def getMovieHeader():
 	# Simple fields
 	fieldnames = ('Media ID', 
 			'Title',
+			'Sort title',
 			'Studio',
 			'Content Rating',
 			'Summary',
@@ -272,6 +273,8 @@ def getMovieHeader():
 			'Directors',
 			'Roles',
 			'Duration',
+			'Locked Fields',
+			'Extras'
 			)
 	# Extended fields
 	if Prefs['Movie_Level'] in ['Extended','Extreme', 'Extreme 2']:
@@ -349,11 +352,13 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			# Get Media ID
 			myRow['Media ID'] = GetRegInfo(myMedia, 'ratingKey')
 			# Get Extended info if needed
-			if Prefs['Movie_Level'] in ['Extended','Extreme','Extreme 2']:
-				myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia, 'ratingKey')		
+			if Prefs['Movie_Level'] in ['Basic','Extended','Extreme','Extreme 2']:
+				myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia, 'ratingKey') + '?includeExtras=1'
 				ExtInfo = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
 			# Get title
 			myRow['Title'] = GetRegInfo(myMedia, 'title')
+			# Get Sorted title
+			myRow['Sort title'] = GetRegInfo(myMedia, 'titleSort')
 			# Get Studio
 			myRow['Studio'] = GetRegInfo(myMedia, 'studio')
 			# Get contentRating
@@ -416,6 +421,34 @@ def scanMovieDB(myMediaURL, myCSVFile):
 						Director = Director + mySepChar + myDirector
 				Director = WrapStr(Director)
 				myRow['Directors'] = Director.encode('utf8')
+				# Get Locked fields
+				Fields = ExtInfo.xpath('Field/@name')
+				if not Fields:
+					Fields = ['']
+				Field = ''
+				for myField in Fields:
+					if Field == '':
+						Field = myField
+					else:
+						Field = Field + mySepChar + myField
+				Director = WrapStr(Director)
+				myRow['Locked Fields'] = Field.encode('utf8')
+
+				# Got extras?
+				Extras = ExtInfo.xpath('//Extras/@size')
+				if not Extras:
+					Extra = '0'
+				else:
+					for myExtra in Extras:
+						Extra = myExtra								
+				Extra = WrapStr(Extra)
+				myRow['Extras'] = Extra.encode('utf8')
+
+
+
+
+
+
 				# Only if basic, and not others
 				if Prefs['Movie_Level'] in ['Basic']:
 					# Get Roles Basic

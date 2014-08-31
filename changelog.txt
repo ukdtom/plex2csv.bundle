@@ -3,6 +3,10 @@ V0.0.0.22:
 - Added list of admin locked fields to "Extend" mode for TV-Shows
 - Added count of extras for TV-Shows to "Extend" mode
 - Added "Episode Sort Title" to "Basic" mode for TV-Shows
+- Added list of admin locked fields to "Basic" mode for Movies
+- Added count of extras for Movies to "Basic" mode
+- Added "Sort title" to "Simple" mode for Movies
+
 
 V0.0.0.21:
 - Made an error, since I left some debug console printing in the code, that could cause the plug-in to fail
