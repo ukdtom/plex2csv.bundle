@@ -18,7 +18,7 @@ import datetime
 from textwrap import wrap, fill
 import re
 
-VERSION = ' V0.0.0.21'
+VERSION = ' V0.0.0.22'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -323,7 +323,7 @@ def WrapStr(myStr):
 ####################################################################################################
 @route(PREFIX + '/scanMovieDB')
 def scanMovieDB(myMediaURL, myCSVFile):
-	Log.Debug("******* Starting scanMovieDB with an URL of %s***********" %(myMediaURL))
+	Log.Debug("******* Starting scanMovieDB with an URL of %s ***********" %(myMediaURL))
 	Log.Debug('Movie Export level is %s' %(Prefs['Movie_Level']))
 	global bScanStatusCount
 	global bScanStatusCountOf
@@ -332,14 +332,20 @@ def scanMovieDB(myMediaURL, myCSVFile):
 	try:
 		mySepChar = Prefs['Seperator']
 		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Video')
+		Log.Debug("Retrieved myMedias okay")
 		bScanStatusCountOf = len(myMedias)
+		Log.Debug("Found %s items" %(bScanStatusCountOf))
+		Log.Debug("About to open file %s" %(myCSVFile))
 		csvfile = io.open(myCSVFile,'wb')
 		# Create output file, and print the header
 		csvwriter = csv.DictWriter(csvfile, fieldnames=getMovieHeader(), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
+		Log.Debug("Writing header")
 		csvwriter.writeheader()
+		Log.Debug("Walking medias")
 		for myMedia in myMedias:				
 			myRow = {}
 # Add all for Simple Export and above
+			Log.Debug("Starting Simple stuff")
 			# Get Media ID
 			myRow['Media ID'] = GetRegInfo(myMedia, 'ratingKey')
 			# Get Extended info if needed
@@ -378,6 +384,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				csvwriter.writerow(myRow)
 			else:
 # Basic and above
+				Log.Debug("Starting Basic stuff")
 				# Get the Tag Line
 				myRow['Tagline'] = GetRegInfo(myMedia, 'tagline')
 				# Get the Release Date
@@ -449,6 +456,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				else:
 # Extended or higher
 					# Here goes extended stuff, not part of basic or simple
+					Log.Debug("Starting Extended stuff")
 					# Get Collections
 					Collections = ExtInfo.xpath('Collection/@tag')
 					if not Collections:
@@ -585,6 +593,7 @@ def getTVHeader():
 	fieldnames = ('Id', 
 			'Series Title',
 			'Episode Title',
+			'Episode Sort Title',
 			'Year',
 			'Season',
 			'Episode',
@@ -593,7 +602,7 @@ def getTVHeader():
 			'Rating',			
 			)
 	# Basic fields
-	if (Prefs['TV_Level'] in ['Basic','Extended','Extreme']):
+	if (Prefs['TV_Level'] in ['Basic','Extended','Extreme', 'Extreme2']):
 		fieldnames = fieldnames + (
 			'Studio',
 			'Originally Aired',
@@ -606,7 +615,7 @@ def getTVHeader():
 			'Updated'			
 			)
 	# Extended fields
-	if Prefs['TV_Level'] in ['Extended','Extreme']:
+	if Prefs['TV_Level'] in ['Extended','Extreme', 'Extreme2']:
 		fieldnames = fieldnames + (
 			'Media Id',
 			'Video Resolution',
@@ -619,10 +628,12 @@ def getTVHeader():
 			'Audio Codec',
 			'Video Codec',
 			'Container',
-			'Video FrameRate'
+			'Video FrameRate',
+			'Locked fields',
+			'Extras'
 			)
 	# Extreme fields
-	if Prefs['TV_Level'] in ['Extreme']:
+	if Prefs['TV_Level'] in ['Extreme', 'Extreme2']:
 		fieldnames = fieldnames + (			
 			'Part Duration',
 			'Part File',
@@ -637,7 +648,7 @@ def getTVHeader():
 ####################################################################################################
 @route(PREFIX + '/scanShowDB')
 def scanShowDB(myMediaURL, myCSVFile):
-	Log.Debug("******* Starting scanShowDB with an URL of %s***********" %(myMediaURL))
+	Log.Debug("******* Starting scanShowDB with an URL of %s ***********" %(myMediaURL))
 	global bScanStatusCount
 	global bScanStatusCountOf
 	myMediaPaths = []
@@ -663,6 +674,8 @@ def scanShowDB(myMediaURL, myCSVFile):
 				myRow['Id'] = GetRegInfo(myMedia2, 'ratingKey')
 				# Get Serie Title
 				myRow['Series Title'] = GetRegInfo(myMedia2, 'grandparentTitle')
+				# Get Episode sort Title
+				myRow['Episode Sort Title'] = GetRegInfo(myMedia2, 'titleSort')
 				# Get Episode title
 				myRow['Episode Title'] = GetRegInfo(myMedia2, 'title')
 				# Get Year
@@ -748,7 +761,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 						csvwriter.writerow(myRow)
 					else:		
 # Extended or above		
-						myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia2, 'ratingKey')
+						myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia2, 'ratingKey') + '?checkFiles=1&includeExtras=1'
 						Medias2 = XML.ElementFromURL(myExtendedInfoURL).xpath('//Media')	
 						if len(Medias2)>1:
 							csvwriter.writerow(myRow)
@@ -779,11 +792,33 @@ def scanShowDB(myMediaURL, myCSVFile):
 							myRow['Container'] = GetMoviePartInfo(Media, 'container', 'N/A')
 							# VideoFrameRate
 							myRow['Video FrameRate'] = GetMoviePartInfo(Media, 'videoFrameRate', 'N/A')
+							# Get the Locked fields
+							Fields = Media.xpath('//Field/@name')
+							if not Fields:
+								Fields = ['']
+							Field = ''
+							for myField in Fields:
+								if Field == '':
+									Field = myField
+								else:
+									Field = Field + mySepChar + myField
+							Field = WrapStr(Field)
+							myRow['Locked fields'] = Field.encode('utf8')
+							# Got extras?
+							Extras = Media.xpath('//Extras/@size')
+							if not Extras:
+								Extra = '0'
+							else:
+								for myExtra in Extras:
+									Extra = myExtra								
+							Extra = WrapStr(Extra)
+							myRow['Extras'] = Extra.encode('utf8')
+
 						# Everything is gathered, so let's write the row if needed
 						if Prefs['TV_Level'] not in ['Extreme']:
 							csvwriter.writerow(myRow)
 						else:
-# Extreme level
+# Extreme level and above
 							parts = XML.ElementFromURL(myExtendedInfoURL).xpath('//Part')
 							if len(parts)>1:
 								csvwriter.writerow(myRow)
@@ -860,7 +895,7 @@ def fixCRLF(myString):
 ####################################################################################################
 @route(PREFIX + '/scanArtistDB')
 def scanArtistDB(myMediaURL, myCSVFile):
-	Log.Debug("******* Starting scanArtistDB with an URL of %s***********" %(myMediaURL))
+	Log.Debug("******* Starting scanArtistDB with an URL of %s ***********" %(myMediaURL))
 	global bScanStatusCount
 	global bScanStatusCountOf
 	myMediaPaths = []
