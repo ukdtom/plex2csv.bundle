@@ -18,7 +18,7 @@ import datetime
 from textwrap import wrap, fill
 import re
 
-VERSION = ' V0.0.0.22'
+VERSION = ' V0.0.0.23-DEVELOPER-VERSION'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -332,9 +332,16 @@ def scanMovieDB(myMediaURL, myCSVFile):
 	global bScanStatusCountOf
 	bScanStatusCount = 0
 	bScanStatusCountOf = 0
-	try:
+	try:		
+		from lxml import etree as et
+		import urllib2
+		tree = et.parse(urllib2.urlopen(myMediaURL))	
+		root = tree.getroot()
+		myMedias = root.findall('.//Video')		
 		mySepChar = Prefs['Seperator']
-		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Video')
+#		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Video')
+
+
 		Log.Debug("Retrieved myMedias okay")
 		bScanStatusCountOf = len(myMedias)
 		Log.Debug("Found %s items" %(bScanStatusCountOf))
@@ -369,7 +376,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			myRow['Rating'] = GetRegInfo(myMedia, 'rating')
 			# Get Summary
 			myRow['Summary'] = GetRegInfo(myMedia, 'summary')
-			# Get Genres
+			# Get Genres							
 			if Prefs['Movie_Level'] in ['Extended','Extreme','Extreme 2']:
 				Genres = ExtInfo.xpath('Genre/@tag')
 			else:
