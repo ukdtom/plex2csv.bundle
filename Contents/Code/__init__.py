@@ -18,7 +18,7 @@ import datetime
 from textwrap import wrap, fill
 import re
 
-VERSION = ' V0.0.0.23-DEVELOPER-VERSION'
+VERSION = ' V0.0.0.23b-DEVELOPER-VERSION'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -262,11 +262,12 @@ def getMovieHeader():
 			'Summary',
 			'Rating',
 			'Year',
-			'Genres',
+			'Genres'
 			)
 	# Basic fields
 	if (Prefs['Movie_Level'] in ['Basic','Extended','Extreme', 'Extreme 2']):
 		fieldnames = fieldnames + (
+			'Watched',
 			'Tagline',
 			'Release Date',
 			'Writers',
@@ -282,7 +283,7 @@ def getMovieHeader():
 			'Original Title',
 			'Collections',
 			'Added',
-			'Updated',
+			'Updated'
 			)
 	# Extreme fields
 	if Prefs['Movie_Level'] in ['Extreme', 'Extreme 2']:
@@ -339,9 +340,6 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		root = tree.getroot()
 		myMedias = root.findall('.//Video')		
 		mySepChar = Prefs['Seperator']
-#		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Video')
-
-
 		Log.Debug("Retrieved myMedias okay")
 		bScanStatusCountOf = len(myMedias)
 		Log.Debug("Found %s items" %(bScanStatusCountOf))
@@ -397,6 +395,10 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			else:
 # Basic and above
 				Log.Debug("Starting Basic stuff")
+				# Get Watched/UnWatched status
+				myRow['Watched'] = GetRegInfo(myMedia, 'viewCount')
+
+
 				# Get the Tag Line
 				myRow['Tagline'] = GetRegInfo(myMedia, 'tagline')
 				# Get the Release Date
@@ -440,7 +442,6 @@ def scanMovieDB(myMediaURL, myCSVFile):
 						Field = Field + mySepChar + myField
 				Director = WrapStr(Director)
 				myRow['Locked Fields'] = Field.encode('utf8')
-
 				# Got extras?
 				Extras = ExtInfo.xpath('//Extras/@size')
 				if not Extras:
@@ -450,12 +451,6 @@ def scanMovieDB(myMediaURL, myCSVFile):
 						Extra = myExtra								
 				Extra = WrapStr(Extra)
 				myRow['Extras'] = Extra.encode('utf8')
-
-
-
-
-
-
 				# Only if basic, and not others
 				if Prefs['Movie_Level'] in ['Basic']:
 					# Get Roles Basic
@@ -470,7 +465,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 							Role = Role + mySepChar + myRole
 				elif Prefs['Movie_Level'] in ['Extended','Extreme','Extreme 2']:
 					# Get Roles Extended
-					myRoles = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video//Role')
+					myRoles = ExtInfo.xpath('//Role')
 					Role = ''
 					if myRoles:
 						for myRole in myRoles:
@@ -543,14 +538,14 @@ def scanMovieDB(myMediaURL, myCSVFile):
 						myRow['Video FrameRate'] = GetExtInfo(ExtInfo, 'videoFrameRate')
 						# Everything is gathered, so let's write the row if needed
 						if Prefs['Movie_Level'] in ['Extreme 2']:									
-							parts = XML.ElementFromURL(myExtendedInfoURL).xpath('//Part')
+							parts = ExtInfo.xpath('//Part')
 							if len(parts)>1:
 								csvwriter.writerow(myRow)
 								myRow = {}						
 						else:						
 							csvwriter.writerow(myRow)
 						if Prefs['Movie_Level'] in ['Extreme 2']:
-							parts = XML.ElementFromURL(myExtendedInfoURL).xpath('//Part')
+							parts = ExtInfo.xpath('//Part')
 							for part in parts:
 								# File Name of this Part
 								myRow['Part File'] = GetMoviePartInfo(part, 'file', 'N/A')

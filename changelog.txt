@@ -1,5 +1,7 @@
 V0.0.0.23:
 -	Moved away from Plex framework for Movies, since the framework breaks, if mandentory data is missing
+- HUGE speed inprovement when generating output for movies, and running Extended mode or above
+- Added Watched status to Basic level and above
 
 V0.0.0.22:
 - Improved on logging
