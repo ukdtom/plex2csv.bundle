@@ -18,7 +18,7 @@ import datetime
 from textwrap import wrap, fill
 import re
 
-VERSION = ' V0.0.1.23'
+VERSION = ' V0.0.1.24a-DEVELOPER-VERSION'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -266,7 +266,8 @@ def getMovieHeader():
 	# Basic fields
 	if (Prefs['Movie_Level'] in ['Basic','Extended','Extreme', 'Extreme 2']):
 		fieldnames = fieldnames + (
-			'Watched',
+			'View Count',
+			'Last Viewed at',
 			'Tagline',
 			'Release Date',
 			'Writers',
@@ -394,10 +395,14 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			else:
 # Basic and above
 				Log.Debug("Starting Basic stuff")
-				# Get Watched/UnWatched status
-				myRow['Watched'] = GetRegInfo(myMedia, 'viewCount')
-
-
+				# Get View Count
+				myRow['View Count'] = GetRegInfo(myMedia, 'viewCount')
+				# Get last watched timestamp
+				lastViewedAt = (Datetime.FromTimestamp(float(GetRegInfo(myMedia, 'lastViewedAt', '0')))).strftime('%m/%d/%Y')
+				if lastViewedAt == '01/01/1970':
+					myRow['Last Viewed at'] = ''
+				else:
+					myRow['Last Viewed at'] = lastViewedAt.encode('utf8')
 				# Get the Tag Line
 				myRow['Tagline'] = GetRegInfo(myMedia, 'tagline')
 				# Get the Release Date
@@ -639,6 +644,8 @@ def getTVHeader():
 	# Basic fields
 	if (Prefs['TV_Level'] in ['Basic','Extended','Extreme', 'Extreme2']):
 		fieldnames = fieldnames + (
+			'View Count',
+			'Last Viewed at',
 			'Studio',
 			'Originally Aired',
 			'Authors',
@@ -730,6 +737,14 @@ def scanShowDB(myMediaURL, myCSVFile):
 					csvwriter.writerow(myRow)
 				else:
 # Basic and above
+					# Get Watched count
+					myRow['View Count'] = GetRegInfo(myMedia2, 'viewCount')
+					# Get last watched timestamp
+					lastViewedAt = (Datetime.FromTimestamp(float(GetRegInfo(myMedia2, 'lastViewedAt', '0')))).strftime('%m/%d/%Y')
+					if lastViewedAt == '01/01/1970':
+						myRow['Last Viewed at'] = ''
+					else:
+						myRow['Last Viewed at'] = lastViewedAt.encode('utf8')
 					# Get Studio
 					myRow['Studio'] = GetRegInfo(myMedia2, 'studio')
 					# Get Originally Aired
@@ -854,7 +869,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 							csvwriter.writerow(myRow)
 						else:
 # Extreme level and above
-							parts = XML.ElementFromURL(myExtendedInfoURL).xpath('//Part')
+							parts = Media.xpath('//Part')
 							if len(parts)>1:
 								csvwriter.writerow(myRow)
 								myRow = {}							
@@ -918,7 +933,6 @@ def getMusicHeader():
 ####################################################################################################
 @route(PREFIX + '/fixCRLF')
 def fixCRLF(myString):
-	Log.Debug('Fixing string: %s' %(myString))
 	myString = myString.decode('utf-8').replace('\r\n', ' ')
 	myString = myString.decode('utf-8').replace('\n', ' ')
 	myString = myString.decode('utf-8').replace('\r', ' ')
