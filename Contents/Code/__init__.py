@@ -17,8 +17,10 @@ import csv
 import datetime
 from textwrap import wrap, fill
 import re
+from lxml import etree as et
+import urllib2
 
-VERSION = ' V0.0.1.23'
+VERSION = ' V0.0.2.0'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -266,7 +268,8 @@ def getMovieHeader():
 	# Basic fields
 	if (Prefs['Movie_Level'] in ['Basic','Extended','Extreme', 'Extreme 2']):
 		fieldnames = fieldnames + (
-			'Watched',
+			'View Count',
+			'Last Viewed at',
 			'Tagline',
 			'Release Date',
 			'Writers',
@@ -333,8 +336,6 @@ def scanMovieDB(myMediaURL, myCSVFile):
 	bScanStatusCount = 0
 	bScanStatusCountOf = 0
 	try:		
-		from lxml import etree as et
-		import urllib2
 		tree = et.parse(urllib2.urlopen(myMediaURL))	
 		root = tree.getroot()
 		myMedias = root.findall('.//Video')		
@@ -352,7 +353,6 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		for myMedia in myMedias:				
 			myRow = {}
 # Add all for Simple Export and above
-			Log.Debug("Starting Simple stuff")
 			# Get Media ID
 			myRow['Media ID'] = GetRegInfo(myMedia, 'ratingKey')
 			# Get Extended info if needed
@@ -393,11 +393,14 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				csvwriter.writerow(myRow)
 			else:
 # Basic and above
-				Log.Debug("Starting Basic stuff")
-				# Get Watched/UnWatched status
-				myRow['Watched'] = GetRegInfo(myMedia, 'viewCount')
-
-
+				# Get View Count
+				myRow['View Count'] = GetRegInfo(myMedia, 'viewCount')
+				# Get last watched timestamp
+				lastViewedAt = (Datetime.FromTimestamp(float(GetRegInfo(myMedia, 'lastViewedAt', '0')))).strftime('%m/%d/%Y')
+				if lastViewedAt == '01/01/1970':
+					myRow['Last Viewed at'] = ''
+				else:
+					myRow['Last Viewed at'] = lastViewedAt.encode('utf8')
 				# Get the Tag Line
 				myRow['Tagline'] = GetRegInfo(myMedia, 'tagline')
 				# Get the Release Date
@@ -490,7 +493,6 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				else:
 # Extended or higher
 					# Here goes extended stuff, not part of basic or simple
-					Log.Debug("Starting Extended stuff")
 					# Get Collections
 					Collections = ExtInfo.xpath('Collection/@tag')
 					if not Collections:
@@ -538,27 +540,35 @@ def scanMovieDB(myMediaURL, myCSVFile):
 						# Everything is gathered, so let's write the row if needed
 						if Prefs['Movie_Level'] in ['Extreme 2']:									
 							parts = ExtInfo.xpath('//Part')
-							if len(parts)>1:
+							movieParts = 0
+							# Check if part is an extra or a real movie part
+							for part in parts:
+								if GetRegInfo(part, 'file')	!= '':
+									movieParts += 1
+							if movieParts > 1:
 								csvwriter.writerow(myRow)
 								myRow = {}						
 						else:						
 							csvwriter.writerow(myRow)
 #Extreme 2 Level
 						if Prefs['Movie_Level'] in ['Extreme 2']:
-							parts = ExtInfo.xpath('//Part')
+							Parts = ExtInfo.xpath('//Video/Media/Part')
 							for part in parts:
-								# File Name of this Part
-								myRow['Part File'] = GetMoviePartInfo(part, 'file', 'N/A')
-								# File size of this part
-								myRow['Part Size'] = GetMoviePartInfo(part, 'size', 'N/A')
-								# Is This part Indexed
-								myRow['Part Indexed'] = GetMoviePartInfo(part, 'indexes', 'N/A')
-								# Part Container
-								myRow['Part Container'] = GetMoviePartInfo(part, 'container', 'N/A')
-								# Part Duration
-								partDuration = ConvertTimeStamp(GetMoviePartInfo(part, 'duration', '0'))
-								myRow['Part Duration'] = partDuration.encode('utf8')								
-								csvwriter.writerow(myRow)
+								if GetRegInfo(part, 'file')	== '':
+									pass
+								else:
+									# File Name of this Part
+									myRow['Part File'] = GetMoviePartInfo(part, 'file', 'N/A')
+									# File size of this part
+									myRow['Part Size'] = GetMoviePartInfo(part, 'size', 'N/A')
+									# Is This part Indexed
+									myRow['Part Indexed'] = GetMoviePartInfo(part, 'indexes', 'N/A')
+									# Part Container
+									myRow['Part Container'] = GetMoviePartInfo(part, 'container', 'N/A')
+									# Part Duration
+									partDuration = ConvertTimeStamp(GetMoviePartInfo(part, 'duration', '0'))
+									myRow['Part Duration'] = partDuration.encode('utf8')								
+									csvwriter.writerow(myRow)
 						# Extreme 2 ended
 			bScanStatusCount += 1
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, GetRegInfo(myMedia, 'title')))
@@ -639,6 +649,8 @@ def getTVHeader():
 	# Basic fields
 	if (Prefs['TV_Level'] in ['Basic','Extended','Extreme', 'Extreme2']):
 		fieldnames = fieldnames + (
+			'View Count',
+			'Last Viewed at',
 			'Studio',
 			'Originally Aired',
 			'Authors',
@@ -690,10 +702,11 @@ def scanShowDB(myMediaURL, myCSVFile):
 	bScanStatusCount = 0
 	try:
 		mySepChar = Prefs['Seperator']
-		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Directory')
+		tree = et.parse(urllib2.urlopen(myMediaURL))	
+		root = tree.getroot()
+		myMedias = root.findall('.//Directory')		
 		bScanStatusCountOf = len(myMedias)
 		csvfile = io.open(myCSVFile,'wb')
-
 		csvwriter = csv.DictWriter(csvfile, fieldnames=getTVHeader(), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		csvwriter.writeheader()
 		for myMedia in myMedias:
@@ -701,7 +714,9 @@ def scanShowDB(myMediaURL, myCSVFile):
 			ratingKey = myMedia.get("ratingKey")
 			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves"
 			Log.Debug("Show %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))
-			myMedias2 = XML.ElementFromURL(myURL).xpath('//Video')
+			tree2 = et.parse(urllib2.urlopen(myURL))	
+			root2 = tree2.getroot()
+			myMedias2 = root2.findall('.//Video')		
 			for myMedia2 in myMedias2:
 # Simple and above
 				myRow = {}
@@ -730,6 +745,14 @@ def scanShowDB(myMediaURL, myCSVFile):
 					csvwriter.writerow(myRow)
 				else:
 # Basic and above
+					# Get Watched count
+					myRow['View Count'] = GetRegInfo(myMedia2, 'viewCount')
+					# Get last watched timestamp
+					lastViewedAt = (Datetime.FromTimestamp(float(GetRegInfo(myMedia2, 'lastViewedAt', '0')))).strftime('%m/%d/%Y')
+					if lastViewedAt == '01/01/1970':
+						myRow['Last Viewed at'] = ''
+					else:
+						myRow['Last Viewed at'] = lastViewedAt.encode('utf8')
 					# Get Studio
 					myRow['Studio'] = GetRegInfo(myMedia2, 'studio')
 					# Get Originally Aired
@@ -842,11 +865,13 @@ def scanShowDB(myMediaURL, myCSVFile):
 							# Got extras?
 							Extras = Media.xpath('//Extras/@size')
 							if not Extras:
-								Extra = '0'
-							else:
-								for myExtra in Extras:
-									Extra = myExtra								
-							Extra = WrapStr(Extra)
+#								Extra = '0'
+								Extras = '0'
+#							else:
+#								for myExtra in Extras:
+#									Extra = myExtra								
+#							Extra = WrapStr(Extra)
+							Extras = WrapStr(Extras)
 							myRow['Extras'] = Extra.encode('utf8')
 
 						# Everything is gathered, so let's write the row if needed
@@ -854,7 +879,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 							csvwriter.writerow(myRow)
 						else:
 # Extreme level and above
-							parts = XML.ElementFromURL(myExtendedInfoURL).xpath('//Part')
+							parts = Media.xpath('//Part')
 							if len(parts)>1:
 								csvwriter.writerow(myRow)
 								myRow = {}							
@@ -918,11 +943,9 @@ def getMusicHeader():
 ####################################################################################################
 @route(PREFIX + '/fixCRLF')
 def fixCRLF(myString):
-	Log.Debug('Fixing string: %s' %(myString))
 	myString = myString.decode('utf-8').replace('\r\n', ' ')
 	myString = myString.decode('utf-8').replace('\n', ' ')
 	myString = myString.decode('utf-8').replace('\r', ' ')
-	Log.Debug('Returning string: %s' %(myString))
 	return myString
 
 ####################################################################################################

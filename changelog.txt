@@ -1,3 +1,13 @@
+V0.0.2.0:
+- Added "View Count" to TV-Shows in Basic Mode
+- Added "Last Viewed" to TV-Shows in Basic Mode
+- HUGE speed increase, when exporting TV-Shows when running Extended mode or above
+- Changed fieldname "Watched" in Movie export to "View Count"
+- Added "Last Viewed" to Movies in Basic mode
+- Moved away from Plex Channel framework for grapping sections and episodes, and instead use native Python calls
+- Speed increase when calculating amount of extras for Movies
+- Fixed so extras doesn't mess up the part information for movies in level Extreme2
+
 V0.0.1.23:
 - Found out, that I wasn't following my own milestones regarding versioning....Hehehe.....Version now bumped to 0.0.1.23
 - Moved away from Plex framework for Movies, since the framework breaks, if mandentory data is missing
