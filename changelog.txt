@@ -1,3 +1,6 @@
+V0.0.2.1:
+- Made a buh-buh....But fixed now, causing TV-Shows to fail in Extended or above mode
+
 V0.0.2.0:
 - Added "View Count" to TV-Shows in Basic Mode
 - Added "Last Viewed" to TV-Shows in Basic Mode

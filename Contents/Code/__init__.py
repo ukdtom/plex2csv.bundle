@@ -20,7 +20,7 @@ import re
 from lxml import etree as et
 import urllib2
 
-VERSION = ' V0.0.2.0'
+VERSION = ' V0.0.2.1'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -863,17 +863,16 @@ def scanShowDB(myMediaURL, myCSVFile):
 							Field = WrapStr(Field)
 							myRow['Locked fields'] = Field.encode('utf8')
 							# Got extras?
+							print 'Ged'
 							Extras = Media.xpath('//Extras/@size')
-							if not Extras:
-#								Extra = '0'
-								Extras = '0'
-#							else:
-#								for myExtra in Extras:
-#									Extra = myExtra								
-#							Extra = WrapStr(Extra)
-							Extras = WrapStr(Extras)
+							print 'ged2'
+							print 'ged 3 : ' + Extras[0]
+							if not Extras[0]:
+								Extra = '0'
+							else:
+								Extra = Extras[0]
+							Extra = WrapStr(Extra)
 							myRow['Extras'] = Extra.encode('utf8')
-
 						# Everything is gathered, so let's write the row if needed
 						if Prefs['TV_Level'] not in ['Extreme']:
 							csvwriter.writerow(myRow)
