@@ -18,12 +18,11 @@ import datetime
 from textwrap import wrap, fill
 import re
 
-VERSION = ' V0.0.0.23b-DEVELOPER-VERSION'
+VERSION = ' V0.0.1.23b-DEVELOPER-VERSION'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
 PREFIX = '/applications/Plex2csv'
-
 
 bScanStatus = 0			# Current status of the background scan
 initialTimeOut = 17		# When starting a scan, how long in seconds to wait before displaying a status page. Needs to be at least 1.
@@ -33,7 +32,7 @@ sectiontype = ''		# Type of section been exported
 # Start function
 ####################################################################################################
 def Start():
-	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
+#	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
 	Log.Debug("*******  Started %s on %s  ***********" %(NAME  + VERSION, Platform.OS))
 	Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
 	ObjectContainer.art = R(ART)
@@ -544,6 +543,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 								myRow = {}						
 						else:						
 							csvwriter.writerow(myRow)
+#Extreme 2 Level
 						if Prefs['Movie_Level'] in ['Extreme 2']:
 							parts = ExtInfo.xpath('//Part')
 							for part in parts:
