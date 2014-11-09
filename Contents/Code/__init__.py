@@ -20,7 +20,7 @@ import re
 from lxml import etree as et
 import urllib2
 
-VERSION = ' V0.0.1.24'
+VERSION = ' V0.0.2.0'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'

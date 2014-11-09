@@ -1,4 +1,4 @@
-V0.0.1.24:
+V0.0.2.0:
 - Added "View Count" to TV-Shows in Basic Mode
 - Added "Last Viewed" to TV-Shows in Basic Mode
 - HUGE speed increase, when exporting TV-Shows when running Extended mode or above
