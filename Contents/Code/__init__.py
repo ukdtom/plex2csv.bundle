@@ -18,7 +18,7 @@ import datetime
 from textwrap import wrap, fill
 import re
 
-VERSION = ' V0.0.1.23b-DEVELOPER-VERSION'
+VERSION = ' V0.0.1.23'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
