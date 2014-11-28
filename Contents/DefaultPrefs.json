@@ -42,5 +42,24 @@
 		"type": "enum",
 		"values" : ["Simple","Basic","Extended", "Extreme"],
 		"default": "Basic"
+	},
+	{
+		"id":"Authenticate",
+		"label":"Authenticate @ plex.tv (Use if running in Home mode)",
+		"type":"bool",
+		"default":"false"
+	},
+	{
+		"id":"Plex_User",
+		"label":"plex.tv User Name",
+		"type":"text",
+		"default":""
+	},
+	{
+		"id":"Plex_Pwd",
+		"label":"plex.tv User Password",
+		"type":"text",
+		"option": "hidden",
+		"default":""
 	}
 ]

@@ -19,29 +19,79 @@ from textwrap import wrap, fill
 import re
 from lxml import etree as et
 import urllib2
+import base64
+import uuid
+from urllib2 import Request, urlopen, URLError, HTTPError
 
-VERSION = ' V0.0.2.1'
+VERSION = ' V0.0.2.2'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
 PREFIX = '/applications/Plex2csv'
+APPGUID = '7608cf36-742b-11e4-8b39-00089bd210b2'
+MYTOKEN = ''
+MYHEADER = {}
 
 bScanStatus = 0			# Current status of the background scan
-initialTimeOut = 17		# When starting a scan, how long in seconds to wait before displaying a status page. Needs to be at least 1.
+initialTimeOut = 12		# When starting a scan, how long in seconds to wait before displaying a status page. Needs to be at least 1.
 sectiontype = ''		# Type of section been exported
 
 ####################################################################################################
 # Start function
 ####################################################################################################
 def Start():
-#	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
+	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
 	Log.Debug("*******  Started %s on %s  ***********" %(NAME  + VERSION, Platform.OS))
+	global MYHEADER
+	global MYTOKEN
 	Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
 	ObjectContainer.art = R(ART)
 	ObjectContainer.title1 = NAME  + VERSION
 	ObjectContainer.view_group = 'List'
 	DirectoryObject.thumb = R(ICON)
 	HTTP.CacheTime = 0
+	MYTOKEN = 'X-Plex-Token=' + getToken()
+	MYHEADER['X-Plex-Token'] = getToken()
+
+#********** Get token from plex.tv *********
+''' This will return a valid token, that can be used for authenticating if needed, to be inserted into the header '''
+# DO NOT APPEND THE TOKEN TO THE URL...IT MIGHT BE LOGGED....INSERT INTO THE HEADER INSTEAD
+@route(PREFIX + '/getToken')
+def getToken():
+	Log.Debug('Starting to get the token')
+	if Prefs['Authenticate']:
+		# Start by checking, if we already got a token
+		if 'authentication_token' in Dict:
+			Log.Debug('Got a token from local storage')
+			return Dict['authentication_token']
+		else:
+			Log.Debug('Need to generate a token first from plex.tv')
+			userName = Prefs['Plex_User']
+			userPwd = Prefs['Plex_Pwd']
+			myUrl = 'https://plex.tv/users/sign_in.json'
+			# Create the authentication string
+			base64string = String.Base64Encode('%s:%s' % (userName, userPwd))
+			# Create the header
+			MYAUTHHEADER= {}
+			MYAUTHHEADER['X-Plex-Product'] = NAME
+			MYAUTHHEADER['X-Plex-Client-Identifier'] = APPGUID
+			MYAUTHHEADER['X-Plex-Version'] = VERSION
+			MYAUTHHEADER['Authorization'] = 'Basic ' + base64string
+			# Send the request
+			try:
+				httpResponse = HTTP.Request(myUrl, headers=MYAUTHHEADER, method='POST')
+				myToken = JSON.ObjectFromString(httpResponse.content)['user']['authentication_token']
+				Log.Debug('Response from plex.tv was : %s' %(httpResponse.headers["status"]))
+			except:
+				Log.Critical('Exception happend when trying to get a token from plex.tv')
+				Log.Critical('Returned answer was %s' %httpResponse.content)
+				Log.Critical('Status was: %s' %httpResponse.headers) 			
+			Dict['authentication_token'] = myToken
+			Dict.Save()
+			return myToken
+	else:
+			Log.Debug('Authentication disabled')
+			return ''
 
 ####################################################################################################
 # Main menu
@@ -54,7 +104,7 @@ def MainMenu(random=0):
 	oc = ObjectContainer()
 	try:
 		if ValidateExportPath():
-			sections = XML.ElementFromURL('http://127.0.0.1:32400/library/sections/').xpath('//Directory')
+			sections = XML.ElementFromURL('http://127.0.0.1:32400/library/sections?', headers=MYHEADER).xpath('//Directory')
 			for section in sections:
 				sectiontype = section.get('type')
 				if sectiontype != "photo" and sectiontype != 'artist': # ToDo: Remove artist when code is in place for it.
@@ -104,8 +154,12 @@ def ValidateExportPath():
 ####################################################################################################
 @route(PREFIX + '/ValidatePrefs')
 def ValidatePrefs():
-	# Dummy function to satisfy the framework
-	return
+	# Lets get the token again
+	getToken()
+	global MYHEADER
+	global MYTOKEN
+	MYTOKEN = 'X-Plex-Token=' + getToken()
+	MYHEADER['X-Plex-Token'] = getToken()
 
 ####################################################################################################
 # Export Complete.
@@ -131,7 +185,7 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 	Log.Debug("******* Starting backgroundScan *********")
 	# Current status of the Background Scanner:
 	# 0=not running, 1=db, 2=complete
-	# Errors: 91=unknown section type, 99=Other Error
+	# Errors: 91=unknown section type, 99=Other Error, 401= Authentication error
 	global bScanStatus
 	# Current status count (ex. "Show 2 of 31")
 	global bScanStatusCount
@@ -161,7 +215,6 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 			oc2 = ObjectContainer(title1="Scan is not running.", no_history=True)
 			oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="Go to the Main Menu"))
 			return oc2
-
 			# Summary to add to the status
 		summary = "The Plex Server will only wait a few seconds for us to work, so we run it in the background. This requires you to keep checking on the status until it is complete. \n\n"
 		if bScanStatus == 1:
@@ -170,7 +223,6 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 			oc2 = ObjectContainer(title1="Exporting the Database " + str(bScanStatusCount) + " of " + str(bScanStatusCountOf) + ".", no_history=True)
 			oc2.add(DirectoryObject(key=Callback(backgroundScan, random=time.clock(), statusCheck=1, title=title), title="Exporting the database. To update Status, click here.", summary=summary))
 			oc2.add(DirectoryObject(key=Callback(backgroundScan, random=time.clock(), statusCheck=1, title=title), title="Exporting " + str(bScanStatusCount) + " of " + str(bScanStatusCountOf), summary=summary))
-
 		elif bScanStatus == 2:
 			# Show complete screen.
 			oc2 = complete(title=title)
@@ -185,9 +237,16 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 		elif bScanStatus == 99:
 			# Error condition set by scanner
 			summary = "An internal error has occurred. Please check the logs"
-			oc2 = ObjectContainer(title1="Internal Error Detected. Please check the logs",no_history=True)
+			oc2 = ObjectContainer(title1="Internal Error Detected. Please check the logs",no_history=True, view_group = 'List')
 			oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="An internal error has occurred.", summary=summary))
 			oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="*** Please submit logs. ***", summary=summary))
+			bScanStatus = 0
+		elif bScanStatus == 401:
+			oc2 = ObjectContainer(title1="ERROR", no_history=True)
+			# Error condition set by scanner
+			summary = "When running in like Home mode, you must enable authentication in the preferences"
+			oc2 = ObjectContainer(title1=summary,no_history=True)
+			oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="Authentication error.", summary=summary))			
 			bScanStatus = 0
 		else:
 			# Unknown status. Should not happen.
@@ -238,8 +297,6 @@ def backgroundScanThread(title, key, sectiontype):
 			bScanStatus = 91
 		# Stop scanner on error
 		if bScanStatus >= 90: return
-		# Stop scanner on error
-		if bScanStatus >= 90: return
 		Log.Debug("*******  Ending backgroundScanThread  ***********")
 		bScanStatus = 2
 		return
@@ -277,7 +334,8 @@ def getMovieHeader():
 			'Roles',
 			'Duration',
 			'Locked Fields',
-			'Extras'
+			'Extras',
+			'Labels'
 			)
 	# Extended fields
 	if Prefs['Movie_Level'] in ['Extended','Extreme', 'Extreme 2']:
@@ -319,7 +377,6 @@ def getMovieHeader():
 def WrapStr(myStr):
 	LineWrap = int(Prefs['Line_Length'])
 	if Prefs['Line_Wrap']:		
-#		Log.Debug('Wrapped Output is: %s' %(fill(myStr, LineWrap)))
 		return fill(myStr, LineWrap)
 	else:
 		return myStr
@@ -333,10 +390,25 @@ def scanMovieDB(myMediaURL, myCSVFile):
 	Log.Debug('Movie Export level is %s' %(Prefs['Movie_Level']))
 	global bScanStatusCount
 	global bScanStatusCountOf
+	global bScanStatus
 	bScanStatusCount = 0
-	bScanStatusCountOf = 0
-	try:		
-		tree = et.parse(urllib2.urlopen(myMediaURL))	
+	bScanStatusCountOf = 0	
+	try:
+		Log.Debug('Starting to fetch the list of items in this section')
+		req = Request(myMediaURL + '?' + MYTOKEN)
+		response = urlopen(req)
+	except HTTPError as e:
+		Log.Critical('The server couldn\'t fulfill the request. Errorcode was %s' %e.code)
+		bScanStatus = 401
+	except URLError as e:
+		Log.Critical('We failed to reach a server. Reason was %s' %e.reason)
+		bScanStatus = 401
+	except:
+		Log.Critical('Unknown error in scanMovieDb')
+		bScanStatus = 99
+	else:
+		# everything is fine
+		tree = et.parse(response)
 		root = tree.getroot()
 		myMedias = root.findall('.//Video')		
 		mySepChar = Prefs['Seperator']
@@ -356,9 +428,9 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			# Get Media ID
 			myRow['Media ID'] = GetRegInfo(myMedia, 'ratingKey')
 			# Get Extended info if needed
-			if Prefs['Movie_Level'] in ['Basic','Extended','Extreme','Extreme 2']:
-				myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia, 'ratingKey') + '?includeExtras=1'
-				ExtInfo = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
+			if Prefs['Movie_Level'] in ['Basic','Extended','Extreme','Extreme 2']:				
+				myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia, 'ratingKey') + '?includeExtras=1&'
+				ExtInfo = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Video')[0]
 			# Get title
 			myRow['Title'] = GetRegInfo(myMedia, 'title')
 			# Get Sorted title
@@ -432,6 +504,18 @@ def scanMovieDB(myMediaURL, myCSVFile):
 						Director = Director + mySepChar + myDirector
 				Director = WrapStr(Director)
 				myRow['Directors'] = Director.encode('utf8')
+				# Get the labels
+				Labels = ExtInfo.xpath('Label/@tag')
+				if not Labels:
+					Labels = ['']
+				Label = ''
+				for myLabel in Labels:
+					if Label == '':
+						Label = myLabel
+					else:
+						Label = Label + mySepChar + myLabel
+				Label = WrapStr(Label)
+				myRow['Labels'] = Label.encode('utf8')
 				# Get Locked fields
 				Fields = ExtInfo.xpath('Field/@name')
 				if not Fields:
@@ -572,12 +656,6 @@ def scanMovieDB(myMediaURL, myCSVFile):
 						# Extreme 2 ended
 			bScanStatusCount += 1
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, GetRegInfo(myMedia, 'title')))
-		return	
-	except:
-		Log.Critical("Detected an exception in scanMovieDB Extended")
-		bScanStatus = 99
-		raise	
-	finally:
 		Log.Debug("******* Ending scanMovieDB ***********")
 		csvfile.close
 
@@ -624,9 +702,6 @@ def GetRegInfo(myMedia, myField, default = ''):
 	except:
 		myLookUp = WrapStr(default)
 		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
-	
-
-
 	return myLookUp.encode('utf8')
 
 ####################################################################################################
@@ -657,6 +732,7 @@ def getTVHeader():
 			'Genres',
 			'Directors',
 			'Roles',
+			'Labels',
 			'Duration',
 			'Added',
 			'Updated'			
@@ -698,11 +774,30 @@ def scanShowDB(myMediaURL, myCSVFile):
 	Log.Debug("******* Starting scanShowDB with an URL of %s ***********" %(myMediaURL))
 	global bScanStatusCount
 	global bScanStatusCountOf
+	global bScanStatus
 	myMediaPaths = []
 	bScanStatusCount = 0
+
 	try:
+		Log.Debug('Starting to fetch the list of items in this section')
+		req = Request(myMediaURL + '?' + MYTOKEN)
+		response = urlopen(req)
+	except HTTPError as e:
+		Log.Critical('The server couldn\'t fulfill the request. Errorcode was %s' %e.code)
+		bScanStatus = 401
+	except URLError as e:
+		Log.Critical('We failed to reach a server. Reason was %s' %e.reason)
+		bScanStatus = 401
+	except:
+		Log.Critical('Unknown error in scanMovieDb')
+		bScanStatus = 99
+	else:
+
+
+#	try:
 		mySepChar = Prefs['Seperator']
-		tree = et.parse(urllib2.urlopen(myMediaURL))	
+#		tree = et.parse(urllib2.urlopen(myMediaURL + '?' + MYTOKEN))	
+		tree = et.parse(urllib2.urlopen(req))	
 		root = tree.getroot()
 		myMedias = root.findall('.//Directory')		
 		bScanStatusCountOf = len(myMedias)
@@ -712,9 +807,9 @@ def scanShowDB(myMediaURL, myCSVFile):
 		for myMedia in myMedias:
 			bScanStatusCount += 1
 			ratingKey = myMedia.get("ratingKey")
-			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves"
+			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves?"
 			Log.Debug("Show %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))
-			tree2 = et.parse(urllib2.urlopen(myURL))	
+			tree2 = et.parse(urllib2.urlopen(myURL + MYTOKEN))	
 			root2 = tree2.getroot()
 			myMedias2 = root2.findall('.//Video')		
 			for myMedia2 in myMedias2:
@@ -805,6 +900,20 @@ def scanShowDB(myMediaURL, myCSVFile):
 							Role = Role + mySepChar + myRole
 					Role = WrapStr(Role)
 					myRow['Roles'] = Role.encode('utf8')
+					# Get labels
+					Labels = myMedia2.xpath('Label/@tag')
+					if not Labels:
+						Labels = ['']
+					Label = ''
+					for myLabel in Labels:
+						if Label == '':
+							Label = myLabel
+						else:
+							Label = Label + mySepChar + myLabel
+					Label = WrapStr(Label)
+					myRow['Labels'] = Label.encode('utf8')
+
+
 					# Get the duration of the episode
 					duration = ConvertTimeStamp(GetRegInfo(myMedia2, 'duration', '0'))
 					myRow['Duration'] = duration.encode('utf8')
@@ -819,8 +928,8 @@ def scanShowDB(myMediaURL, myCSVFile):
 						csvwriter.writerow(myRow)
 					else:		
 # Extended or above		
-						myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia2, 'ratingKey') + '?checkFiles=1&includeExtras=1'
-						Medias2 = XML.ElementFromURL(myExtendedInfoURL).xpath('//Media')	
+						myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia2, 'ratingKey') + '?checkFiles=1&includeExtras=1&'
+						Medias2 = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Media')	
 						if len(Medias2)>1:
 							csvwriter.writerow(myRow)
 							myRow = {}										
@@ -863,10 +972,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 							Field = WrapStr(Field)
 							myRow['Locked fields'] = Field.encode('utf8')
 							# Got extras?
-							print 'Ged'
 							Extras = Media.xpath('//Extras/@size')
-							print 'ged2'
-							print 'ged 3 : ' + Extras[0]
 							if not Extras[0]:
 								Extra = '0'
 							else:
@@ -898,10 +1004,10 @@ def scanShowDB(myMediaURL, myCSVFile):
 						# Extreme ended
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, GetRegInfo(myMedia, 'grandparentTitle') + '-' + GetRegInfo(myMedia, 'title')))
 		return
-	except:
-		Log.Critical("Detected an exception in scanShowDB")
-		bScanStatus = 99
-		raise # Dumps the error so you can see what the problem is
+#	except:
+#		Log.Critical("Detected an exception in scanShowDB")
+#		bScanStatus = 99
+#		raise # Dumps the error so you can see what the problem is
 	Log.Debug("******* Ending scanShowDB ***********")
 
 ####################################################################################################
@@ -955,11 +1061,12 @@ def scanArtistDB(myMediaURL, myCSVFile):
 	Log.Debug("******* Starting scanArtistDB with an URL of %s ***********" %(myMediaURL))
 	global bScanStatusCount
 	global bScanStatusCountOf
+	global bScanStatus
 	myMediaPaths = []
 	bScanStatusCount = 0
 	try:
 		mySepChar = Prefs['Seperator']
-		myMedias = XML.ElementFromURL(myMediaURL).xpath('//Directory')
+		myMedias = XML.ElementFromURL(myMediaURL, headers=MYHEADER).xpath('//Directory')
 		bScanStatusCountOf = len(myMedias)
 		csvfile = io.open(myCSVFile,'wb')
 		csvwriter = csv.DictWriter(csvfile, fieldnames=getTVHeader())
@@ -967,9 +1074,9 @@ def scanArtistDB(myMediaURL, myCSVFile):
 		for myMedia in myMedias:
 			bScanStatusCount += 1
 			ratingKey = myMedia.get("ratingKey")
-			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves"
+			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves?" + MYTOKEN
 			Log.Debug("Show %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))
-			myMedias2 = XML.ElementFromURL(myURL).xpath('//Video')
+			myMedias2 = XML.ElementFromURL(myURL, headers=MYHEADER).xpath('//Video')
 			for myMedia2 in myMedias2:
 				myRow = {}
 				# Get episode rating key
