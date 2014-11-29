@@ -23,7 +23,7 @@ import base64
 import uuid
 from urllib2 import Request, urlopen, URLError, HTTPError
 
-VERSION = ' V0.0.2.2'
+VERSION = ' V0.0.2.3'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -40,7 +40,7 @@ sectiontype = ''		# Type of section been exported
 # Start function
 ####################################################################################################
 def Start():
-	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
+#	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
 	Log.Debug("*******  Started %s on %s  ***********" %(NAME  + VERSION, Platform.OS))
 	global MYHEADER
 	global MYTOKEN
@@ -61,7 +61,7 @@ def getToken():
 	Log.Debug('Starting to get the token')
 	if Prefs['Authenticate']:
 		# Start by checking, if we already got a token
-		if 'authentication_token' in Dict:
+		if 'authentication_token' in Dict and Dict['authentication_token'] != 'NuKeMe':
 			Log.Debug('Got a token from local storage')
 			return Dict['authentication_token']
 		else:
@@ -154,12 +154,25 @@ def ValidateExportPath():
 ####################################################################################################
 @route(PREFIX + '/ValidatePrefs')
 def ValidatePrefs():
-	# Lets get the token again
+	if Prefs['NukeToken']:
+		# My master wants to nuke the local store
+		Log.Debug('Removing Token from local storage')
+		# DICT RESET IS BROKEN IN THE API....SIGH....
+#		Dict.Reset()
+		Dict['authentication_token'] = 'NuKeMe'
+		Dict.Save()
+	# Lets get the token again, in case credentials are switched, or token is deleted
 	getToken()
 	global MYHEADER
 	global MYTOKEN
 	MYTOKEN = 'X-Plex-Token=' + getToken()
 	MYHEADER['X-Plex-Token'] = getToken()
+	if Prefs['NukeToken']:
+		# My master has nuked the local store, so reset the prefs flag
+		myHTTPPrefix = 'http://127.0.0.1:32400/:/plugins/com.plexapp.plugins.Plex2csv/prefs/'
+		myURL = myHTTPPrefix + 'set?NukeToken=0'
+		Log.Debug('Prefs Sending : ' + myURL)
+		HTTP.Request(myURL, immediate=True, headers=MYHEADER)
 
 ####################################################################################################
 # Export Complete.

@@ -1,3 +1,6 @@
+V0.0.2.3:
+- Added posibillity to reset the local cached token from prefs, if user deletes the Plex2CSV from the device list
+
 V0.0.2.2:
 - Added export of labels for Movies in basic mode
 	ToDO: get it for TV-Shows as well
