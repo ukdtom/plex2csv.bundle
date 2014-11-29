@@ -74,6 +74,7 @@ def getToken():
 			# Create the header
 			MYAUTHHEADER= {}
 			MYAUTHHEADER['X-Plex-Product'] = NAME
+			MYAUTHHEADER['X-Plex-Device-Name'] = NAME
 			MYAUTHHEADER['X-Plex-Client-Identifier'] = APPGUID
 			MYAUTHHEADER['X-Plex-Version'] = VERSION
 			MYAUTHHEADER['Authorization'] = 'Basic ' + base64string
