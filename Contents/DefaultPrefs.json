@@ -64,7 +64,7 @@
 	},
 	{
 		"id":"NukeToken",
-		"label":"Detele local stored token, and force new one from plex.tv",
+		"label":"Delete local stored token, and force new one from plex.tv",
 		"type":"bool",
 		"default":"false"
 	},
