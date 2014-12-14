@@ -23,13 +23,13 @@ import base64
 import uuid
 from urllib2 import Request, urlopen, URLError, HTTPError
 
-VERSION = ' V0.0.2.3'
+VERSION = ' V0.0.2.4'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
 PREFIX = '/applications/Plex2csv'
 APPGUID = '7608cf36-742b-11e4-8b39-00089bd210b2'
-MYTOKEN = ''
+DESCRIPTION = 'Export Plex libraries to CSV-Files'
 MYHEADER = {}
 
 bScanStatus = 0			# Current status of the background scan
@@ -43,15 +43,13 @@ def Start():
 #	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
 	Log.Debug("*******  Started %s on %s  ***********" %(NAME  + VERSION, Platform.OS))
 	global MYHEADER
-	global MYTOKEN
 	Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
 	ObjectContainer.art = R(ART)
 	ObjectContainer.title1 = NAME  + VERSION
 	ObjectContainer.view_group = 'List'
 	DirectoryObject.thumb = R(ICON)
 	HTTP.CacheTime = 0
-	MYTOKEN = 'X-Plex-Token=' + getToken()
-	MYHEADER['X-Plex-Token'] = getToken()
+	getToken()
 
 #********** Get token from plex.tv *********
 ''' This will return a valid token, that can be used for authenticating if needed, to be inserted into the header '''
@@ -59,11 +57,12 @@ def Start():
 @route(PREFIX + '/getToken')
 def getToken():
 	Log.Debug('Starting to get the token')
+	global MYHEADER
 	if Prefs['Authenticate']:
 		# Start by checking, if we already got a token
 		if 'authentication_token' in Dict and Dict['authentication_token'] != 'NuKeMe':
-			Log.Debug('Got a token from local storage')
-			return Dict['authentication_token']
+			Log.Debug('Got a token from local storage')			
+			MYHEADER['X-Plex-Token'] = Dict['authentication_token']
 		else:
 			Log.Debug('Need to generate a token first from plex.tv')
 			userName = Prefs['Plex_User']
@@ -73,11 +72,11 @@ def getToken():
 			base64string = String.Base64Encode('%s:%s' % (userName, userPwd))
 			# Create the header
 			MYAUTHHEADER= {}
-			MYAUTHHEADER['X-Plex-Product'] = NAME
-			MYAUTHHEADER['X-Plex-Device-Name'] = NAME
+			MYAUTHHEADER['X-Plex-Product'] = DESCRIPTION
 			MYAUTHHEADER['X-Plex-Client-Identifier'] = APPGUID
 			MYAUTHHEADER['X-Plex-Version'] = VERSION
 			MYAUTHHEADER['Authorization'] = 'Basic ' + base64string
+			MYAUTHHEADER['X-Plex-Device-Name'] = NAME
 			# Send the request
 			try:
 				httpResponse = HTTP.Request(myUrl, headers=MYAUTHHEADER, method='POST')
@@ -89,7 +88,7 @@ def getToken():
 				Log.Critical('Status was: %s' %httpResponse.headers) 			
 			Dict['authentication_token'] = myToken
 			Dict.Save()
-			return myToken
+			MYHEADER['X-Plex-Token'] = myToken
 	else:
 			Log.Debug('Authentication disabled')
 			return ''
@@ -108,8 +107,8 @@ def MainMenu(random=0):
 			sections = XML.ElementFromURL('http://127.0.0.1:32400/library/sections?', headers=MYHEADER).xpath('//Directory')
 			for section in sections:
 				sectiontype = section.get('type')
-				if sectiontype != "photo" and sectiontype != 'artist': # ToDo: Remove artist when code is in place for it.
-#				if sectiontype != "photo":
+#				if sectiontype != "photo" and sectiontype != 'artist': # ToDo: Remove artist when code is in place for it.
+				if sectiontype != "photo": # ToDo: Remove artist when code is in place for it.
 					title = section.get('title')
 					key = section.get('key')
 					Log.Debug('Title of section is %s with a key of %s' %(title, key))
@@ -164,10 +163,6 @@ def ValidatePrefs():
 		Dict.Save()
 	# Lets get the token again, in case credentials are switched, or token is deleted
 	getToken()
-	global MYHEADER
-	global MYTOKEN
-	MYTOKEN = 'X-Plex-Token=' + getToken()
-	MYHEADER['X-Plex-Token'] = getToken()
 	if Prefs['NukeToken']:
 		# My master has nuked the local store, so reset the prefs flag
 		myHTTPPrefix = 'http://127.0.0.1:32400/:/plugins/com.plexapp.plugins.Plex2csv/prefs/'
@@ -295,6 +290,8 @@ def backgroundScanThread(title, key, sectiontype):
 			myLevel = Prefs['TV_Level']
 		if sectiontype == 'movie':
 			myLevel = Prefs['Movie_Level']
+		if sectiontype == 'artist':
+			myLevel = Prefs['Artist_Level']
 		# Remove invalid caracters, if on Windows......
 		newtitle = re.sub('[\/[:#*?"<>|]', '_', title)
 		myCSVFile = os.path.join(Prefs['Export_Path'], NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
@@ -409,7 +406,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 	bScanStatusCountOf = 0	
 	try:
 		Log.Debug('Starting to fetch the list of items in this section')
-		req = Request(myMediaURL + '?' + MYTOKEN)
+		req = Request(myMediaURL, headers=MYHEADER)
 		response = urlopen(req)
 	except HTTPError as e:
 		Log.Critical('The server couldn\'t fulfill the request. Errorcode was %s' %e.code)
@@ -791,10 +788,9 @@ def scanShowDB(myMediaURL, myCSVFile):
 	global bScanStatus
 	myMediaPaths = []
 	bScanStatusCount = 0
-
 	try:
 		Log.Debug('Starting to fetch the list of items in this section')
-		req = Request(myMediaURL + '?' + MYTOKEN)
+		req = Request(myMediaURL, headers=MYHEADER)
 		response = urlopen(req)
 	except HTTPError as e:
 		Log.Critical('The server couldn\'t fulfill the request. Errorcode was %s' %e.code)
@@ -806,11 +802,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 		Log.Critical('Unknown error in scanMovieDb')
 		bScanStatus = 99
 	else:
-
-
-#	try:
 		mySepChar = Prefs['Seperator']
-#		tree = et.parse(urllib2.urlopen(myMediaURL + '?' + MYTOKEN))	
 		tree = et.parse(urllib2.urlopen(req))	
 		root = tree.getroot()
 		myMedias = root.findall('.//Directory')		
@@ -823,7 +815,8 @@ def scanShowDB(myMediaURL, myCSVFile):
 			ratingKey = myMedia.get("ratingKey")
 			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves?"
 			Log.Debug("Show %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))
-			tree2 = et.parse(urllib2.urlopen(myURL + MYTOKEN))	
+			req = Request(myURL, headers=MYHEADER)
+			tree2 = et.parse(urllib2.urlopen(req))		
 			root2 = tree2.getroot()
 			myMedias2 = root2.findall('.//Video')		
 			for myMedia2 in myMedias2:
@@ -926,8 +919,6 @@ def scanShowDB(myMediaURL, myCSVFile):
 							Label = Label + mySepChar + myLabel
 					Label = WrapStr(Label)
 					myRow['Labels'] = Label.encode('utf8')
-
-
 					# Get the duration of the episode
 					duration = ConvertTimeStamp(GetRegInfo(myMedia2, 'duration', '0'))
 					myRow['Duration'] = duration.encode('utf8')
@@ -1046,14 +1037,17 @@ def getMusicHeader():
 	# Simple fields
 	fieldnames = ('Media ID',
 			'Artist', 
-			'Title',
 			'Album',
-			'Summary',
-			'Season',
-			'Episode',
-			'Content Rating',
-			'Summary',
-			'Rating',			
+			'Title',
+			)
+	# Basic fields
+	if (Prefs['Artist_Level'] in ['Basic','Extended','Extreme', 'Extreme2']):
+		fieldnames = fieldnames + (
+			'Artist Summery',
+			'Track No',
+			'Duration',
+			'Added',
+			'Updated',
 			)
 	return fieldnames
 
@@ -1080,106 +1074,55 @@ def scanArtistDB(myMediaURL, myCSVFile):
 	bScanStatusCount = 0
 	try:
 		mySepChar = Prefs['Seperator']
+		#TODO 'Fix without framework'
 		myMedias = XML.ElementFromURL(myMediaURL, headers=MYHEADER).xpath('//Directory')
 		bScanStatusCountOf = len(myMedias)
 		csvfile = io.open(myCSVFile,'wb')
-		csvwriter = csv.DictWriter(csvfile, fieldnames=getTVHeader())
+		csvwriter = csv.DictWriter(csvfile, fieldnames=getMusicHeader())
 		csvwriter.writeheader()
 		for myMedia in myMedias:
 			bScanStatusCount += 1
 			ratingKey = myMedia.get("ratingKey")
-			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves?" + MYTOKEN
-			Log.Debug("Show %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))
-			myMedias2 = XML.ElementFromURL(myURL, headers=MYHEADER).xpath('//Video')
+			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves"
+			Log.Debug("Album %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))
+
+
+			#TODO Switch away from framework here
+			myMedias2 = XML.ElementFromURL(myURL, headers=MYHEADER).xpath('//Track')			
+
 			for myMedia2 in myMedias2:
+# Simple and above
 				myRow = {}
 				# Get episode rating key
 				myRow['Media ID'] = GetRegInfo(myMedia2, 'ratingKey')
-				# Get Serie Title
-				myRow['Artist'] = GetRegInfo(myMedia2, 'grandparentTitle')
-				# Get Episode title
-				myRow['Episode Title'] = GetRegInfo(myMedia2, 'title')
-				# Get Year
-				myRow['Year'] = GetRegInfo(myMedia2, 'year')
-				# Get Season number
-				myRow['Season'] = GetRegInfo(myMedia2, 'parentIndex')
-				# Get Episode number
-				myRow['Episode'] = GetRegInfo(myMedia2, 'index')
-				# Get Content Rating
-				myRow['Content Rating'] = GetRegInfo(myMedia2, 'contentRating')
-				# Get summary
-				myRow['Summary'] = GetRegInfo(myMedia2, 'summary')
-				# Get Rating
-				myRow['Rating'] = GetRegInfo(myMedia2, 'rating')
+				# Get Track title
+				myRow['Title'] = GetRegInfo(myMedia2, 'title')	
+				# Get Artist
+				myRow['Artist'] = GetRegInfo(myMedia, 'title')	
+				# Get Album
+				myRow['Album'] = GetRegInfo(myMedia2, 'parentTitle')								
 				# And now for Basic Export
-				if Prefs['TV_Level'] in ['Basic','Extended','Extreme']:
-					# Get Studio
-					myRow['Studio'] = GetRegInfo(myMedia2, 'studio')
-					# Get Originally Aired
-					myRow['Originally Aired'] = GetRegInfo(myMedia2, 'originallyAvailableAt')
-					# Get the Writers
-					Writer = myMedia2.xpath('Writer/@tag')
-					if not Writer:
-						Writer = ['']
-					Author = ''
-					for myWriter in Writer:
-						if Author == '':
-							Author = myWriter
-						else:
-							Author = Author + ' - ' + myWriter
-					Author = WrapStr(Author)
-					myRow['Authors'] = Author.encode('utf8')
-					# Get Genres
-					Genres = myMedia.xpath('Genre/@tag')
-					if not Genres:
-						Genres = ['']
-					Genre = ''
-					for myGenre in Genres:
-						if Genre == '':
-							Genre = myGenre
-						else:
-							Genre = Genre + mySepChar + myGenre
-					Genre = WrapStr(Genre)
-					myRow['Genres'] = Genre.encode('utf8')
-					# Get the Directors
-					Directors = myMedia2.xpath('Director/@tag')
-					if not Directors:
-						Directors = ['']
-					Director = ''
-					for myDirector in Directors:
-						if Director == '':
-							Director = myDirector
-						else:
-							Director = Director + mySepChar + myDirector
-					Director = WrapStr(Director)
-					myRow['Directors'] = Director.encode('utf8')
-					# Get Roles
-					Roles = myMedia.xpath('Role/@tag')
-					if not Roles:
-						Roles = ['']
-					Role = ''
-					for myRole in Roles:
-						if Role == '':
-							Role = myRole
-						else:
-							Role = Role + mySepChar + myRole
-					Role = WrapStr(Role)
-					myRow['Roles'] = Role.encode('utf8')
-					# Get the duration of the episode
-					duration = ConvertTimeStamp(GetRegInfo(myMedia2, 'duration', '0'))
-					myRow['Duration'] = duration.encode('utf8')
-					# Get Added at
-					addedAt = (Datetime.FromTimestamp(float(myMedia2.get('addedAt')))).strftime('%m/%d/%Y')
-					myRow['Added'] = addedAt.encode('utf8')
-					# Get Updated at
-					# If myMedia.get('updatedAt') has a value then change the time format else set it to blank.
-					if myMedia.get('updatedAt'): updatedAt = (Datetime.FromTimestamp(float(myMedia2.get('updatedAt')))).strftime('%m/%d/%Y')
-					else: updatedAt = ""
-					myRow['Updated'] = updatedAt.encode('utf8')
-				# Everything is gathered, so let's write the row
-				csvwriter.writerow(myRow)
+				if Prefs['Artist_Level'] not in ['Basic','Extended','Extreme']:
+					csvwriter.writerow(myRow)
+				else:
+# Basic and above
+					myRow['Artist Summery'] = GetRegInfo(myMedia, 'summary')
+					myRow['Track No'] = GetRegInfo(myMedia2, 'index')
+					myRow['Duration'] = ConvertTimeStamp(GetRegInfo(myMedia2, 'duration', '0'))
+					myRow['Added'] = (Datetime.FromTimestamp(float(GetRegInfo(myMedia2, 'addedAt', '0')))).strftime('%m/%d/%Y')
+					myRow['Updated'] = (Datetime.FromTimestamp(float(GetRegInfo(myMedia2, 'updatedAt', '0')))).strftime('%m/%d/%Y')
+
+
+
+					csvwriter.writerow(myRow)
+
+
+
+
+
+
 				
-			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, GetRegInfo(myMedia, 'grandparentTitle') + '-' + GetRegInfo(myMedia, 'title')))
+			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, GetRegInfo(myMedia, 'title') + '-' + GetRegInfo(myMedia2, 'parentTitle')))
 		return
 	except:
 		Log.Critical("Detected an exception in scanArtistDB")
