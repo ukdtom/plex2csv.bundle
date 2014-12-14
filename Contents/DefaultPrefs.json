@@ -31,17 +31,24 @@
 	},	
 	{
 		"id": "Movie_Level",
-		"label": "Movie Export Level",
+		"label": "Movie Export Level..",
 		"type": "enum",
 		"values" : ["Simple","Basic","Extended", "Extreme", "Extreme 2"],
 		"default": "Basic"
 	},
 	{
 		"id": "TV_Level",
-		"label": "TV Export Level",
+		"label": "TV Export Level.........",
 		"type": "enum",
 		"values" : ["Simple","Basic","Extended", "Extreme"],
 		"default": "Basic"
+	},
+	{
+		"id": "Artist_Level",
+		"label": "Audio Export Level..",
+		"type": "enum",
+		"values" : ["Simple", "Basic"],
+		"default": "Simple"
 	},
 	{
 		"id":"Authenticate",
@@ -67,5 +74,5 @@
 		"label":"Delete local stored token, and force new one from plex.tv",
 		"type":"bool",
 		"default":"false"
-	},
+	}
 ]

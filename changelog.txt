@@ -1,3 +1,7 @@
+V0.0.2.4:
+- Fixed issue with some requests having token in the url, instead of in the header
+- Added Simple and basic mode to Music sections
+
 V0.0.2.3:
 - Added posibillity to reset the local cached token from prefs, if user deletes the Plex2CSV from the device list
 
