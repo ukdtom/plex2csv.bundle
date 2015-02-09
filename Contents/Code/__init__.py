@@ -23,7 +23,7 @@ import base64
 import uuid
 from urllib2 import Request, urlopen, URLError, HTTPError
 
-VERSION = ' V0.0.2.4'
+VERSION = ' V0.0.2.5'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -354,7 +354,9 @@ def getMovieHeader():
 			'Original Title',
 			'Collections',
 			'Added',
-			'Updated'
+			'Updated',
+			'Audio Languages',
+			'Subtitle Languages'
 			)
 	# Extreme fields
 	if Prefs['Movie_Level'] in ['Extreme', 'Extreme 2']:
@@ -608,6 +610,24 @@ def scanMovieDB(myMediaURL, myCSVFile):
 					# Get Updated at
 					updatedAt = (Datetime.FromTimestamp(float(GetRegInfo(myMedia, 'updatedAt', '0')))).strftime('%m/%d/%Y')
 					myRow['Updated'] = updatedAt.encode('utf8')
+					#Get Audio languages
+					AudioStreamsLanguages = ExtInfo.xpath('Media/Part/Stream[@streamType=2][@languageCode]')
+					for langCode in AudioStreamsLanguages
+						if AudioLanguages == '':
+							AudioLanguages = langCode
+						else:
+							AudioLanguages = AudioLanguages + mySepChar + langCode
+						Genre = WrapStr(AudioLanguages)
+						myRow['Audio Languages'] = AudioLanguages
+					#Get Subtitle languages
+					SubtitleStreams = ExtInfo.xpath('Media/Part/Stream[@streamType=3][@languageCode]')
+					for langCode in SubtitleStreamsLanguages
+						if SubtitleLanguages == '':
+							SubtitleLanguages = langCode
+						else:
+							SubtitleLanguages = SubtitleLanguages + mySepChar + langCode
+						Genre = WrapStr(SubtitleLanguages)
+						myRow['Subtitle Languages'] = SubtitleLanguages
 					if Prefs['Movie_Level'] not in ['Extreme','Extreme 2']:
 						csvwriter.writerow(myRow)
 					else:
@@ -764,7 +784,9 @@ def getTVHeader():
 			'Container',
 			'Video FrameRate',
 			'Locked fields',
-			'Extras'
+			'Extras',
+			'Audio Languages',
+			'Subtitle Languages'
 			)
 	# Extreme fields
 	if Prefs['TV_Level'] in ['Extreme', 'Extreme2']:
@@ -984,6 +1006,24 @@ def scanShowDB(myMediaURL, myCSVFile):
 								Extra = Extras[0]
 							Extra = WrapStr(Extra)
 							myRow['Extras'] = Extra.encode('utf8')
+							#Get Audio languages
+							AudioStreamsLanguages = Media.xpath('//Stream[@streamType=2][@languageCode]')
+							for langCode in AudioStreamsLanguages
+								if AudioLanguages == '':
+									AudioLanguages = langCode
+								else:
+									AudioLanguages = AudioLanguages + mySepChar + langCode
+								Genre = WrapStr(AudioLanguages)
+								myRow['Audio Languages'] = AudioLanguages
+							#Get Subtitle languages
+							SubtitleStreams = Media.xpath('//Stream[@streamType=3][@languageCode]')
+							for langCode in SubtitleStreamsLanguages
+								if SubtitleLanguages == '':
+									SubtitleLanguages = langCode
+								else:
+									SubtitleLanguages = SubtitleLanguages + mySepChar + langCode
+								Genre = WrapStr(SubtitleLanguages)
+								myRow['Subtitle Languages'] = SubtitleLanguages							
 						# Everything is gathered, so let's write the row if needed
 						if Prefs['TV_Level'] not in ['Extreme']:
 							csvwriter.writerow(myRow)
