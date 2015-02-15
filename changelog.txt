@@ -1,3 +1,8 @@
+V0.0.2.5:
+- Added export of Audio Language for movies and TV-Shows
+- Added export of Subtitle Language for movies and TV-Shows
+*** Above was made by a new lost soul here......CCarpo
+
 V0.0.2.4:
 - Fixed issue with some requests having token in the url, instead of in the header
 - Added Simple and basic mode to Music sections
