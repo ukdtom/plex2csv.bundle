@@ -1,3 +1,9 @@
+V0.0.2.6:
+- Added new export level to Movies, called "Extreme 3"
+  - Allows export of the path where metadata is stored, like subtitles
+- Added new export level to TV-Shows, called "Extreme 2"
+  - Allows export of the path where metadata is stored, like subtitles
+
 V0.0.2.5:
 - Added export of Audio Language for movies and TV-Shows
 - Added export of Subtitle Language for movies and TV-Shows

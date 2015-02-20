@@ -24,7 +24,7 @@ import base64
 import uuid
 from urllib2 import Request, urlopen, URLError, HTTPError
 
-VERSION = ' V0.0.2.5'
+VERSION = ' V0.0.2.6'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -335,7 +335,7 @@ def getMovieHeader():
 			'Genres'
 			)
 	# Basic fields
-	if (Prefs['Movie_Level'] in ['Basic','Extended','Extreme', 'Extreme 2']):
+	if (Prefs['Movie_Level'] in ['Basic','Extended','Extreme', 'Extreme 2', 'Extreme 3']):
 		fieldnames = fieldnames + (
 			'View Count',
 			'Last Viewed at',
@@ -350,7 +350,7 @@ def getMovieHeader():
 			'Labels'
 			)
 	# Extended fields
-	if Prefs['Movie_Level'] in ['Extended','Extreme', 'Extreme 2']:
+	if Prefs['Movie_Level'] in ['Extended','Extreme', 'Extreme 2', 'Extreme 3']:
 		fieldnames = fieldnames + (
 			'Original Title',
 			'Collections',
@@ -360,7 +360,7 @@ def getMovieHeader():
 			'Subtitle Languages'
 			)
 	# Extreme fields
-	if Prefs['Movie_Level'] in ['Extreme', 'Extreme 2']:
+	if Prefs['Movie_Level'] in ['Extreme', 'Extreme 2', 'Extreme 3']:
 		fieldnames = fieldnames + (
 			'Video Resolution',
 			'Bitrate',
@@ -374,13 +374,19 @@ def getMovieHeader():
 			'Video FrameRate'
 			)
 	# Part info
-	if Prefs['Movie_Level'] in ['Extreme 2']:			
+	if Prefs['Movie_Level'] in ['Extreme 2', 'Extreme 3']:			
 		fieldnames = fieldnames + (
 			'Part File',
 			'Part Size',
 			'Part Indexed',
 			'Part Duration',
 			'Part Container'
+			)
+	# Extreme 3 level
+	if Prefs['Movie_Level'] in ['Extreme 3']:			
+		fieldnames = fieldnames + (
+			'PMS Media Path',
+			''
 			)
 	return fieldnames
 
@@ -442,7 +448,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			# Get Media ID
 			myRow['Media ID'] = GetRegInfo(myMedia, 'ratingKey')
 			# Get Extended info if needed
-			if Prefs['Movie_Level'] in ['Basic','Extended','Extreme','Extreme 2']:				
+			if Prefs['Movie_Level'] in ['Basic','Extended','Extreme','Extreme 2', 'Extreme 3']:				
 				myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia, 'ratingKey') + '?includeExtras=1&'
 				ExtInfo = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Video')[0]
 			# Get title
@@ -460,7 +466,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			# Get Summary
 			myRow['Summary'] = GetRegInfo(myMedia, 'summary')
 			# Get Genres							
-			if Prefs['Movie_Level'] in ['Extended','Extreme','Extreme 2']:
+			if Prefs['Movie_Level'] in ['Extended','Extreme','Extreme 2', 'Extreme 3']:
 				Genres = ExtInfo.xpath('Genre/@tag')
 			else:
 				Genres = myMedia.xpath('Genre/@tag')
@@ -475,7 +481,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			Genre = WrapStr(Genre)
 			myRow['Genres'] = Genre.encode('utf8')
 			# And now for Basic Export or higher if needed, else write out the row
-			if Prefs['Movie_Level'] not in ['Basic','Extended','Extreme','Extreme 2']:
+			if Prefs['Movie_Level'] not in ['Basic','Extended','Extreme','Extreme 2', 'Extreme 3']:
 				csvwriter.writerow(myRow)
 			else:
 # Basic and above
@@ -563,7 +569,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 							Role = myRole
 						else:
 							Role = Role + mySepChar + myRole
-				elif Prefs['Movie_Level'] in ['Extended','Extreme','Extreme 2']:
+				elif Prefs['Movie_Level'] in ['Extended','Extreme','Extreme 2', 'Extreme 3']:
 					# Get Roles Extended
 					myRoles = ExtInfo.xpath('//Role')
 					Role = ''
@@ -586,7 +592,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				Role = WrapStr(Role)
 				myRow['Roles'] = Role.encode('utf8')
 				# End here, or higher level selected by my master?
-				if Prefs['Movie_Level'] not in ['Extended','Extreme','Extreme 2']:
+				if Prefs['Movie_Level'] not in ['Extended','Extreme','Extreme 2', 'Extreme 3']:
 					csvwriter.writerow(myRow)
 				else:
 # Extended or higher
@@ -629,7 +635,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 						else:
 							SubtitleLanguages = SubtitleLanguages + mySepChar + GetMoviePartInfo(langCode, 'languageCode', 'N/A')
 					myRow['Subtitle Languages'] = SubtitleLanguages
-					if Prefs['Movie_Level'] not in ['Extreme','Extreme 2']:
+					if Prefs['Movie_Level'] not in ['Extreme','Extreme 2', 'Extreme 3']:
 						csvwriter.writerow(myRow)
 					else:
 # Extreme or higher
@@ -654,7 +660,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 						# Get Video FrameRate
 						myRow['Video FrameRate'] = GetExtInfo(ExtInfo, 'videoFrameRate')
 						# Everything is gathered, so let's write the row if needed
-						if Prefs['Movie_Level'] in ['Extreme 2']:									
+						if Prefs['Movie_Level'] in ['Extreme 2', 'Extreme 3']:									
 							parts = ExtInfo.xpath('//Part')
 							movieParts = 0
 							# Check if part is an extra or a real movie part
@@ -667,12 +673,15 @@ def scanMovieDB(myMediaURL, myCSVFile):
 						else:						
 							csvwriter.writerow(myRow)
 #Extreme 2 Level
-						if Prefs['Movie_Level'] in ['Extreme 2']:
+						if Prefs['Movie_Level'] in ['Extreme 2', 'Extreme 3']:
 							Parts = ExtInfo.xpath('//Video/Media/Part')
 							for part in parts:
 								if GetRegInfo(part, 'file')	== '':
+									if Prefs['Movie_Level'] not in ['Extreme 3']:
+										csvwriter.writerow(myRow)
 									pass
 								else:
+
 									# File Name of this Part
 									myRow['Part File'] = GetMoviePartInfo(part, 'file', 'N/A')
 									# File size of this part
@@ -683,9 +692,19 @@ def scanMovieDB(myMediaURL, myCSVFile):
 									myRow['Part Container'] = GetMoviePartInfo(part, 'container', 'N/A')
 									# Part Duration
 									partDuration = ConvertTimeStamp(GetMoviePartInfo(part, 'duration', '0'))
-									myRow['Part Duration'] = partDuration.encode('utf8')								
-									csvwriter.writerow(myRow)
-						# Extreme 2 ended
+									myRow['Part Duration'] = partDuration.encode('utf8')
+									if Prefs['Movie_Level'] not in ['Extreme 3']:
+										csvwriter.writerow(myRow)
+									else:							
+#Extreme 3 Level
+										# Get tree info for media
+										myMediaTreeInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia, 'ratingKey') + '/tree'
+										TreeInfo = XML.ElementFromURL(myMediaTreeInfoURL, headers=MYHEADER).xpath('//MediaPart')
+										for myPart in TreeInfo:
+											MediaHash = GetRegInfo(myPart, 'hash')
+											PMSMediaPath = os.path.join(Core.app_support_path, 'Media', 'localhost', MediaHash[0], MediaHash[1:]+ '.bundle', 'Contents')
+											myRow['PMS Media Path'] = PMSMediaPath.encode('utf8')
+											csvwriter.writerow(myRow)
 			bScanStatusCount += 1
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, GetRegInfo(myMedia, 'title')))
 		Log.Debug("******* Ending scanMovieDB ***********")
@@ -754,7 +773,7 @@ def getTVHeader():
 			'Rating',			
 			)
 	# Basic fields
-	if (Prefs['TV_Level'] in ['Basic','Extended','Extreme', 'Extreme2']):
+	if (Prefs['TV_Level'] in ['Basic','Extended','Extreme', 'Extreme 2']):
 		fieldnames = fieldnames + (
 			'View Count',
 			'Last Viewed at',
@@ -770,7 +789,7 @@ def getTVHeader():
 			'Updated'			
 			)
 	# Extended fields
-	if Prefs['TV_Level'] in ['Extended','Extreme', 'Extreme2']:
+	if Prefs['TV_Level'] in ['Extended','Extreme', 'Extreme 2']:
 		fieldnames = fieldnames + (
 			'Media Id',
 			'Video Resolution',
@@ -790,13 +809,19 @@ def getTVHeader():
 			'Subtitle Languages'
 			)
 	# Extreme fields
-	if Prefs['TV_Level'] in ['Extreme', 'Extreme2']:
+	if Prefs['TV_Level'] in ['Extreme', 'Extreme 2']:
 		fieldnames = fieldnames + (			
 			'Part Duration',
 			'Part File',
 			'Part Size',
 			'Part Indexed',
 			'Part Container'			
+			)
+	# Extreme 2 fields
+	if Prefs['TV_Level'] in ['Extreme 2']:
+		fieldnames = fieldnames + (			
+			'PMS Media Path',
+			''
 			)
 	return fieldnames
 
@@ -866,7 +891,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 				# Get Rating
 				myRow['Rating'] = GetRegInfo(myMedia2, 'rating')
 				# And now for Basic Export
-				if Prefs['TV_Level'] not in ['Basic','Extended','Extreme']:
+				if Prefs['TV_Level'] not in ['Basic','Extended','Extreme', 'Extreme 2']:
 					csvwriter.writerow(myRow)
 				else:
 # Basic and above
@@ -952,7 +977,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 					updatedAt = (Datetime.FromTimestamp(float(GetRegInfo(myMedia2, 'updatedAt', '0')))).strftime('%m/%d/%Y')
 					myRow['Updated'] = updatedAt.encode('utf8')
 					# Everything is gathered, so let's write the row if needed
-					if Prefs['TV_Level'] not in ['Extended','Extreme']:
+					if Prefs['TV_Level'] not in ['Extended','Extreme', 'Extreme 2']:
 						csvwriter.writerow(myRow)
 					else:		
 # Extended or above		
@@ -1026,7 +1051,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 									SubtitleLanguages = SubtitleLanguages + mySepChar + GetMoviePartInfo(langCode, 'languageCode', 'N/A')
 							myRow['Subtitle Languages'] = SubtitleLanguages							
 						# Everything is gathered, so let's write the row if needed
-						if Prefs['TV_Level'] not in ['Extreme']:
+						if Prefs['TV_Level'] not in ['Extreme', 'Extreme 2']:
 							csvwriter.writerow(myRow)
 						else:
 # Extreme level and above
@@ -1046,7 +1071,19 @@ def scanShowDB(myMediaURL, myCSVFile):
 								# Part Duration
 								partDuration = ConvertTimeStamp(GetMoviePartInfo(part, 'duration', '0'))
 								myRow['Part Duration'] = partDuration.encode('utf8')								
+							if Prefs['TV_Level'] not in ['Extreme 2']:
 								csvwriter.writerow(myRow)
+							else:
+# Extreme level 2
+							
+								# Get tree info for media
+								myMediaTreeInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia, 'ratingKey') + '/tree'
+								TreeInfo = XML.ElementFromURL(myMediaTreeInfoURL, headers=MYHEADER).xpath('//MediaPart')
+								for myPart in TreeInfo:
+									MediaHash = GetRegInfo(myPart, 'hash')
+									PMSMediaPath = os.path.join(Core.app_support_path, 'Media', 'localhost', MediaHash[0], MediaHash[1:]+ '.bundle', 'Contents')
+									myRow['PMS Media Path'] = PMSMediaPath.encode('utf8')
+									csvwriter.writerow(myRow)								
 						# Extreme ended
 			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, GetRegInfo(myMedia, 'grandparentTitle') + '-' + GetRegInfo(myMedia, 'title')))
 		return
