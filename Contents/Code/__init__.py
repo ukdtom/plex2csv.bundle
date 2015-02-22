@@ -27,7 +27,7 @@ import movies, tvseries, audio
 import consts, misc
 
 
-VERSION = ' V0.0.2.8 - DEV'
+VERSION = ' V0.0.2.8'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
