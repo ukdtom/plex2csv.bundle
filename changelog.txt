@@ -1,3 +1,7 @@
+V0.0.2.8:
+- Moved Movie section scaning away from native Python, and back to the Plex framework
+  - This means less impact on the Plex Media Server while exporting a Movie section
+
 V0.0.2.7:
 - Fixed issue with TV-Series in Extreme 2 level multiplied
 - Started to reorganize code into sub files, making development a tad more easy
