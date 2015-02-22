@@ -1,3 +1,7 @@
+V0.0.2.7:
+- Fixed issue with TV-Series in Extreme 2 level multiplied
+- Started to reorganize code into sub files, making development a tad more easy
+
 V0.0.2.6:
 - Added new export level to Movies, called "Extreme 3"
   - Allows export of the path where metadata is stored, like subtitles
