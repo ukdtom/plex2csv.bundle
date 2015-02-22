@@ -22,6 +22,20 @@ def GetExtInfo(ExtInfo, myField, default = ''):
 	return myLookUp.encode('utf8')
 
 ####################################################################################################
+# This function will return info from different parts of a movie
+####################################################################################################
+def GetMoviePartInfo(ExtInfo, myField, default = ''):
+	try:
+		myLookUp = WrapStr(ExtInfo.get(myField))
+		if not myLookUp:
+			myLookUp = WrapStr(default)
+	except:
+		myLookUp = WrapStr(default)
+		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
+	return myLookUp.encode('utf8')
+
+
+####################################################################################################
 #	Pull's a field from the xml
 ####################################################################################################
 def GetRegInfo(myMedia, myField, default = ''):

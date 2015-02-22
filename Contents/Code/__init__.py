@@ -24,10 +24,10 @@ import base64
 import uuid
 from urllib2 import Request, urlopen, URLError, HTTPError
 import movies, tvseries
-import consts
+import consts, misc
 
 
-VERSION = ' V0.0.2.7 - DEV2'
+VERSION = ' V0.0.2.7'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -378,76 +378,11 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		Log.Debug("Walking medias")
 		for myMedia in myMedias:				
 			myRow = {}
-# Add all for Simple Export and above
-			
+			# Export the info			
 			myRow = movies.getMovieInfo(myMedia, myRow, MYHEADER, csvwriter)
-
-			# Get Extended info if needed
-			if Prefs['Movie_Level'] in ['Basic','Extended','Extreme','Extreme 2', 'Extreme 3']:				
-				myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia, 'ratingKey') + '?includeExtras=1&'
-				ExtInfo = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Video')[0]
-
-			# Dummy to handle an indent during convert to external movie.py file
-			if True:
-				if True:
-					if Prefs['Movie_Level'] not in ['Extreme','Extreme 2', 'Extreme 3']:
-						csvwriter.writerow(myRow)
-					else:
-# Extreme or higher
-
-
-
-						# Everything is gathered, so let's write the row if needed
-						if Prefs['Movie_Level'] in ['Extreme 2', 'Extreme 3']:									
-							parts = ExtInfo.xpath('//Part')
-							movieParts = 0
-							# Check if part is an extra or a real movie part
-							for part in parts:
-								if GetRegInfo(part, 'file')	!= '':
-									movieParts += 1
-							if movieParts > 1:
-								csvwriter.writerow(myRow)
-								myRow = {}						
-						else:						
-							csvwriter.writerow(myRow)
-
-
-
-#Extreme 2 Level
-						if Prefs['Movie_Level'] in ['Extreme 2', 'Extreme 3']:
-							Parts = ExtInfo.xpath('//Video/Media/Part')
-							for part in parts:
-								if GetRegInfo(part, 'file')	== '':
-									if Prefs['Movie_Level'] not in ['Extreme 3']:
-										csvwriter.writerow(myRow)
-									pass
-								else:
-
-									# File Name of this Part
-									myRow['Part File'] = GetMoviePartInfo(part, 'file', 'N/A')
-									# File size of this part
-									myRow['Part Size'] = GetMoviePartInfo(part, 'size', 'N/A')
-									# Is This part Indexed
-									myRow['Part Indexed'] = GetMoviePartInfo(part, 'indexes', 'N/A')
-									# Part Container
-									myRow['Part Container'] = GetMoviePartInfo(part, 'container', 'N/A')
-									# Part Duration
-									partDuration = ConvertTimeStamp(GetMoviePartInfo(part, 'duration', '0'))
-									myRow['Part Duration'] = partDuration.encode('utf8')
-									if Prefs['Movie_Level'] not in ['Extreme 3']:
-										csvwriter.writerow(myRow)
-									else:							
-#Extreme 3 Level
-										# Get tree info for media
-										myMediaTreeInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia, 'ratingKey') + '/tree'
-										TreeInfo = XML.ElementFromURL(myMediaTreeInfoURL, headers=MYHEADER).xpath('//MediaPart')
-										for myPart in TreeInfo:
-											MediaHash = GetRegInfo(myPart, 'hash')
-											PMSMediaPath = os.path.join(Core.app_support_path, 'Media', 'localhost', MediaHash[0], MediaHash[1:]+ '.bundle', 'Contents')
-											myRow['PMS Media Path'] = PMSMediaPath.encode('utf8')
-											csvwriter.writerow(myRow)
+			csvwriter.writerow(myRow)
 			bScanStatusCount += 1
-			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, GetRegInfo(myMedia, 'title')))
+			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, misc.GetRegInfo(myMedia, 'title')))
 		Log.Debug("******* Ending scanMovieDB ***********")
 		csvfile.close
 

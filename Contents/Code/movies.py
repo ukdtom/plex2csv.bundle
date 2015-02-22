@@ -97,10 +97,49 @@ def getMovieInfo(myMedia, myRow, MYHEADER, csvwriter):
 		# Get Extreme Info
 		if Prefs['Movie_Level'] in ["Extreme", "Extreme 2", "Extreme 3"]:
 			myRow = getMovieExtreme(myMedia, myRow, ExtInfo)	
-
-
+		# Get Extreme 2 Info
+		if Prefs['Movie_Level'] in ["Extreme 2", "Extreme 3"]:
+			myRow = getMovieExtreme2(myMedia, myRow, ExtInfo)	
+		# Get Extreme 2 Info
+		if Prefs['Movie_Level'] in ["Extreme 3"]:
+			myRow = getMovieExtreme3(myMedia, myRow, ExtInfo, MYHEADER)	
 		return myRow
 
+####################################################################################################
+# This function will return the extreme 2 info for movies
+####################################################################################################
+def getMovieExtreme3(myMedia, myRow, ExtInfo, MYHEADER):
+
+	# Get tree info for media
+	myMediaTreeInfoURL = 'http://127.0.0.1:32400/library/metadata/' + misc.GetRegInfo(myMedia, 'ratingKey') + '/tree'
+	TreeInfo = XML.ElementFromURL(myMediaTreeInfoURL, headers=MYHEADER).xpath('//MediaPart')
+	for myPart in TreeInfo:
+		MediaHash = misc.GetRegInfo(myPart, 'hash')
+		PMSMediaPath = os.path.join(Core.app_support_path, 'Media', 'localhost', MediaHash[0], MediaHash[1:]+ '.bundle', 'Contents')
+		myRow['PMS Media Path'] = PMSMediaPath.encode('utf8')
+	return myRow
+
+####################################################################################################
+# This function will return the extreme 2 info for movies
+####################################################################################################
+def getMovieExtreme2(myMedia, myRow, ExtInfo):
+	parts = ExtInfo.xpath('//Video/Media/Part')
+	for part in parts:
+		if misc.GetRegInfo(part, 'file')	== '':
+			pass
+		else:
+			# File Name of this Part
+			myRow['Part File'] = misc.GetRegInfo(part, 'file', 'N/A')
+			# File size of this part
+			myRow['Part Size'] = misc.GetRegInfo(part, 'size', 'N/A')
+			# Is This part Indexed
+			myRow['Part Indexed'] = misc.GetRegInfo(part, 'indexes', 'N/A')
+			# Part Container
+			myRow['Part Container'] = misc.GetRegInfo(part, 'container', 'N/A')
+			# Part Duration
+			partDuration = misc.ConvertTimeStamp(misc.GetRegInfo(part, 'duration', '0'))
+			myRow['Part Duration'] = partDuration.encode('utf8')
+	return myRow
 
 ####################################################################################################
 # This function will return the extreme info for movies
@@ -126,12 +165,7 @@ def getMovieExtreme(myMedia, myRow, ExtInfo):
 	myRow['Container'] = misc.GetExtInfo(ExtInfo, 'container')
 	# Get Video FrameRate
 	myRow['Video FrameRate'] = misc.GetExtInfo(ExtInfo, 'videoFrameRate')
-
-
-
-
 	return myRow
-
 
 ####################################################################################################
 # This function will return the extended info for movies
