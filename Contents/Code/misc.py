@@ -83,4 +83,10 @@ def ConvertTimeStamp(timeStamp):
 	hours=str((int(timeStamp)/(1000*60*60))%24)
 	return hours + ':' + minutes + ':' + seconds
 
+####################################################################################################
+# This function will return a string in month, date, year format from a millisecond timestamp
+####################################################################################################
+def ConvertDateStamp(timeStamp):
+	return Datetime.FromTimestamp(float(timeStamp)).strftime('%m/%d/%Y')
+
 

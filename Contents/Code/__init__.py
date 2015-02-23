@@ -27,7 +27,7 @@ import movies, tvseries, audio
 import consts, misc
 
 
-VERSION = ' V0.0.2.8'
+VERSION = ' V0.0.2.8 - DEV2'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -47,9 +47,9 @@ sectiontype = ''		# Type of section been exported
 # Start function
 ####################################################################################################
 def Start():
-#	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
+	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
 	Log.Debug("*******  Started %s on %s  ***********" %(NAME  + VERSION, Platform.OS))
-	global MYHEADER
+#	global MYHEADER
 	Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
 	ObjectContainer.art = R(ART)
 	ObjectContainer.title1 = NAME  + VERSION
@@ -118,8 +118,9 @@ def MainMenu(random=0):
 				if sectiontype != "photo": # ToDo: Remove artist when code is in place for it.
 					title = section.get('title')
 					key = section.get('key')
+					thumb = 'http://127.0.0.1:32400' + section.get('thumb')
 					Log.Debug('Title of section is %s with a key of %s' %(title, key))
-					oc.add(DirectoryObject(key=Callback(backgroundScan, title=title, sectiontype=sectiontype, key=key, random=time.clock()), title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
+					oc.add(DirectoryObject(key=Callback(backgroundScan, title=title, sectiontype=sectiontype, key=key, random=time.clock()), thumb=thumb, title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
 		else:
 			oc.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="Select Preferences to set the export path"))
 	except:
@@ -425,117 +426,23 @@ def scanShowDB(myMediaURL, myCSVFile):
 			myMedias2 = root2.findall('.//Video')		
 			for myMedia2 in myMedias2:
 # Simple and above
-				myRow = {}
-				# Get episode rating key
-				myRow['Id'] = misc.GetRegInfo(myMedia2, 'ratingKey')
-				# Get Serie Title
-				myRow['Series Title'] = misc.GetRegInfo(myMedia2, 'grandparentTitle')
-				# Get Episode sort Title
-				myRow['Episode Sort Title'] = misc.GetRegInfo(myMedia2, 'titleSort')
-				# Get Episode title
-				myRow['Episode Title'] = misc.GetRegInfo(myMedia2, 'title')
-				# Get Year
-				myRow['Year'] = misc.GetRegInfo(myMedia2, 'year')
-				# Get Season number
-				myRow['Season'] = misc.GetRegInfo(myMedia2, 'parentIndex')
-				# Get Episode number
-				myRow['Episode'] = misc.GetRegInfo(myMedia2, 'index')
-				# Get Content Rating
-				myRow['Content Rating'] = misc.GetRegInfo(myMedia2, 'contentRating')
-				# Get summary
-				myRow['Summary'] = misc.GetRegInfo(myMedia2, 'summary')
-				# Get Rating
-				myRow['Rating'] = misc.GetRegInfo(myMedia2, 'rating')
+				myRow = {}				
+				# Export the info			
+				myRow = tvseries.getTVInfo(myMedia2, myRow, MYHEADER, csvwriter, myMedia)				
+
+
 				# And now for Basic Export
 				if Prefs['TV_Level'] not in ['Basic','Extended','Extreme', 'Extreme 2']:
 					csvwriter.writerow(myRow)
 				else:
-# Basic and above
-					# Get Watched count
-					myRow['View Count'] = misc.GetRegInfo(myMedia2, 'viewCount')
-					# Get last watched timestamp
-					lastViewedAt = (Datetime.FromTimestamp(float(misc.GetRegInfo(myMedia2, 'lastViewedAt', '0')))).strftime('%m/%d/%Y')
-					if lastViewedAt == '01/01/1970':
-						myRow['Last Viewed at'] = ''
-					else:
-						myRow['Last Viewed at'] = lastViewedAt.encode('utf8')
-					# Get Studio
-					myRow['Studio'] = misc.GetRegInfo(myMedia2, 'studio')
-					# Get Originally Aired
-					myRow['Originally Aired'] = misc.GetRegInfo(myMedia2, 'originallyAvailableAt')
-					# Get the Writers
-					Writer = myMedia2.xpath('Writer/@tag')
-					if not Writer:
-						Writer = ['']
-					Author = ''
-					for myWriter in Writer:
-						if Author == '':
-							Author = myWriter
-						else:
-							Author = Author + ' - ' + myWriter
-					Author = misc.WrapStr(Author)
-					myRow['Authors'] = Author.encode('utf8')
-					# Get Genres
-					Genres = myMedia.xpath('Genre/@tag')
-					if not Genres:
-						Genres = ['']
-					Genre = ''
-					for myGenre in Genres:
-						if Genre == '':
-							Genre = myGenre
-						else:
-							Genre = Genre + mySepChar + myGenre
-					Genre = misc.WrapStr(Genre)
-					myRow['Genres'] = Genre.encode('utf8')
-					# Get the Directors
-					Directors = myMedia2.xpath('Director/@tag')
-					if not Directors:
-						Directors = ['']
-					Director = ''
-					for myDirector in Directors:
-						if Director == '':
-							Director = myDirector
-						else:
-							Director = Director + mySepChar + myDirector
-					Director = misc.WrapStr(Director)
-					myRow['Directors'] = Director.encode('utf8')
-					# Get Roles
-					Roles = myMedia.xpath('Role/@tag')
-					if not Roles:
-						Roles = ['']
-					Role = ''
-					for myRole in Roles:
-						if Role == '':
-							Role = myRole
-						else:
-							Role = Role + mySepChar + myRole
-					Role = misc.WrapStr(Role)
-					myRow['Roles'] = Role.encode('utf8')
-					# Get labels
-					Labels = myMedia2.xpath('Label/@tag')
-					if not Labels:
-						Labels = ['']
-					Label = ''
-					for myLabel in Labels:
-						if Label == '':
-							Label = myLabel
-						else:
-							Label = Label + mySepChar + myLabel
-					Label = misc.WrapStr(Label)
-					myRow['Labels'] = Label.encode('utf8')
-					# Get the duration of the episode
-					duration = misc.ConvertTimeStamp(misc.GetRegInfo(myMedia2, 'duration', '0'))
-					myRow['Duration'] = duration.encode('utf8')
-					# Get Added at
-					addedAt = (Datetime.FromTimestamp(float(misc.GetRegInfo(myMedia2, 'addedAt', '0')))).strftime('%m/%d/%Y')
-					myRow['Added'] = addedAt.encode('utf8')
-					# Get Updated at
-					updatedAt = (Datetime.FromTimestamp(float(misc.GetRegInfo(myMedia2, 'updatedAt', '0')))).strftime('%m/%d/%Y')
-					myRow['Updated'] = updatedAt.encode('utf8')
+
 					# Everything is gathered, so let's write the row if needed
 					if Prefs['TV_Level'] not in ['Extended','Extreme', 'Extreme 2']:
 						csvwriter.writerow(myRow)
 					else:		
+
+
+
 # Extended or above		
 						myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + misc.GetRegInfo(myMedia2, 'ratingKey') + '?checkFiles=1&includeExtras=1&'
 						Medias2 = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Media')	
@@ -666,7 +573,7 @@ def scanArtistDB(myMediaURL, myCSVFile):
 		myMedias = XML.ElementFromURL(myMediaURL, headers=MYHEADER).xpath('//Directory')
 		bScanStatusCountOf = len(myMedias)
 		csvfile = io.open(myCSVFile,'wb')
-		csvwriter = csv.DictWriter(csvfile, fieldnames=audio.getMusicHeader(Prefs['Artist_Level']))
+		csvwriter = csv.DictWriter(csvfile, fieldnames=audio.getMusicHeader(Prefs['Artist_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		csvwriter.writeheader()
 		for myMedia in myMedias:
 			bScanStatusCount += 1
