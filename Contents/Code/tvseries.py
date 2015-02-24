@@ -77,14 +77,54 @@ def getTVHeader(PrefsLevel):
 ####################################################################################################
 # This function will return the info for TV-Shows
 ####################################################################################################
-def getTVInfo(myMedia, myRow, MYHEADER, csvwriter, myMedia):
+def getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia):
 		# Get Simple Info
-		myRow = getTVSimple(myMedia, myRow)
+		myRow = getTVSimple(Episode, myRow)
+
+		print 'GED TV 1'
+
 		# Get Basic Info
 		if Prefs['TV_Level'] in ["Basic","Extended", "Extreme", "Extreme 2"]:
-			myRow = getTVBasic(myMedia, myRow, myMedia)
+			myRow = getTVBasic(Episode, myRow, EpisodeMedia)
+
+		print 'GED TV 2'
+
+		# Gather som futher info here		
+		if Prefs['TV_Level'] in ["Extended", "Extreme", "Extreme 2"]:
+
+			print 'GED TV 3'
+
+			print 'GED ', EpisodeMedia
+
+			# Get Extended info
+			myRow = getTVExtended(Episode, myRow, EpisodeMedia)
 
 		return myRow
+
+####################################################################################################
+# This function will return the Extended info for TV-Shows
+####################################################################################################
+def getTVExtended(Episode, myRow, EpisodeMedia):
+
+	# VideoResolution
+	myRow['Video Resolution'] = misc.GetMoviePartInfo(EpisodeMedia, 'videoResolution', 'N/A')
+	# id
+	myRow['Media Id'] = misc.GetMoviePartInfo(Episode, 'id', 'N/A')
+	# Duration
+	Mediaduration = misc.ConvertTimeStamp(misc.GetRegInfo(EpisodeMedia, 'duration', '0'))
+	myRow['Media Duration'] = Mediaduration.encode('utf8')
+	# Bitrate
+	myRow['Bit Rate'] = misc.GetMoviePartInfo(EpisodeMedia, 'bitrate', 'N/A')
+
+
+
+	print 'GED3 ', misc.GetMoviePartInfo(Episode, 'id', 'N/A')
+
+
+
+
+	return myRow
+
 
 ####################################################################################################
 # This function will return the Basic info for TV-Shows
@@ -123,7 +163,7 @@ def getTVBasic(myMedia2, myRow, myMedia):
 		if Genre == '':
 			Genre = myGenre
 		else:
-			Genre = Genre + mySepChar + myGenre
+			Genre = Genre + Prefs['Seperator'] + myGenre
 	Genre = misc.WrapStr(Genre)
 	myRow['Genres'] = Genre.encode('utf8')
 	# Get the Directors
@@ -138,8 +178,6 @@ def getTVBasic(myMedia2, myRow, myMedia):
 			Director = Director + Prefs['Seperator'] + myDirector
 	Director = misc.WrapStr(Director)
 	myRow['Directors'] = Director.encode('utf8')
-
-
 	# Get Roles
 	Roles = myMedia.xpath('Role/@tag')
 	if not Roles:
@@ -149,7 +187,7 @@ def getTVBasic(myMedia2, myRow, myMedia):
 		if Role == '':
 			Role = myRole
 		else:
-			Role = Role + mySepChar + myRole
+			Role = Role + Prefs['Seperator'] + myRole
 	Role = misc.WrapStr(Role)
 	myRow['Roles'] = Role.encode('utf8')
 	# Get labels
@@ -164,10 +202,6 @@ def getTVBasic(myMedia2, myRow, myMedia):
 			Label = Label + Prefs['Seperator'] + myLabel
 	Label = misc.WrapStr(Label)
 	myRow['Labels'] = Label.encode('utf8')
-
-
-
-
 	# Get the duration of the episode
 	duration = misc.ConvertTimeStamp(misc.GetRegInfo(myMedia2, 'duration', '0'))
 	myRow['Duration'] = duration.encode('utf8')
@@ -177,16 +211,7 @@ def getTVBasic(myMedia2, myRow, myMedia):
 	# Get Updated at
 	updatedAt = misc.ConvertDateStamp(misc.GetRegInfo(myMedia2, 'updatedAt', '0'))
 	myRow['Updated'] = updatedAt.encode('utf8')
-
-
-
-
-
-
-
-
 	return myRow
-
 
 ####################################################################################################
 # This function will return the simple info for TV-Shows
