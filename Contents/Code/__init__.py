@@ -436,12 +436,12 @@ def scanShowDB(myMediaURL, myCSVFile):
 # Simple and above
 				myRow = {}	
 
-				print 'GED TEST2'
+
 	
 				# Just assign it temp, if running in simple mode, and don't use it
 				EpisodeMedia = Episode
 
-				print 'GED TEST3'
+
 
 				# Extended or above?
 				if Prefs['TV_Level'] in ['Extended','Extreme', 'Extreme 2']:
@@ -449,13 +449,13 @@ def scanShowDB(myMediaURL, myCSVFile):
 					EpisodeMedia = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Media')
 
 
-				print 'GED TEST4 ', EpisodeMedia
+
 
 			
 				# Export the info			
-				myRow = tvseries.getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia)				
+				myRow = tvseries.getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShow)				
 
-				print 'GED 22 ', Prefs['TV_Level']
+
 
 
 
@@ -463,7 +463,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 				if Prefs['TV_Level'] not in ['Extreme', 'Extreme 2']:
 					csvwriter.writerow(myRow)
 
-					print 'GED NAESTE'
+
 
 				else:
 					if True:
@@ -493,32 +493,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 						for Media in Medias2:
 
 
-							# VideoResolution
-#							myRow['Video Resolution'] = misc.GetMoviePartInfo(Media, 'videoResolution', 'N/A')
-							# id
-#							myRow['Media Id'] = misc.GetMoviePartInfo(Media, 'id', 'N/A')
-							# Duration
-#							Mediaduration = misc.ConvertTimeStamp(misc.GetRegInfo(Media, 'duration', '0'))
-#							myRow['Media Duration'] = Mediaduration.encode('utf8')
-							# Bitrate
-#							myRow['Bit Rate'] = misc.GetMoviePartInfo(Media, 'bitrate', 'N/A')
-
-
-
-							# Width
-							myRow['Width'] = misc.GetMoviePartInfo(Media, 'width', 'N/A')
-							# Height
-							myRow['Height'] = misc.GetMoviePartInfo(Media, 'height', 'N/A')
-							# AspectRatio
-							myRow['Aspect Ratio'] = misc.GetMoviePartInfo(Media, 'aspectRatio', 'N/A')
-							# AudioChannels
-							myRow['Audio Channels'] = misc.GetMoviePartInfo(Media, 'audioChannels', 'N/A')
-							# AudioCodec
-							myRow['Audio Codec'] = misc.GetMoviePartInfo(Media, 'audioCodec', 'N/A')
-							# VideoCodec
-							myRow['Video Codec'] = misc.GetMoviePartInfo(Media, 'videoCodec', 'N/A')
-							# Container
-							myRow['Container'] = misc.GetMoviePartInfo(Media, 'container', 'N/A')
+		
 							# VideoFrameRate
 							myRow['Video FrameRate'] = misc.GetMoviePartInfo(Media, 'videoFrameRate', 'N/A')
 							# Get the Locked fields
@@ -533,6 +508,14 @@ def scanShowDB(myMediaURL, myCSVFile):
 									Field = Field + mySepChar + myField
 							Field = misc.WrapStr(Field)
 							myRow['Locked fields'] = Field.encode('utf8')
+
+
+
+
+
+
+
+
 							# Got extras?
 							Extras = Media.xpath('//Extras/@size')
 							if not Extras[0]:
@@ -558,7 +541,13 @@ def scanShowDB(myMediaURL, myCSVFile):
 									SubtitleLanguages = misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
 								else:
 									SubtitleLanguages = SubtitleLanguages + mySepChar + misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
-							myRow['Subtitle Languages'] = SubtitleLanguages							
+							myRow['Subtitle Languages'] = SubtitleLanguages				
+
+
+
+
+
+			
 						# Everything is gathered, so let's write the row if needed
 						if Prefs['TV_Level'] not in ['Extreme', 'Extreme 2']:
 							csvwriter.writerow(myRow)
