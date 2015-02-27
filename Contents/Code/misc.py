@@ -9,6 +9,22 @@ import datetime
 
 
 ####################################################################################################
+# This function will return info from an array, defined in an xpath
+####################################################################################################
+def GetArrayAsString(Media, Field, default = ''):
+	Fields = Media.xpath(Field)
+	if not Fields:
+		Fields = ['']
+	Field = ''
+	for myField in Fields:
+		if Field == '':
+			Field = myField
+		else:
+			Field = Field + mySepChar + myField
+	Field = WrapStr(Field)
+	return Field.encode('utf8')
+
+####################################################################################################
 # This function will return info from extended page for movies
 ####################################################################################################
 def GetExtInfo(ExtInfo, myField, default = ''):

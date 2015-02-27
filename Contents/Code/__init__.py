@@ -410,68 +410,46 @@ def scanShowDB(myMediaURL, myCSVFile):
 		mySepChar = Prefs['Seperator']
 		tree = et.parse(urllib2.urlopen(req))	
 		root = tree.getroot()
-		TVShows = root.findall('.//Directory')		
-		bScanStatusCountOf = len(TVShows)
+		AllTVShows = root.findall('.//Directory')		
+		bScanStatusCountOf = len(AllTVShows)
 		csvfile = io.open(myCSVFile,'wb')
 		csvwriter = csv.DictWriter(csvfile, fieldnames=tvseries.getTVHeader(Prefs['TV_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		csvwriter.writeheader()
-		for TVShow in TVShows:
+		for TVShows in AllTVShows:
 
 
-			print 'GED TEST433221'
+
 
 
 			bScanStatusCount += 1
-			ratingKey = TVShow.get("ratingKey")
-			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves?"
+			ratingKey = TVShows.get("ratingKey")
+			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves"
 			Log.Debug("Show %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))
 			req = Request(myURL, headers=MYHEADER)
 			tree2 = et.parse(urllib2.urlopen(req))		
 			root2 = tree2.getroot()
 			Episodes = root2.findall('.//Video')	
 
-			print 'GED TEST1'
+
 	
 			for Episode in Episodes:
 # Simple and above
 				myRow = {}	
-
-
-	
 				# Just assign it temp, if running in simple mode, and don't use it
-				EpisodeMedia = Episode
-
-
-
+				EpisodeMediaRatingKey = Episode.get('ratingKey')
 				# Extended or above?
 				if Prefs['TV_Level'] in ['Extended','Extreme', 'Extreme 2']:
-					myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + misc.GetRegInfo(Episode, 'ratingKey') + '?checkFiles=1&includeExtras=1&'
-					EpisodeMedia = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Media')
-
-
-
-
-			
+					myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + Episode.get('ratingKey') + '?includeExtras=1'
+					EpisodeMedia = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Video')
 				# Export the info			
-				myRow = tvseries.getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShow)				
-
-
-
-
-
+				myRow = tvseries.getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShows)				
 				# And now for Basic Export
 				if Prefs['TV_Level'] not in ['Extreme', 'Extreme 2']:
 					csvwriter.writerow(myRow)
 
 
-
 				else:
 					if True:
-
-					# Everything is gathered, so let's write the row if needed
-#					if Prefs['TV_Level'] not in ['Extended','Extreme', 'Extreme 2']:
-#						csvwriter.writerow(myRow)
-#					else:		
 
 
 
@@ -493,21 +471,6 @@ def scanShowDB(myMediaURL, myCSVFile):
 						for Media in Medias2:
 
 
-		
-							# VideoFrameRate
-							myRow['Video FrameRate'] = misc.GetMoviePartInfo(Media, 'videoFrameRate', 'N/A')
-							# Get the Locked fields
-							Fields = Media.xpath('//Field/@name')
-							if not Fields:
-								Fields = ['']
-							Field = ''
-							for myField in Fields:
-								if Field == '':
-									Field = myField
-								else:
-									Field = Field + mySepChar + myField
-							Field = misc.WrapStr(Field)
-							myRow['Locked fields'] = Field.encode('utf8')
 
 
 
@@ -516,14 +479,6 @@ def scanShowDB(myMediaURL, myCSVFile):
 
 
 
-							# Got extras?
-							Extras = Media.xpath('//Extras/@size')
-							if not Extras[0]:
-								Extra = '0'
-							else:
-								Extra = Extras[0]
-							Extra = misc.WrapStr(Extra)
-							myRow['Extras'] = Extra.encode('utf8')
 							#Get Audio languages
 							AudioStreamsLanguages = Media.xpath('//Stream[@streamType=2][@languageCode]')
 							AudioLanguages = ''
@@ -533,6 +488,9 @@ def scanShowDB(myMediaURL, myCSVFile):
 								else:
 									AudioLanguages = AudioLanguages + mySepChar + misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
 							myRow['Audio Languages'] = AudioLanguages
+
+
+
 							#Get Subtitle languages
 							SubtitleStreamsLanguages = Media.xpath('//Stream[@streamType=3][@languageCode]')
 							SubtitleLanguages = ''

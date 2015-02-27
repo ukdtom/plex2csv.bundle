@@ -80,22 +80,11 @@ def getTVHeader(PrefsLevel):
 def getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShow):
 		# Get Simple Info
 		myRow = getTVSimple(Episode, myRow)
-
-		print 'GED TV 1'
-
 		# Get Basic Info
 		if Prefs['TV_Level'] in ["Basic","Extended", "Extreme", "Extreme 2"]:
 			myRow = getTVBasic(Episode, myRow, EpisodeMedia, TVShow)
-
-		print 'GED TV 2'
-
 		# Gather som futher info here		
 		if Prefs['TV_Level'] in ["Extended", "Extreme", "Extreme 2"]:
-
-			print 'GED TV 3'
-
-			print 'GED ', EpisodeMedia
-
 			# Get Extended info
 			myRow = getTVExtended(Episode, myRow, EpisodeMedia)
 
@@ -104,7 +93,7 @@ def getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShow):
 ####################################################################################################
 # This function will return the Extended info for TV-Shows
 ####################################################################################################
-def getTVExtended(Episode, myRow, EpisodeMedia):
+def getTVExtended(Episode, myRow, EpisodeMedias):
 	# VideoResolution
 	myRow['Video Resolution'] = misc.GetExtInfo(Episode, 'videoResolution', 'N/A')
 	# id
@@ -132,45 +121,56 @@ def getTVExtended(Episode, myRow, EpisodeMedia):
 	myRow['Video FrameRate'] = misc.GetExtInfo(Episode, 'videoFrameRate', 'N/A')
 
 
+	for EpisodeMedia in EpisodeMedias:
 
+		myRow['Locked fields'] = misc.GetArrayAsString(EpisodeMedia, 'Field/@name', default = '')
 
-	Writer = Episode.xpath('Writer/@tag')
-	print 'ged tommy ', Writer[0]
+		# Get the Locked fields
+#		Fields = EpisodeMedia.xpath('Field/@name')
+#		if not Fields:
+#			Fields = ['']
+#		Field = ''
+#		for myField in Fields:
+#			if Field == '':
+#				Field = myField
+#			else:
+#				Field = Field + mySepChar + myField
+#		Field = misc.WrapStr(Field)
+#		myRow['Locked fields'] = Field.encode('utf8')
 
-
-
-	# Get the Locked fields
-	Fields = Episode.xpath('Field/@name')
-
-
-	print 'GED Tommy 2 ', Fields[0]
-
-	
-
-	print 'GED ffff ', Fields
-
-
-	if not Fields:
-		Fields = ['']
-		
-		print 'GED DARN'
-
-	Field = ''
-	for myField in Fields:
-		
-		print 'GED TEST12345'
-
-		if Field == '':
-			Field = myField
-			print 'GED 54321 ', myField
-
-		else:
-			Field = Field + mySepChar + myField
-	Field = misc.WrapStr(Field)
-	myRow['Locked fields'] = Field.encode('utf8')
+		# Got extras?
+#		Extras = EpisodeMedia.xpath('//Extras/@size')
+#		if not Extras[0]:
+#			Extra = '0'
+#		else:
+#			Extra = Extras[0]
+#		Extra = misc.WrapStr(Extra)
+#		myRow['Extras'] = Extra.encode('utf8')
 
 
 
+		# Got extras?
+		myRow['Extras'] = misc.GetArrayAsString(EpisodeMedia, 'Extras/@size', default = '')
+
+		#Get Audio languages
+#		myRow['Audio Languages'] = misc.GetArrayAsString(EpisodeMedia, '//Stream[@streamType=2][@languageCode]', default = '')
+
+
+
+		AudioStreamsLanguages = EpisodeMedia.xpath('//Stream[@streamType=2][@languageCode]')
+
+		print 'GED 11223213 ', AudioStreamsLanguages
+
+		AudioLanguages = ''
+		for langCode in AudioStreamsLanguages:
+
+			print 'GED NEXT ', langCode
+
+			if AudioLanguages == '':
+				AudioLanguages = misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
+			else:
+				AudioLanguages = AudioLanguages + Prefs['Seperator'] + misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
+		myRow['Audio Languages'] = AudioLanguages
 
 
 
