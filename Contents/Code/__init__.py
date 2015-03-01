@@ -444,7 +444,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 				# Export the info			
 				myRow = tvseries.getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShows)				
 				# And now for Basic Export
-				if Prefs['TV_Level'] not in ['Extreme', 'Extreme 2']:
+				if Prefs['TV_Level'] not in ['Extreme 2']:
 					csvwriter.writerow(myRow)
 
 
@@ -473,49 +473,16 @@ def scanShowDB(myMediaURL, myCSVFile):
 
 
 
-
-
-
-
-
-
-							#Get Audio languages
-							AudioStreamsLanguages = Media.xpath('//Stream[@streamType=2][@languageCode]')
-							AudioLanguages = ''
-							for langCode in AudioStreamsLanguages:
-								if AudioLanguages == '':
-									AudioLanguages = misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
-								else:
-									AudioLanguages = AudioLanguages + mySepChar + misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
-							myRow['Audio Languages'] = AudioLanguages
-
-
-
-							#Get Subtitle languages
-							SubtitleStreamsLanguages = Media.xpath('//Stream[@streamType=3][@languageCode]')
-							SubtitleLanguages = ''
-							for langCode in SubtitleStreamsLanguages:
-								if SubtitleLanguages == '':
-									SubtitleLanguages = misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
-								else:
-									SubtitleLanguages = SubtitleLanguages + mySepChar + misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
-							myRow['Subtitle Languages'] = SubtitleLanguages				
-
-
-
-
-
 			
-						# Everything is gathered, so let's write the row if needed
-						if Prefs['TV_Level'] not in ['Extreme', 'Extreme 2']:
-							csvwriter.writerow(myRow)
-						else:
+						
 # Extreme level and above
 							parts = Media.xpath('//Part')
 							if len(parts)>1:
 								csvwriter.writerow(myRow)
 								myRow = {}							
 							for part in parts:
+
+
 								# File Name of this Part
 								myRow['Part File'] = misc.GetMoviePartInfo(part, 'file', 'N/A')
 								# File size of this part
@@ -526,7 +493,9 @@ def scanShowDB(myMediaURL, myCSVFile):
 								myRow['Part Container'] = misc.GetMoviePartInfo(part, 'container', 'N/A')
 								# Part Duration
 								partDuration = misc.ConvertTimeStamp(misc.GetMoviePartInfo(part, 'duration', '0'))
-								myRow['Part Duration'] = partDuration.encode('utf8')								
+								myRow['Part Duration'] = partDuration.encode('utf8')		
+
+						
 							if Prefs['TV_Level'] not in ['Extreme 2']:
 								csvwriter.writerow(myRow)
 							else:

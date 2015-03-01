@@ -83,12 +83,41 @@ def getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShow):
 		# Get Basic Info
 		if Prefs['TV_Level'] in ["Basic","Extended", "Extreme", "Extreme 2"]:
 			myRow = getTVBasic(Episode, myRow, EpisodeMedia, TVShow)
-		# Gather som futher info here		
+		# Gather Extended info here		
 		if Prefs['TV_Level'] in ["Extended", "Extreme", "Extreme 2"]:
 			# Get Extended info
 			myRow = getTVExtended(Episode, myRow, EpisodeMedia)
-
+		# Gather Extreme info here		
+		if Prefs['TV_Level'] in ["Extreme", "Extreme 2"]:
+			# Get Extreme info
+			myRow = getTVExtreme(Episode, myRow, EpisodeMedia)
 		return myRow
+
+####################################################################################################
+# This function will return the Extreme info for TV-Shows
+####################################################################################################
+def getTVExtreme(Episode, myRow, EpisodeMedias):	
+	for Media in EpisodeMedias:
+		parts = Media.xpath('//Part')
+
+
+		# TODO: Check for more parts, and then do a NewLine
+
+
+
+		for part in parts:
+			# File Name of this Part
+			myRow['Part File'] = misc.GetMoviePartInfo(part, 'file', 'N/A')
+			# File size of this part
+			myRow['Part Size'] = misc.GetMoviePartInfo(part, 'size', 'N/A')
+			# Is This part Indexed
+			myRow['Part Indexed'] = misc.GetMoviePartInfo(part, 'indexes', 'N/A')
+			# Part Container
+			myRow['Part Container'] = misc.GetMoviePartInfo(part, 'container', 'N/A')
+			# Part Duration
+			partDuration = misc.ConvertTimeStamp(misc.GetMoviePartInfo(part, 'duration', '0'))
+			myRow['Part Duration'] = partDuration.encode('utf8')	
+	return myRow
 
 ####################################################################################################
 # This function will return the Extended info for TV-Shows
@@ -119,64 +148,29 @@ def getTVExtended(Episode, myRow, EpisodeMedias):
 	myRow['Container'] = misc.GetExtInfo(Episode, 'container', 'N/A')
 	# VideoFrameRate
 	myRow['Video FrameRate'] = misc.GetExtInfo(Episode, 'videoFrameRate', 'N/A')
-
-
 	for EpisodeMedia in EpisodeMedias:
-
 		myRow['Locked fields'] = misc.GetArrayAsString(EpisodeMedia, 'Field/@name', default = '')
-
-		# Get the Locked fields
-#		Fields = EpisodeMedia.xpath('Field/@name')
-#		if not Fields:
-#			Fields = ['']
-#		Field = ''
-#		for myField in Fields:
-#			if Field == '':
-#				Field = myField
-#			else:
-#				Field = Field + mySepChar + myField
-#		Field = misc.WrapStr(Field)
-#		myRow['Locked fields'] = Field.encode('utf8')
-
 		# Got extras?
-#		Extras = EpisodeMedia.xpath('//Extras/@size')
-#		if not Extras[0]:
-#			Extra = '0'
-#		else:
-#			Extra = Extras[0]
-#		Extra = misc.WrapStr(Extra)
-#		myRow['Extras'] = Extra.encode('utf8')
-
-
-
-		# Got extras?
-		myRow['Extras'] = misc.GetArrayAsString(EpisodeMedia, 'Extras/@size', default = '')
-
+		myRow['Extras'] = misc.GetArrayAsString(EpisodeMedia, 'Extras/@size', default = 'N/A')
 		#Get Audio languages
-#		myRow['Audio Languages'] = misc.GetArrayAsString(EpisodeMedia, '//Stream[@streamType=2][@languageCode]', default = '')
-
-
-
 		AudioStreamsLanguages = EpisodeMedia.xpath('//Stream[@streamType=2][@languageCode]')
-
-		print 'GED 11223213 ', AudioStreamsLanguages
-
 		AudioLanguages = ''
 		for langCode in AudioStreamsLanguages:
-
-			print 'GED NEXT ', langCode
-
 			if AudioLanguages == '':
 				AudioLanguages = misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
 			else:
 				AudioLanguages = AudioLanguages + Prefs['Seperator'] + misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
 		myRow['Audio Languages'] = AudioLanguages
-
-
-
-
+		#Get Subtitle languages
+		SubtitleStreamsLanguages = EpisodeMedia.xpath('//Stream[@streamType=3][@languageCode]')
+		SubtitleLanguages = ''
+		for langCode in SubtitleStreamsLanguages:
+			if SubtitleLanguages == '':
+				SubtitleLanguages = misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
+			else:
+				SubtitleLanguages = SubtitleLanguages + Prefs['Seperator'] + misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
+		myRow['Subtitle Languages'] = SubtitleLanguages				
 	return myRow
-
 
 ####################################################################################################
 # This function will return the Basic info for TV-Shows
