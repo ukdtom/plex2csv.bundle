@@ -27,7 +27,7 @@ import movies, tvseries, audio
 import consts, misc
 
 
-VERSION = ' V0.0.2.8 - DEV3'
+VERSION = ' V0.0.2.8 - DEV4'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -391,49 +391,73 @@ def scanShowDB(myMediaURL, myCSVFile):
 	global bScanStatusCount
 	global bScanStatusCountOf
 	global bScanStatus
-	myMediaPaths = []
 	bScanStatusCount = 0
+
+
+
+	bScanStatusCountOf = 0	
+	iCurrent = 0
+
+
+
+	myMediaPaths = []				# HUH
+
+
+
+
 	try:
+		Log.Debug("About to open file %s" %(myCSVFile))
+		csvfile = io.open(myCSVFile,'wb')
+		# Create output file, and print the header
+		csvwriter = csv.DictWriter(csvfile, fieldnames=movies.getMovieHeader(Prefs['Movie_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
+		Log.Debug("Writing header")
+		csvwriter.writeheader()
 		Log.Debug('Starting to fetch the list of items in this section')
-		req = Request(myMediaURL, headers=MYHEADER)
-		response = urlopen(req)
-	except HTTPError as e:
-		Log.Critical('The server couldn\'t fulfill the request. Errorcode was %s' %e.code)
-		bScanStatus = 401
-	except URLError as e:
-		Log.Critical('We failed to reach a server. Reason was %s' %e.reason)
-		bScanStatus = 401
-	except:
-		Log.Critical('Unknown error in scanMovieDb')
-		bScanStatus = 99
-	else:
-		mySepChar = Prefs['Seperator']
-		tree = et.parse(urllib2.urlopen(req))	
-		root = tree.getroot()
+		while True:
+			Log.Debug("Walking medias")
+			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=' + str(CONTAINERSIZE)
+			iCount = bScanStatusCount
+			partMedias = XML.ElementFromURL(fetchURL, headers=MYHEADER)
+			if bScanStatusCount == 0:
+				totalCount = partMedias.get('totalSize')
+				bScanStatusCountOf = partMedias.get('totalSize')
+				Log.Debug('Amount of items in this section is %s' %totalCount)
+			# HERE WE DO STUFF
+
+
+
+
+
+
+
+
+
+
+
+
 		AllTVShows = root.findall('.//Directory')		
 		bScanStatusCountOf = len(AllTVShows)
 		csvfile = io.open(myCSVFile,'wb')
 		csvwriter = csv.DictWriter(csvfile, fieldnames=tvseries.getTVHeader(Prefs['TV_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		csvwriter.writeheader()
 		for TVShows in AllTVShows:
-
-
-
-
-
 			bScanStatusCount += 1
 			ratingKey = TVShows.get("ratingKey")
+			title = TVShows.get("title")
 			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves"
-			Log.Debug("Show %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))
+			Log.Debug('Show %s of %s with a RatingKey of %s at myURL: %s with a title of "%s"' %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL, title))
 			req = Request(myURL, headers=MYHEADER)
 			tree2 = et.parse(urllib2.urlopen(req))		
 			root2 = tree2.getroot()
+
+
+
+
+
+
 			Episodes = root2.findall('.//Video')	
 
-
-	
 			for Episode in Episodes:
-# Simple and above
 				myRow = {}	
 				# Just assign it temp, if running in simple mode, and don't use it
 				EpisodeMediaRatingKey = Episode.get('ratingKey')
@@ -441,76 +465,14 @@ def scanShowDB(myMediaURL, myCSVFile):
 				if Prefs['TV_Level'] in ['Extended','Extreme', 'Extreme 2']:
 					myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + Episode.get('ratingKey') + '?includeExtras=1'
 					EpisodeMedia = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Video')
+				if Prefs['TV_Level'] in ['Extreme 2']:
+					myExtendedInfoURL  = 'http://127.0.0.1:32400/library/metadata/' + Episode.get('ratingKey') + '/tree'
+					Extreme2Level = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//MediaPart')
 				# Export the info			
-				myRow = tvseries.getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShows)				
-				# And now for Basic Export
-				if Prefs['TV_Level'] not in ['Extreme 2']:
-					csvwriter.writerow(myRow)
-
-
-				else:
-					if True:
-
-
-
-						continue
-						break
-
-
-
-
-# Extended or above		
- 						myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + misc.GetRegInfo(Medias2, 'ratingKey') + '?checkFiles=1&includeExtras=1&'
-						Medias2 = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Media')	
-#						if len(Medias2)>1:
-#							csvwriter.writerow(myRow)
-#							myRow = {}										
-
-
-
-						for Media in Medias2:
-
-
-
-
-			
-						
-# Extreme level and above
-							parts = Media.xpath('//Part')
-							if len(parts)>1:
-								csvwriter.writerow(myRow)
-								myRow = {}							
-							for part in parts:
-
-
-								# File Name of this Part
-								myRow['Part File'] = misc.GetMoviePartInfo(part, 'file', 'N/A')
-								# File size of this part
-								myRow['Part Size'] = misc.GetMoviePartInfo(part, 'size', 'N/A')
-								# Is This part Indexed
-								myRow['Part Indexed'] = misc.GetMoviePartInfo(part, 'indexes', 'N/A')
-								# Part Container
-								myRow['Part Container'] = misc.GetMoviePartInfo(part, 'container', 'N/A')
-								# Part Duration
-								partDuration = misc.ConvertTimeStamp(misc.GetMoviePartInfo(part, 'duration', '0'))
-								myRow['Part Duration'] = partDuration.encode('utf8')		
-
-						
-							if Prefs['TV_Level'] not in ['Extreme 2']:
-								csvwriter.writerow(myRow)
-							else:
-# Extreme level 2
-							
-								# Get tree info for media
-								myMediaTreeInfoURL = 'http://127.0.0.1:32400/library/metadata/' + misc.GetRegInfo(Video, 'ratingKey') + '/tree'
-								TreeInfo = XML.ElementFromURL(myMediaTreeInfoURL, headers=MYHEADER).xpath('//MediaPart')
-								for myPart in TreeInfo:
-									MediaHash = misc.GetRegInfo(myPart, 'hash')
-									PMSMediaPath = os.path.join(Core.app_support_path, 'Media', 'localhost', MediaHash[0], MediaHash[1:]+ '.bundle', 'Contents')
-									myRow['PMS Media Path'] = PMSMediaPath.encode('utf8')
-									csvwriter.writerow(myRow)								
-						# Extreme ended
-			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, misc.GetRegInfo(Episode, 'grandparentTitle') + '-' + misc.GetRegInfo(Episode, 'title')))
+				myRow = tvseries.getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShows, Extreme2Level)								
+				csvwriter.writerow(myRow)
+								
+				Log.Debug("Show #%s from database: '%s'" %(bScanStatusCount, misc.GetRegInfo(Episode, 'grandparentTitle') + '-' + misc.GetRegInfo(Episode, 'title')))
 		return
 #	except:
 #		Log.Critical("Detected an exception in scanShowDB")

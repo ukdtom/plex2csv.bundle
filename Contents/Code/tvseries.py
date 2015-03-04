@@ -77,7 +77,7 @@ def getTVHeader(PrefsLevel):
 ####################################################################################################
 # This function will return the info for TV-Shows
 ####################################################################################################
-def getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShow):
+def getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShow, Extreme2Level):
 		# Get Simple Info
 		myRow = getTVSimple(Episode, myRow)
 		# Get Basic Info
@@ -91,7 +91,20 @@ def getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShow):
 		if Prefs['TV_Level'] in ["Extreme", "Extreme 2"]:
 			# Get Extreme info
 			myRow = getTVExtreme(Episode, myRow, EpisodeMedia)
+		if Prefs['TV_Level'] in ["Extreme 2"]:
+			# Get Extreme info
+			myRow = getTVExtreme2(Extreme2Level, myRow)
 		return myRow
+
+####################################################################################################
+# This function will return the Extreme info for TV-Shows
+####################################################################################################
+def getTVExtreme2(Extreme2Level, myRow):
+	for myPart in Extreme2Level:
+		MediaHash = misc.GetRegInfo(myPart, 'hash')
+		PMSMediaPath = os.path.join(Core.app_support_path, 'Media', 'localhost', MediaHash[0], MediaHash[1:]+ '.bundle', 'Contents')
+		myRow['PMS Media Path'] = misc.WrapStr(PMSMediaPath.encode('utf8'))
+	return myRow
 
 ####################################################################################################
 # This function will return the Extreme info for TV-Shows
@@ -99,12 +112,7 @@ def getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShow):
 def getTVExtreme(Episode, myRow, EpisodeMedias):	
 	for Media in EpisodeMedias:
 		parts = Media.xpath('//Part')
-
-
 		# TODO: Check for more parts, and then do a NewLine
-
-
-
 		for part in parts:
 			# File Name of this Part
 			myRow['Part File'] = misc.GetMoviePartInfo(part, 'file', 'N/A')
