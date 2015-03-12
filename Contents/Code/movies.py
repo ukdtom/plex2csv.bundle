@@ -15,6 +15,7 @@ def getMovieHeader(PrefsLevel):
 			'Title',
 			'Sort title',
 			'Studio',
+#			'IMDB Id',
 			'Content Rating',
 			'Summary',
 			'Rating',
@@ -34,7 +35,7 @@ def getMovieHeader(PrefsLevel):
 			'Duration',
 			'Locked Fields',
 			'Extras',
-			'Labels'
+			'Labels'			
 			)
 	# Extended fields
 	if PrefsLevel in ['Extended','Extreme', 'Extreme 2', 'Extreme 3']:
@@ -336,6 +337,7 @@ def getMovieBasic(myMedia, myRow, ExtInfo):
 				Role = Role + Prefs['Seperator'] + myRole
 		Role = misc.WrapStr(Role)
 		myRow['Roles'] = Role.encode('utf8')
+	#TODO Get IMDB ID
 	return myRow
 
 ####################################################################################################
@@ -370,10 +372,6 @@ def getMovieSimple(myMedia, myRow):
 			Genre = Genre + Prefs['Seperator'] + myGenre
 	Genre = misc.WrapStr(Genre)
 	myRow['Genres'] = Genre.encode('utf8')
-
-
-
-
 	return myRow
 
 

@@ -6,9 +6,16 @@ V0.0.2.8:
 	  This means less impact on the Plex Media Server while exporting a Movie section, since we now process
 	  items in chunks of 20
 	- Movie related stuff now in it's own file, making is a tad more easy to digest when coding
+	- Speed has been improved
+- TV-Shows
+	- Moved TV section scaning away from native Python, and back to the Plex framework.
+	  This means less impact on the Plex Media Server while exporting a Movie section, since we now process
+	  items in chunks of 5
+	- TV related stuff now in it's own file, making is a tad more easy to digest when coding
+	- Speed has been improved
 - Audio
 	- Moved Audio related code into it's own file, making coding more easy to digest
-
+	- ToDo: Start to use Plex FramWork again
 
 V0.0.2.7:
 - Fixed issue with TV-Series in Extreme 2 level multiplied
