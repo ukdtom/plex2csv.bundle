@@ -15,7 +15,6 @@ def getMovieHeader(PrefsLevel):
 			'Title',
 			'Sort title',
 			'Studio',
-#			'IMDB Id',
 			'Content Rating',
 			'Summary',
 			'Rating',
@@ -35,7 +34,9 @@ def getMovieHeader(PrefsLevel):
 			'Duration',
 			'Locked Fields',
 			'Extras',
-			'Labels'			
+			'Labels',
+			'IMDB Id',
+			'IMDB Language'		
 			)
 	# Extended fields
 	if PrefsLevel in ['Extended','Extreme', 'Extreme 2', 'Extreme 3']:
@@ -77,7 +78,6 @@ def getMovieHeader(PrefsLevel):
 			''
 			)
 	return fieldnames
-
 
 ####################################################################################################
 # This function will return the info for movies
@@ -244,7 +244,6 @@ def getMovieExtended(myMedia, myRow, ExtInfo):
 		else:
 			SubtitleLanguages = SubtitleLanguages + Prefs['Seperator'] + misc.GetRegInfo(langCode, 'languageCode', 'N/A')
 	myRow['Subtitle Languages'] = SubtitleLanguages
-
 	return myRow
 
 ####################################################################################################
@@ -256,7 +255,7 @@ def getMovieBasic(myMedia, myRow, ExtInfo):
 	# Get last watched timestamp
 	lastViewedAt = misc.ConvertDateStamp(misc.GetRegInfo(myMedia, 'lastViewedAt', '0'))
 	if lastViewedAt == '01/01/1970':
-		myRow['Last Viewed at'] = ''
+		myRow['Last Viewed at'] = 'N/A'
 	else:
 		myRow['Last Viewed at'] = lastViewedAt.encode('utf8')
 	# Get the Tag Line
@@ -337,7 +336,15 @@ def getMovieBasic(myMedia, myRow, ExtInfo):
 				Role = Role + Prefs['Seperator'] + myRole
 		Role = misc.WrapStr(Role)
 		myRow['Roles'] = Role.encode('utf8')
-	#TODO Get IMDB ID
+	#Get IMDB ID
+	IMDBId = ExtInfo.get('guid')[26:]
+	if IMDBId != '':
+		IMDBIds = IMDBId.split('?')
+		myRow['IMDB Id'] = IMDBIds[0]
+		myRow['IMDB Language'] = IMDBIds[1][5:]
+	else:
+		myRow['IMDB Id'] = 'N/A'
+		myRow['IMDB Language'] = 'N/A'
 	return myRow
 
 ####################################################################################################
@@ -373,7 +380,4 @@ def getMovieSimple(myMedia, myRow):
 	Genre = misc.WrapStr(Genre)
 	myRow['Genres'] = Genre.encode('utf8')
 	return myRow
-
-
-
 

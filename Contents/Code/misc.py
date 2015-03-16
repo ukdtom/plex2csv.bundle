@@ -34,7 +34,7 @@ def GetExtInfo(ExtInfo, myField, default = ''):
 			myLookUp = WrapStr(default)
 	except:
 		myLookUp = WrapStr(default)
-		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
+#		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
 	return myLookUp.encode('utf8')
 
 ####################################################################################################
@@ -47,7 +47,7 @@ def GetMoviePartInfo(ExtInfo, myField, default = ''):
 			myLookUp = WrapStr(default)
 	except:
 		myLookUp = WrapStr(default)
-		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
+#		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
 	return myLookUp.encode('utf8')
 
 
@@ -64,7 +64,7 @@ def GetRegInfo(myMedia, myField, default = ''):
 			myLookUp = WrapStr(default)
 	except:
 		myLookUp = WrapStr(default)
-		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
+#		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
 	return myLookUp.encode('utf8')
 
 ####################################################################################################

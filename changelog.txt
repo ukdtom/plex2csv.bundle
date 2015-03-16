@@ -7,6 +7,7 @@ V0.0.2.8:
 	  items in chunks of 20
 	- Movie related stuff now in it's own file, making is a tad more easy to digest when coding
 	- Speed has been improved
+	- If level is set to Basic or above, both IMDB ID and IMDB Language will be exported as well
 - TV-Shows
 	- Moved TV section scaning away from native Python, and back to the Plex framework.
 	  This means less impact on the Plex Media Server while exporting a Movie section, since we now process

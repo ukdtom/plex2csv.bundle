@@ -77,24 +77,28 @@ def getTVHeader(PrefsLevel):
 ####################################################################################################
 # This function will return the info for TV-Shows
 ####################################################################################################
-def getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShow, Extreme2Level):
-		# Get Simple Info
-		myRow = getTVSimple(Episode, myRow)
-		# Get Basic Info
-		if Prefs['TV_Level'] in ["Basic","Extended", "Extreme", "Extreme 2"]:
-			myRow = getTVBasic(Episode, myRow, EpisodeMedia, TVShow)
-		# Gather Extended info here		
-		if Prefs['TV_Level'] in ["Extended", "Extreme", "Extreme 2"]:
-			# Get Extended info
-			myRow = getTVExtended(Episode, myRow, EpisodeMedia)
-		# Gather Extreme info here		
-		if Prefs['TV_Level'] in ["Extreme", "Extreme 2"]:
-			# Get Extreme info
-			myRow = getTVExtreme(Episode, myRow, EpisodeMedia)
-		if Prefs['TV_Level'] in ["Extreme 2"]:
-			# Get Extreme info
-			myRow = getTVExtreme2(Extreme2Level, myRow)
-		return myRow
+def ExportTVShows(Episode, myRow, MYHEADER, TVShows):
+	# Get Simple Info
+	myRow = getTVSimple(Episode, myRow)
+	# Get Basic Info
+	if Prefs['TV_Level'] in ["Basic","Extended", "Extreme", "Extreme 2"]:
+		myRow = getTVBasic(Episode, myRow, TVShows)
+	# Extended or above?
+	if Prefs['TV_Level'] in ['Extended','Extreme', 'Extreme 2']:	
+		myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + Episode.get('ratingKey')
+		EpisodeMedia = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Video')
+		# Get Extended info
+		myRow = getTVExtended(Episode, myRow, EpisodeMedia)
+	# Gather Extreme info here		
+	if Prefs['TV_Level'] in ["Extreme", "Extreme 2"]:
+		# Get Extreme info
+		myRow = getTVExtreme(Episode, myRow, EpisodeMedia)
+	if Prefs['TV_Level'] in ['Extreme 2']:
+		myExtendedInfoURL  = 'http://127.0.0.1:32400/library/metadata/' + Episode.get('ratingKey') + '/tree'
+		Extreme2Level = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//MediaPart')
+		# Get Extreme info
+		myRow = getTVExtreme2(Extreme2Level, myRow)
+	return myRow
 
 ####################################################################################################
 # This function will return the Extreme info for TV-Shows
@@ -183,7 +187,8 @@ def getTVExtended(Episode, myRow, EpisodeMedias):
 ####################################################################################################
 # This function will return the Basic info for TV-Shows
 ####################################################################################################
-def getTVBasic(Episode, myRow, myMedia, TVShow):
+#def getTVBasic(Episode, myRow, myMedia, TVShow):
+def getTVBasic(Episode, myRow, TVShow):
 	# Get Watched count
 	myRow['View Count'] = misc.GetRegInfo(Episode, 'viewCount')
 	# Get last watched timestamp

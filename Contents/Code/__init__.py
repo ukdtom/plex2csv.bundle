@@ -26,12 +26,7 @@ from urllib2 import Request, urlopen, URLError, HTTPError
 import movies, tvseries, audio
 import consts, misc
 
-
-
-
-
-
-VERSION = ' V0.0.2.8 - DEV4'
+VERSION = ' V0.0.2.8 - DEV5'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
@@ -335,7 +330,6 @@ def getValues(tree, category):
     parent = tree.find(".//parent[@name='%s']" % category)
     return [child.get('value') for child in parent]
 
-
 ####################################################################################################
 # This function will scan a movie section.
 ####################################################################################################
@@ -358,13 +352,12 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		csvwriter.writeheader()
 		while True:
 			Log.Debug("Walking medias")
-			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=' + str(CONTAINERSIZEMOVIES)
+			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCurrent) + '&X-Plex-Container-Size=' + str(CONTAINERSIZEMOVIES)
 			iCount = bScanStatusCount
 			partMedias = XML.ElementFromURL(fetchURL, headers=MYHEADER)
 			if bScanStatusCount == 0:
-				totalCount = partMedias.get('totalSize')
 				bScanStatusCountOf = partMedias.get('totalSize')
-				Log.Debug('Amount of items in this section is %s' %totalCount)
+				Log.Debug('Amount of items in this section is %s' %bScanStatusCountOf)
 			# HERE WE DO STUFF
 			Log.Debug("Retrieved part of medias okay [%s of %s]" %(str(bScanStatusCount), str(bScanStatusCountOf)))
 			medias = partMedias.xpath('.//Video')
@@ -374,12 +367,11 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				myRow = movies.getMovieInfo(media, myRow, MYHEADER, csvwriter)
 				csvwriter.writerow(myRow)
 				iCurrent += 1
+				bScanStatusCount += 1
 				Log.Debug("Media #%s from database: '%s'" %(str(iCurrent), misc.GetRegInfo(media, 'title')))
 			# Got to the end of the line?		
 			if int(partMedias.get('size')) == 0:
 				break
-			else:
-				bScanStatusCount += CONTAINERSIZEMOVIES
 		csvfile.close
 	except HTTPError as e:
 		Log.Critical('The server couldn\'t fulfill the request. Errorcode was %s' %e.code)
@@ -404,7 +396,6 @@ def scanShowDB(myMediaURL, myCSVFile):
 	global bScanStatus
 	bScanStatusCount = 0
 	bScanStatusCountOf = 0	
-	iCurrent = 0
 	try:
 		Log.Debug("About to open file %s" %(myCSVFile))
 		csvfile = io.open(myCSVFile,'wb')
@@ -415,43 +406,33 @@ def scanShowDB(myMediaURL, myCSVFile):
 		Log.Debug('Starting to fetch the list of items in this section')
 		while True:
 			Log.Debug("Walking medias")
-			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=' + str(CONTAINERSIZETV)
 			iCount = bScanStatusCount
+			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCount) + '&X-Plex-Container-Size=' + str(CONTAINERSIZETV)			
 			partMedias = XML.ElementFromURL(fetchURL, headers=MYHEADER)
 			if bScanStatusCount == 0:
-				totalCount = partMedias.get('totalSize')
 				bScanStatusCountOf = partMedias.get('totalSize')
 				Log.Debug('Amount of items in this section is %s' %bScanStatusCountOf)
 			# HERE WE DO STUFF
-			Log.Debug("Retrieved part of medias okay [%s of %s]" %(str(bScanStatusCount), str(bScanStatusCountOf)))
+			Log.Debug("Retrieved part of medias okay [%s of %s]" %(str(iCount), str(bScanStatusCountOf)))
 			AllTVShows = partMedias.xpath('.//Directory')
 			for TVShows in AllTVShows:
 				bScanStatusCount += 1
+				iCount += 1
 				ratingKey = TVShows.get("ratingKey")
 				title = TVShows.get("title")
 				myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves"
-				Log.Debug('Show %s of %s with a RatingKey of %s at myURL: %s with a title of "%s"' %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL, title))
-				Episodes = XML.ElementFromURL(myURL, headers=MYHEADER).xpath('//Video')
+				Log.Debug('Show %s of %s with a RatingKey of %s at myURL: %s with a title of "%s"' %(iCount, bScanStatusCountOf, ratingKey, myURL, title))			
+				MainEpisodes = XML.ElementFromURL(myURL, headers=MYHEADER)
+				Episodes = MainEpisodes.xpath('//Video')
+				Log.Debug('Show %s with an index of %s contains %s episodes' %(MainEpisodes.get('parentTitle'), iCount, MainEpisodes.get('size')))
 				for Episode in Episodes:
 					myRow = {}	
-					# Just assign it temp, if running in simple mode, and don't use it
-					EpisodeMediaRatingKey = Episode.get('ratingKey')
-					# Extended or above?
-					if Prefs['TV_Level'] in ['Extended','Extreme', 'Extreme 2']:
-						myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + Episode.get('ratingKey')
-						EpisodeMedia = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Video')
-					if Prefs['TV_Level'] in ['Extreme 2']:
-						myExtendedInfoURL  = 'http://127.0.0.1:32400/library/metadata/' + Episode.get('ratingKey') + '/tree'
-						Extreme2Level = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//MediaPart')
-					# Export the info			
-					myRow = tvseries.getTVInfo(Episode, myRow, MYHEADER, csvwriter, EpisodeMedia, TVShows, Extreme2Level)								
+					myRow = tvseries.ExportTVShows(Episode, myRow, MYHEADER, TVShows)
+					Log.Debug("Show %s from database: %s Season %s Episode %s title: %s" %(bScanStatusCount, misc.GetRegInfo(Episode, 'grandparentTitle'), misc.GetRegInfo(Episode, 'parentIndex'), misc.GetRegInfo(Episode, 'index'), misc.GetRegInfo(Episode, 'title')))							
 					csvwriter.writerow(myRow)								
-					Log.Debug("Show #%s from database: '%s'" %(bScanStatusCount, misc.GetRegInfo(Episode, 'grandparentTitle') + '-' + misc.GetRegInfo(Episode, 'title')))
 			# Got to the end of the line?		
 			if int(partMedias.get('size')) == 0:
 				break
-			else:
-				bScanStatusCount += CONTAINERSIZETV
 		csvfile.close
 	except ValueError as err:
 		Log.Debug('Exception happend as %s' %err.args)		
