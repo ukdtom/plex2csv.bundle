@@ -20,7 +20,7 @@ def GetArrayAsString(Media, Field, default = ''):
 		if Field == '':
 			Field = myField
 		else:
-			Field = Field + mySepChar + myField
+			Field = Field + Prefs['Seperator'] + myField
 	Field = WrapStr(Field)
 	return Field.encode('utf8')
 

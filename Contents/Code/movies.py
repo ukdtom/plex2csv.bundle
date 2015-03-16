@@ -36,7 +36,7 @@ def getMovieHeader(PrefsLevel):
 			'Extras',
 			'Labels',
 			'IMDB Id',
-			'IMDB Language'		
+			'Metadata Language'		
 			)
 	# Extended fields
 	if PrefsLevel in ['Extended','Extreme', 'Extreme 2', 'Extreme 3']:
