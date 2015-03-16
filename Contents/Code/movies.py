@@ -341,10 +341,10 @@ def getMovieBasic(myMedia, myRow, ExtInfo):
 	if IMDBId != '':
 		IMDBIds = IMDBId.split('?')
 		myRow['IMDB Id'] = IMDBIds[0]
-		myRow['IMDB Language'] = IMDBIds[1][5:]
+		myRow['Metadata Language'] = IMDBIds[1][5:]
 	else:
 		myRow['IMDB Id'] = 'N/A'
-		myRow['IMDB Language'] = 'N/A'
+		myRow['Metadata Language'] = 'N/A'
 	return myRow
 
 ####################################################################################################
