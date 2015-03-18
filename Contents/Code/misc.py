@@ -9,6 +9,22 @@ import datetime
 
 
 ####################################################################################################
+# This function will return info from an array, defined in an xpath
+####################################################################################################
+def GetArrayAsString(Media, Field, default = ''):
+	Fields = Media.xpath(Field)
+	if not Fields:
+		Fields = ['']
+	Field = ''
+	for myField in Fields:
+		if Field == '':
+			Field = myField
+		else:
+			Field = Field + Prefs['Seperator'] + myField
+	Field = WrapStr(Field)
+	return Field.encode('utf8')
+
+####################################################################################################
 # This function will return info from extended page for movies
 ####################################################################################################
 def GetExtInfo(ExtInfo, myField, default = ''):
@@ -18,7 +34,7 @@ def GetExtInfo(ExtInfo, myField, default = ''):
 			myLookUp = WrapStr(default)
 	except:
 		myLookUp = WrapStr(default)
-		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
+#		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
 	return myLookUp.encode('utf8')
 
 ####################################################################################################
@@ -31,7 +47,7 @@ def GetMoviePartInfo(ExtInfo, myField, default = ''):
 			myLookUp = WrapStr(default)
 	except:
 		myLookUp = WrapStr(default)
-		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
+#		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
 	return myLookUp.encode('utf8')
 
 
@@ -48,7 +64,7 @@ def GetRegInfo(myMedia, myField, default = ''):
 			myLookUp = WrapStr(default)
 	except:
 		myLookUp = WrapStr(default)
-		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
+#		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
 	return myLookUp.encode('utf8')
 
 ####################################################################################################
@@ -82,5 +98,11 @@ def ConvertTimeStamp(timeStamp):
 		minutes = '0' + minutes
 	hours=str((int(timeStamp)/(1000*60*60))%24)
 	return hours + ':' + minutes + ':' + seconds
+
+####################################################################################################
+# This function will return a string in month, date, year format from a millisecond timestamp
+####################################################################################################
+def ConvertDateStamp(timeStamp):
+	return Datetime.FromTimestamp(float(timeStamp)).strftime('%m/%d/%Y')
 
 

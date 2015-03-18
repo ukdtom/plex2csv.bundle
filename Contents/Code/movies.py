@@ -3,8 +3,8 @@
 # This one handles movies
 ####################################################################################################
 
-import consts, misc
-import datetime
+import misc
+
 
 ####################################################################################################
 # This function will return the header for the CSV file for movies
@@ -34,7 +34,9 @@ def getMovieHeader(PrefsLevel):
 			'Duration',
 			'Locked Fields',
 			'Extras',
-			'Labels'
+			'Labels',
+			'IMDB Id',
+			'Metadata Language'		
 			)
 	# Extended fields
 	if PrefsLevel in ['Extended','Extreme', 'Extreme 2', 'Extreme 3']:
@@ -76,7 +78,6 @@ def getMovieHeader(PrefsLevel):
 			''
 			)
 	return fieldnames
-
 
 ####################################################################################################
 # This function will return the info for movies
@@ -123,21 +124,22 @@ def getMovieExtreme3(myMedia, myRow, ExtInfo, MYHEADER):
 # This function will return the extreme 2 info for movies
 ####################################################################################################
 def getMovieExtreme2(myMedia, myRow, ExtInfo):
-	parts = ExtInfo.xpath('//Video/Media/Part')
-	for part in parts:
-		if misc.GetRegInfo(part, 'file')	== '':
-			pass
-		else:
-			# File Name of this Part
-			myRow['Part File'] = misc.GetRegInfo(part, 'file', 'N/A')
+	Videos = ExtInfo.xpath('//Video')
+	if not Videos:
+		Videos = ['']
+	for Video in Videos:
+		if not Video.get('extraType'):
+			realVideo = Video.xpath('//Part')
 			# File size of this part
-			myRow['Part Size'] = misc.GetRegInfo(part, 'size', 'N/A')
+			myRow['Part Size'] = misc.GetRegInfo(realVideo[0], 'size', 'N/A')			
+			# File Name of this Part
+			myRow['Part File'] = misc.GetRegInfo(realVideo[0], 'file', 'N/A')
 			# Is This part Indexed
-			myRow['Part Indexed'] = misc.GetRegInfo(part, 'indexes', 'N/A')
+			myRow['Part Indexed'] = misc.GetRegInfo(realVideo[0], 'indexes', 'N/A')
 			# Part Container
-			myRow['Part Container'] = misc.GetRegInfo(part, 'container', 'N/A')
+			myRow['Part Container'] = misc.GetRegInfo(realVideo[0], 'container', 'N/A')
 			# Part Duration
-			partDuration = misc.ConvertTimeStamp(misc.GetRegInfo(part, 'duration', '0'))
+			partDuration = misc.ConvertTimeStamp(misc.GetRegInfo(realVideo[0], 'duration', '0'))
 			myRow['Part Duration'] = partDuration.encode('utf8')
 	return myRow
 
@@ -219,10 +221,10 @@ def getMovieExtended(myMedia, myRow, ExtInfo):
 	# Get the original title
 	myRow['Original Title'] = misc.GetRegInfo(myMedia, 'originalTitle')
 	# Get Added at
-	addedAt = (Datetime.FromTimestamp(float(misc.GetRegInfo(myMedia, 'addedAt', '0')))).strftime('%m/%d/%Y')
+	addedAt = misc.ConvertDateStamp(misc.GetRegInfo(myMedia, 'addedAt', '0'))
 	myRow['Added'] = addedAt.encode('utf8')
 	# Get Updated at
-	updatedAt = (Datetime.FromTimestamp(float(misc.GetRegInfo(myMedia, 'updatedAt', '0')))).strftime('%m/%d/%Y')
+	updatedAt = misc.ConvertDateStamp(misc.GetRegInfo(myMedia, 'updatedAt', '0'))
 	myRow['Updated'] = updatedAt.encode('utf8')
 	#Get Audio languages
 	AudioLanguages = ''
@@ -242,7 +244,6 @@ def getMovieExtended(myMedia, myRow, ExtInfo):
 		else:
 			SubtitleLanguages = SubtitleLanguages + Prefs['Seperator'] + misc.GetRegInfo(langCode, 'languageCode', 'N/A')
 	myRow['Subtitle Languages'] = SubtitleLanguages
-
 	return myRow
 
 ####################################################################################################
@@ -252,9 +253,9 @@ def getMovieBasic(myMedia, myRow, ExtInfo):
 	# Get View Count
 	myRow['View Count'] = misc.GetRegInfo(myMedia, 'viewCount')
 	# Get last watched timestamp
-	lastViewedAt = (Datetime.FromTimestamp(float(misc.GetRegInfo(myMedia, 'lastViewedAt', '0')))).strftime('%m/%d/%Y')
+	lastViewedAt = misc.ConvertDateStamp(misc.GetRegInfo(myMedia, 'lastViewedAt', '0'))
 	if lastViewedAt == '01/01/1970':
-		myRow['Last Viewed at'] = ''
+		myRow['Last Viewed at'] = 'N/A'
 	else:
 		myRow['Last Viewed at'] = lastViewedAt.encode('utf8')
 	# Get the Tag Line
@@ -335,6 +336,15 @@ def getMovieBasic(myMedia, myRow, ExtInfo):
 				Role = Role + Prefs['Seperator'] + myRole
 		Role = misc.WrapStr(Role)
 		myRow['Roles'] = Role.encode('utf8')
+	#Get IMDB ID
+	IMDBId = ExtInfo.get('guid')[26:]
+	if IMDBId != '':
+		IMDBIds = IMDBId.split('?')
+		myRow['IMDB Id'] = IMDBIds[0]
+		myRow['Metadata Language'] = IMDBIds[1][5:]
+	else:
+		myRow['IMDB Id'] = 'N/A'
+		myRow['Metadata Language'] = 'N/A'
 	return myRow
 
 ####################################################################################################
@@ -369,12 +379,5 @@ def getMovieSimple(myMedia, myRow):
 			Genre = Genre + Prefs['Seperator'] + myGenre
 	Genre = misc.WrapStr(Genre)
 	myRow['Genres'] = Genre.encode('utf8')
-
-
-
-
 	return myRow
-
-
-
 
