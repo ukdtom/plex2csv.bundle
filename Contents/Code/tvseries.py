@@ -5,6 +5,8 @@
 
 import misc
 
+STACKEDLABELS = ['cd', 'disc', 'disk', 'dvd', 'part', 'pt']
+
 ####################################################################################################
 # This function will return the header for the CSV file for TV-Shows
 ####################################################################################################
@@ -64,7 +66,8 @@ def getTVHeader(PrefsLevel):
 			'Part File',
 			'Part Size',
 			'Part Indexed',
-			'Part Container'			
+			'Part Container',
+			'Possible Duplicate'			
 			)
 	# Extreme 2 fields
 	if PrefsLevel in ['Extreme 2']:
@@ -117,18 +120,51 @@ def getTVExtreme(Episode, myRow, EpisodeMedias):
 	for Media in EpisodeMedias:
 		parts = Media.xpath('//Part')
 		# TODO: Check for more parts, and then do a NewLine
+		PartFile = ''
+		PartSize = ''
+		PartIndexed = ''
+		PartContainer = ''
+		PartDuration = ''
 		for part in parts:
 			# File Name of this Part
-			myRow['Part File'] = misc.GetMoviePartInfo(part, 'file', 'N/A')
+			if PartFile == '':
+				PartFile = misc.GetMoviePartInfo(part, 'file', 'N/A')
+			else:
+				PartFile = PartFile + ', ' + misc.GetMoviePartInfo(part, 'file', 'N/A')
+			# Possible duplicate?
+			if len(parts) > 1:
+				for Stack in STACKEDLABELS:
+					if Stack.upper() not in PartFile.upper():					
+						myRow['Possible Duplicate'] = 'X'
+						Log.Debug('Possible duplicate detected in file %s' %(PartFile))
+			if PartSize == '':
+				PartSize = misc.GetMoviePartInfo(part, 'size', 'N/A')
+			else:
+				PartSize = PartSize + ', ' + misc.GetMoviePartInfo(part, 'size', 'N/A')
+			if PartIndexed == '':
+				PartIndexed = misc.GetMoviePartInfo(part, 'indexes', 'N/A')
+			else:
+				PartIndexed = PartIndexed + ', ' + misc.GetMoviePartInfo(part, 'indexes', 'N/A')
+			if PartContainer == '':
+				PartContainer = misc.GetMoviePartInfo(part, 'container', 'N/A')
+			else:
+				PartContainer = PartContainer + ', ' + misc.GetMoviePartInfo(part, 'container', 'N/A')
+
+			if PartDuration == '':
+				PartDuration = misc.ConvertTimeStamp(misc.GetMoviePartInfo(part, 'duration', '0'))
+			else:
+				PartDuration = PartDuration + ', ' + misc.ConvertTimeStamp(misc.GetMoviePartInfo(part, 'duration', '0'))
+
+			# Part File Name
+			myRow['Part File'] = misc.WrapStr(PartFile.encode('utf8'))
 			# File size of this part
-			myRow['Part Size'] = misc.GetMoviePartInfo(part, 'size', 'N/A')
+			myRow['Part Size'] = misc.WrapStr(PartSize.encode('utf8'))
 			# Is This part Indexed
-			myRow['Part Indexed'] = misc.GetMoviePartInfo(part, 'indexes', 'N/A')
+			myRow['Part Indexed'] = misc.WrapStr(PartIndexed.encode('utf8'))
 			# Part Container
-			myRow['Part Container'] = misc.GetMoviePartInfo(part, 'container', 'N/A')
-			# Part Duration
-			partDuration = misc.ConvertTimeStamp(misc.GetMoviePartInfo(part, 'duration', '0'))
-			myRow['Part Duration'] = partDuration.encode('utf8')	
+			myRow['Part Container'] = misc.WrapStr(PartContainer.encode('utf8'))
+			# Part Duration			
+			myRow['Part Duration'] = PartDuration.encode('utf8')					
 	return myRow
 
 ####################################################################################################
@@ -181,7 +217,7 @@ def getTVExtended(Episode, myRow, EpisodeMedias):
 				SubtitleLanguages = misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
 			else:
 				SubtitleLanguages = SubtitleLanguages + Prefs['Seperator'] + misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
-		myRow['Subtitle Languages'] = SubtitleLanguages				
+		myRow['Subtitle Languages'] = misc.WrapStr(SubtitleLanguages)
 	return myRow
 
 ####################################################################################################

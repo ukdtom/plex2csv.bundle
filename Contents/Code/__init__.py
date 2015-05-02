@@ -26,7 +26,7 @@ from urllib2 import Request, urlopen, URLError, HTTPError
 import movies, tvseries, audio
 import consts, misc
 
-VERSION = ' V0.0.2.8'
+VERSION = ' V0.0.2.9 - DEV'
 NAME = 'Plex2csv'
 ART = 'art-default.jpg'
 ICON = 'icon-Plex2csv.png'
