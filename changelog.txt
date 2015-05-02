@@ -1,3 +1,16 @@
+V0.0.2.9
+- General
+	- Reorganized the code
+- Movies:
+	- Removed Metadata language column again, since this wasn't what I thougt it would be
+	- Reorganized code a bit more
+	- Subtitle language column will now be wrapped as well
+- TV-Shows:
+	- Reorganized code a bit more
+	- Subtitle language column will now be wrapped as well
+	- Part file infos will now be wrapped as well
+	- Will now detect possible duplicates
+
 V0.0.2.8:
 - General
 	-	Main menu now shows the relevant sections with their own icons

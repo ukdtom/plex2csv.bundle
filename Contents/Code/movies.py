@@ -35,8 +35,7 @@ def getMovieHeader(PrefsLevel):
 			'Locked Fields',
 			'Extras',
 			'Labels',
-			'IMDB Id',
-			'Metadata Language'		
+			'IMDB Id'
 			)
 	# Extended fields
 	if PrefsLevel in ['Extended','Extreme', 'Extreme 2', 'Extreme 3']:
@@ -243,7 +242,7 @@ def getMovieExtended(myMedia, myRow, ExtInfo):
 			SubtitleLanguages = misc.GetRegInfo(langCode, 'languageCode', 'N/A')
 		else:
 			SubtitleLanguages = SubtitleLanguages + Prefs['Seperator'] + misc.GetRegInfo(langCode, 'languageCode', 'N/A')
-	myRow['Subtitle Languages'] = SubtitleLanguages
+	myRow['Subtitle Languages'] = misc.WrapStr(SubtitleLanguages)
 	return myRow
 
 ####################################################################################################
@@ -341,10 +340,8 @@ def getMovieBasic(myMedia, myRow, ExtInfo):
 	if IMDBId != '':
 		IMDBIds = IMDBId.split('?')
 		myRow['IMDB Id'] = IMDBIds[0]
-		myRow['Metadata Language'] = IMDBIds[1][5:]
 	else:
 		myRow['IMDB Id'] = 'N/A'
-		myRow['Metadata Language'] = 'N/A'
 	return myRow
 
 ####################################################################################################
