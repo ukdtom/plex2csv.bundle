@@ -1,3 +1,13 @@
+V0.0.3.0
+- General:
+	- Since we are back into the framework, token auth. is no longer needed, and as such, has been removed
+- Movies:
+	- Fixed an issue, where a guid was exported as IMDB id, even though none existed for a Home movie section
+	- Fixed a regression with export of a large movie library, where the counter was fixed at 0 on the screen...cosmetic error only
+- Audio:
+	- Moved Audio export back into the framework, so now we don't stress PMS when dealing with a huge Audio library, but grap it in trunks of 3
+		- Last thing, that still req. plex.tv auth, if in home mode, but now all is good
+
 V0.0.2.9
 - General
 	- Reorganized the code

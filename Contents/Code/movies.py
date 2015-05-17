@@ -336,12 +336,17 @@ def getMovieBasic(myMedia, myRow, ExtInfo):
 		Role = misc.WrapStr(Role)
 		myRow['Roles'] = Role.encode('utf8')
 	#Get IMDB ID
-	IMDBId = ExtInfo.get('guid')[26:]
-	if IMDBId != '':
-		IMDBIds = IMDBId.split('?')
-		myRow['IMDB Id'] = IMDBIds[0]
+	IMDBId = ExtInfo.get('guid')
+	# Avoid printing the guid, if this is a home movie section
+	if 'com.plexapp.agents.imdb' in IMDBId:
+		IMDBId = IMDBId[26:]
+		if IMDBId != '':
+			IMDBIds = IMDBId.split('?')
+			myRow['IMDB Id'] = IMDBIds[0]
+		else:
+			myRow['IMDB Id'] = 'N/A'
 	else:
-		myRow['IMDB Id'] = 'N/A'
+		myRow['IMDB Id'] = 'N/A'	
 	return myRow
 
 ####################################################################################################

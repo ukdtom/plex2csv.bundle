@@ -1,12 +1,65 @@
 ####################################################################################################
-#	Helper file for Plex2CSV
+#	Helper file for dane22
 # This one handles misc functions
+#
+# Increment version for all new functions and fixes
+#
 ####################################################################################################
+
+VERSION='0.0.0.1'
 
 from textwrap import wrap, fill
 import re
 import datetime
 
+####################################################################################################
+# This function will return the version of the misc module
+####################################################################################################
+def getVersion():
+	return VERSION
+
+####################################################################################################
+# This function will return a valid token from plex.tv
+####################################################################################################
+def getToken():
+	userName = Prefs['Plex_User']
+	userPwd = Prefs['Plex_Pwd']
+	myUrl = 'https://plex.tv/users/sign_in.json'
+	# Create the authentication string
+	base64string = String.Base64Encode('%s:%s' % (userName, userPwd))
+	# Create the header
+	MYAUTHHEADER= {}
+	MYAUTHHEADER['X-Plex-Product'] = consts.DESCRIPTION
+	MYAUTHHEADER['X-Plex-Client-Identifier'] = consts.APPGUID
+	MYAUTHHEADER['X-Plex-Version'] = consts.VERSION
+	MYAUTHHEADER['Authorization'] = 'Basic ' + base64string
+	MYAUTHHEADER['X-Plex-Device-Name'] = consts.NAME
+	# Send the request
+	try:
+		httpResponse = HTTP.Request(myUrl, headers=MYAUTHHEADER, method='POST')
+		myToken = JSON.ObjectFromString(httpResponse.content)['user']['authentication_token']
+		Log.Debug('Response from plex.tv was : %s' %(httpResponse.headers["status"]))
+	except:
+		Log.Critical('Exception happend when trying to get a token from plex.tv')
+		Log.Critical('Returned answer was %s' %httpResponse.content)
+		Log.Critical('Status was: %s' %httpResponse.headers)
+		return ''			
+	return myToken
+
+####################################################################################################
+# This function will return the loopback address
+####################################################################################################
+def GetLoopBack():
+
+	# For now, simply return the IPV4 LB Addy, until PMS is better with this
+	return 'http://127.0.0.1:32400'
+	
+	try:
+		httpResponse = HTTP.Request('http://[::1]:32400/web', immediate=True, timeout=5)
+		return 'http://[::1]:32400'
+	except:
+		print 'Got IP v4'
+		return 'http://127.0.0.1:32400'
 
 ####################################################################################################
 # This function will return info from an array, defined in an xpath

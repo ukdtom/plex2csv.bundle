@@ -8,118 +8,63 @@
 #
 ####################################################################################################
 
-# To find Work in progress, search this file for the word ToDo
+# To find Work in progress, search this file for the word ToDo in all the modules
+#TODO: Poster view for first menu
 
 import os
-import unicodedata
 import time
 import io
 import csv
-import datetime
-from textwrap import wrap, fill
 import re
-from lxml import etree as et
-import urllib2
-import base64
-import uuid
-from urllib2 import Request, urlopen, URLError, HTTPError
 import movies, tvseries, audio
 import consts, misc
 
-VERSION = ' V0.0.2.9'
-NAME = 'Plex2csv'
-ART = 'art-default.jpg'
-ICON = 'icon-Plex2csv.png'
-PREFIX = '/applications/Plex2csv'
-APPGUID = '7608cf36-742b-11e4-8b39-00089bd210b2'
-DESCRIPTION = 'Export Plex libraries to CSV-Files'
-MYHEADER = {}
-CONTAINERSIZEMOVIES = 20
-CONTAINERSIZETV = 5
-CONTAINERSIZEAUDIO = 5
-
-bScanStatus = 0			# Current status of the background scan
+# Threading stuff
+bScanStatus = 0				# Current status of the background scan
 initialTimeOut = 12		# When starting a scan, how long in seconds to wait before displaying a status page. Needs to be at least 1.
-sectiontype = ''		# Type of section been exported
+sectiontype = ''			# Type of section been exported
+bScanStatusCount = 0	# Number of item currently been investigated
 
-
+LOOPBACK = ''					# Loopback address in use. Gets set from the misc module
+MYHEADER={}						# Header to be used when accessing PMS
 
 ####################################################################################################
 # Start function
 ####################################################################################################
 def Start():
-#	print("********  Started %s on %s  **********" %(NAME  + VERSION, Platform.OS))
-	Log.Debug("*******  Started %s on %s  ***********" %(NAME  + VERSION, Platform.OS))
-#	global MYHEADER
+	print("********  Started %s on %s  **********" %(consts.NAME  + consts.VERSION, Platform.OS))
+	Log.Debug("*******  Started %s on %s  ***********" %(consts.NAME  + consts.VERSION, Platform.OS))
 	Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
-	ObjectContainer.art = R(ART)
-	ObjectContainer.title1 = NAME  + VERSION
+	ObjectContainer.art = R(consts.ART)
+	ObjectContainer.title1 = consts.NAME  + consts.VERSION
 	ObjectContainer.view_group = 'List'
-	DirectoryObject.thumb = R(ICON)
+	DirectoryObject.thumb = R(consts.ICON)
 	HTTP.CacheTime = 0
-	getToken()
-
-#********** Get token from plex.tv *********
-''' This will return a valid token, that can be used for authenticating if needed, to be inserted into the header '''
-# DO NOT APPEND THE TOKEN TO THE URL...IT MIGHT BE LOGGED....INSERT INTO THE HEADER INSTEAD
-@route(PREFIX + '/getToken')
-def getToken():
-	Log.Debug('Starting to get the token')
-	global MYHEADER
-	if Prefs['Authenticate']:
-		# Start by checking, if we already got a token
-		if 'authentication_token' in Dict and Dict['authentication_token'] != 'NuKeMe':
-			Log.Debug('Got a token from local storage')			
-			MYHEADER['X-Plex-Token'] = Dict['authentication_token']
-		else:
-			Log.Debug('Need to generate a token first from plex.tv')
-			userName = Prefs['Plex_User']
-			userPwd = Prefs['Plex_Pwd']
-			myUrl = 'https://plex.tv/users/sign_in.json'
-			# Create the authentication string
-			base64string = String.Base64Encode('%s:%s' % (userName, userPwd))
-			# Create the header
-			MYAUTHHEADER= {}
-			MYAUTHHEADER['X-Plex-Product'] = DESCRIPTION
-			MYAUTHHEADER['X-Plex-Client-Identifier'] = APPGUID
-			MYAUTHHEADER['X-Plex-Version'] = VERSION
-			MYAUTHHEADER['Authorization'] = 'Basic ' + base64string
-			MYAUTHHEADER['X-Plex-Device-Name'] = NAME
-			# Send the request
-			try:
-				httpResponse = HTTP.Request(myUrl, headers=MYAUTHHEADER, method='POST')
-				myToken = JSON.ObjectFromString(httpResponse.content)['user']['authentication_token']
-				Log.Debug('Response from plex.tv was : %s' %(httpResponse.headers["status"]))
-			except:
-				Log.Critical('Exception happend when trying to get a token from plex.tv')
-				Log.Critical('Returned answer was %s' %httpResponse.content)
-				Log.Critical('Status was: %s' %httpResponse.headers) 			
-			Dict['authentication_token'] = myToken
-			Dict.Save()
-			MYHEADER['X-Plex-Token'] = myToken
-	else:
-			Log.Debug('Authentication disabled')
-			return ''
+	# Get the loopback address
+	global LOOPBACK
+	LOOPBACK = misc.GetLoopBack()
+	Log.Debug('Loopback address is: %s' %(LOOPBACK))
+	Log.Debug('Misc module is version: %s' %misc.getVersion())
 
 ####################################################################################################
 # Main menu
 ####################################################################################################
-@handler(PREFIX, NAME, thumb=ICON, art=ART)
-@route(PREFIX + '/MainMenu')
+@handler(consts.PREFIX, consts.NAME, thumb=consts.ICON, art=consts.ART)
+@route(consts.PREFIX + '/MainMenu')
 def MainMenu(random=0):
 	Log.Debug("**********  Starting MainMenu  **********")
 	global sectiontype
 	oc = ObjectContainer()
 	try:
 		if ValidateExportPath():
-			sections = XML.ElementFromURL('http://127.0.0.1:32400/library/sections?', headers=MYHEADER).xpath('//Directory')
+			sections = XML.ElementFromURL(LOOPBACK + '/library/sections?', headers=MYHEADER).xpath('//Directory')
 			for section in sections:
 				sectiontype = section.get('type')
 #				if sectiontype != "photo" and sectiontype != 'artist': # ToDo: Remove artist when code is in place for it.
 				if sectiontype != "photo": # ToDo: Remove artist when code is in place for it.
 					title = section.get('title')
 					key = section.get('key')
-					thumb = 'http://127.0.0.1:32400' + section.get('thumb')
+					thumb = LOOPBACK + section.get('thumb')
 					Log.Debug('Title of section is %s with a key of %s' %(title, key))
 					oc.add(DirectoryObject(key=Callback(backgroundScan, title=title, sectiontype=sectiontype, key=key, random=time.clock()), thumb=thumb, title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
 		else:
@@ -127,14 +72,14 @@ def MainMenu(random=0):
 	except:
 		Log.Critical("Exception happened in MainMenu")
 		raise
-	oc.add(PrefsObject(title='Preferences', thumb=R('icon-prefs.png')))
+	oc.add(PrefsObject(title='Preferences', thumb=R(consts.ICON)))
 	Log.Debug("**********  Ending MainMenu  **********")
 	return oc
 
 ####################################################################################################
 # Validate Export Path
 ####################################################################################################
-@route(PREFIX + '/ValidateExportPath')
+@route(consts.PREFIX + '/ValidateExportPath')
 def ValidateExportPath():
 	Log.Debug('Entering ValidateExportPath')
 	# Let's check that the provided path is actually valid
@@ -144,9 +89,9 @@ def ValidateExportPath():
 		#Let's see if we can add out subdirectory below this
 		if os.path.exists(myPath):
 			Log.Debug('Master entered a path that already existed as: %s' %(myPath))
-			if not os.path.exists(os.path.join(myPath, NAME)):
-				os.makedirs(os.path.join(myPath, NAME))
-				Log.Debug('Created directory named: %s' %(os.path.join(myPath, NAME)))
+			if not os.path.exists(os.path.join(myPath, consts.NAME)):
+				os.makedirs(os.path.join(myPath, consts.NAME))
+				Log.Debug('Created directory named: %s' %(os.path.join(myPath, consts.NAME)))
 				return True
 			else:
 				Log.Debug('Path verified as already present')
@@ -161,33 +106,19 @@ def ValidateExportPath():
 ####################################################################################################
 # Called by the framework every time a user changes the prefs
 ####################################################################################################
-@route(PREFIX + '/ValidatePrefs')
+@route(consts.PREFIX + '/ValidatePrefs')
 def ValidatePrefs():
-	if Prefs['NukeToken']:
-		# My master wants to nuke the local store
-		Log.Debug('Removing Token from local storage')
-		# DICT RESET IS BROKEN IN THE API....SIGH....
-#		Dict.Reset()
-		Dict['authentication_token'] = 'NuKeMe'
-		Dict.Save()
-	# Lets get the token again, in case credentials are switched, or token is deleted
-	getToken()
-	if Prefs['NukeToken']:
-		# My master has nuked the local store, so reset the prefs flag
-		myHTTPPrefix = 'http://127.0.0.1:32400/:/plugins/com.plexapp.plugins.Plex2csv/prefs/'
-		myURL = myHTTPPrefix + 'set?NukeToken=0'
-		Log.Debug('Prefs Sending : ' + myURL)
-		HTTP.Request(myURL, immediate=True, headers=MYHEADER)
+	return
 
 ####################################################################################################
 # Export Complete.
 ####################################################################################################
-@route(PREFIX + '/complete')
+@route(consts.PREFIX + '/complete')
 def complete(title=''):
 	global bScanStatus
 	Log.Debug("*******  All done, tell my Master  ***********")
 	title = ('Export Completed for %s' %(title))
-	message = 'Check the directory: %s' %(os.path.join(Prefs['Export_Path'], NAME)) 
+	message = 'Check the directory: %s' %(os.path.join(Prefs['Export_Path'], consts.NAME)) 
 	oc2 = ObjectContainer(title1=title, no_cache=True, message=message)
 	oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="Go to the Main Menu"))
 	# Reset the scanner status
@@ -198,7 +129,7 @@ def complete(title=''):
 ####################################################################################################
 # Start the scanner in a background thread and provide status while running
 ####################################################################################################
-@route(PREFIX + '/backgroundScan')
+@route(consts.PREFIX + '/backgroundScan')
 def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 	Log.Debug("******* Starting backgroundScan *********")
 	# Current status of the Background Scanner:
@@ -258,14 +189,14 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 			oc2 = ObjectContainer(title1="Internal Error Detected. Please check the logs",no_history=True, view_group = 'List')
 			oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="An internal error has occurred.", summary=summary))
 			oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="*** Please submit logs. ***", summary=summary))
-			bScanStatus = 0
-		elif bScanStatus == 401:
+			consts.bScanStatus = 0
+		elif consts.bScanStatus == 401:
 			oc2 = ObjectContainer(title1="ERROR", no_history=True)
 			# Error condition set by scanner
 			summary = "When running in like Home mode, you must enable authentication in the preferences"
 			oc2 = ObjectContainer(title1=summary,no_history=True)
 			oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="Authentication error.", summary=summary))			
-			bScanStatus = 0
+			consts.bScanStatus = 0
 		else:
 			# Unknown status. Should not happen.
 			summary = "Something went horribly wrong. The scanner returned an unknown status."
@@ -281,7 +212,7 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 ####################################################################################################
 # Background scanner thread.
 ####################################################################################################
-@route(PREFIX + '/backgroundScanThread')
+@route(consts.PREFIX + '/backgroundScanThread')
 def backgroundScanThread(title, key, sectiontype):
 	Log.Debug("*******  Starting backgroundScanThread  ***********")
 	global bScanStatus
@@ -290,7 +221,7 @@ def backgroundScanThread(title, key, sectiontype):
 	try:
 		bScanStatus = 1
 		Log.Debug("Section type is %s" %(sectiontype))
-		myMediaURL = 'http://127.0.0.1:32400/library/sections/' + key + "/all"
+		myMediaURL = LOOPBACK + '/library/sections/' + key + "/all"
 		Log.Debug("Path to medias in section is %s" %(myMediaURL))
 		# Get current date and time
 		timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -303,7 +234,7 @@ def backgroundScanThread(title, key, sectiontype):
 			myLevel = Prefs['Artist_Level']
 		# Remove invalid caracters, if on Windows......
 		newtitle = re.sub('[\/[:#*?"<>|]', '_', title)
-		myCSVFile = os.path.join(Prefs['Export_Path'], NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
+		myCSVFile = os.path.join(Prefs['Export_Path'], consts.NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
 		Log.Debug('Output file is named %s' %(myCSVFile))
 		# Scan the database based on the type of section
 		if sectiontype == "movie":
@@ -333,7 +264,7 @@ def getValues(tree, category):
 ####################################################################################################
 # This function will scan a movie section.
 ####################################################################################################
-@route(PREFIX + '/scanMovieDB')
+@route(consts.PREFIX + '/scanMovieDB')
 def scanMovieDB(myMediaURL, myCSVFile):
 	Log.Debug("******* Starting scanMovieDB with an URL of %s ***********" %(myMediaURL))
 	Log.Debug('Movie Export level is %s' %(Prefs['Movie_Level']))
@@ -352,7 +283,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		csvwriter.writeheader()
 		while True:
 			Log.Debug("Walking medias")
-			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCurrent) + '&X-Plex-Container-Size=' + str(CONTAINERSIZEMOVIES)
+			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCurrent) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEMOVIES)
 			iCount = bScanStatusCount
 			partMedias = XML.ElementFromURL(fetchURL, headers=MYHEADER)
 			if bScanStatusCount == 0:
@@ -373,12 +304,6 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			if int(partMedias.get('size')) == 0:
 				break
 		csvfile.close
-	except HTTPError as e:
-		Log.Critical('The server couldn\'t fulfill the request. Errorcode was %s' %e.code)
-		bScanStatus = 401
-	except URLError as e:
-		Log.Critical('We failed to reach a server. Reason was %s' %e.reason)
-		bScanStatus = 401
 	except ValueError, Argument:
 		Log.Critical('Unknown error in scanMovieDb %s' %(Argument))
 		bScanStatus = 99
@@ -388,7 +313,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 ####################################################################################################
 # This function will scan a TV-Show section.
 ####################################################################################################
-@route(PREFIX + '/scanShowDB')
+@route(consts.PREFIX + '/scanShowDB')
 def scanShowDB(myMediaURL, myCSVFile):
 	Log.Debug("******* Starting scanShowDB with an URL of %s ***********" %(myMediaURL))
 	global bScanStatusCount
@@ -407,7 +332,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 		while True:
 			Log.Debug("Walking medias")
 			iCount = bScanStatusCount
-			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCount) + '&X-Plex-Container-Size=' + str(CONTAINERSIZETV)			
+			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCount) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZETV)			
 			partMedias = XML.ElementFromURL(fetchURL, headers=MYHEADER)
 			if bScanStatusCount == 0:
 				bScanStatusCountOf = partMedias.get('totalSize')
@@ -420,7 +345,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 				iCount += 1
 				ratingKey = TVShows.get("ratingKey")
 				title = TVShows.get("title")
-				myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves"
+				myURL = LOOPBACK + '/library/metadata/' + ratingKey + '/allLeaves'
 				Log.Debug('Show %s of %s with a RatingKey of %s at myURL: %s with a title of "%s"' %(iCount, bScanStatusCountOf, ratingKey, myURL, title))			
 				MainEpisodes = XML.ElementFromURL(myURL, headers=MYHEADER)
 				Episodes = MainEpisodes.xpath('//Video')
@@ -441,45 +366,52 @@ def scanShowDB(myMediaURL, myCSVFile):
 ####################################################################################################
 # This function will scan a Music section.
 ####################################################################################################
-@route(PREFIX + '/scanArtistDB')
+@route(consts.PREFIX + '/scanArtistDB')
 def scanArtistDB(myMediaURL, myCSVFile):
 	Log.Debug("******* Starting scanArtistDB with an URL of %s ***********" %(myMediaURL))
 	global bScanStatusCount
 	global bScanStatusCountOf
 	global bScanStatus
-	myMediaPaths = []
 	bScanStatusCount = 0
 	try:
 		mySepChar = Prefs['Seperator']
-		#TODO 'Fix without framework'
-		myMedias = XML.ElementFromURL(myMediaURL, headers=MYHEADER).xpath('//Directory')
-		bScanStatusCountOf = len(myMedias)
+		Log.Debug('Writing headers for Audio Export')
 		csvfile = io.open(myCSVFile,'wb')
 		csvwriter = csv.DictWriter(csvfile, fieldnames=audio.getMusicHeader(Prefs['Artist_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		csvwriter.writeheader()
-		for myMedia in myMedias:
-			bScanStatusCount += 1
-			ratingKey = myMedia.get("ratingKey")
-			myURL = "http://127.0.0.1:32400/library/metadata/" + ratingKey + "/allLeaves"
-			Log.Debug("Album %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))
-
-			#TODO Switch away from framework here
-			myMedias2 = XML.ElementFromURL(myURL, headers=MYHEADER).xpath('//Track')			
-
-			for myMedia2 in myMedias2:
-				myRow = {}
-				# Get the Audio Info
-				audio.getAudioInfo(myMedia, myRow, MYHEADER, csvwriter, myMedia2)
-				csvwriter.writerow(myRow)			
-			Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, misc.GetRegInfo(myMedia, 'title') + '-' + misc.GetRegInfo(myMedia2, 'parentTitle')))
-		return
+		iCount = bScanStatusCount
+		Log.Debug('Starting to fetch the list of items in this section')
+		while True:
+			Log.Debug("Walking medias")
+			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCount) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEAUDIO)	
+			partMedias = XML.ElementFromURL(fetchURL, headers=MYHEADER)
+			if bScanStatusCount == 0:
+				bScanStatusCountOf = partMedias.get('totalSize')
+				Log.Debug('Amount of items in this section is %s' %bScanStatusCountOf)
+			# HERE WE DO STUFF
+			Log.Debug("Retrieved part of medias okay [%s of %s]" %(str(iCount), str(bScanStatusCountOf)))
+			AllParts = partMedias.xpath('.//Directory')
+			for Part in AllParts:
+				bScanStatusCount += 1
+				iCount += 1
+				ratingKey = Part.get("ratingKey")
+				title = Part.get("title")
+				myURL = LOOPBACK + '/library/metadata/' + ratingKey + '/allLeaves'				
+				Log.Debug("Album %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))		
+				myMedias2 = XML.ElementFromURL(myURL, headers=MYHEADER).xpath('//Track')			
+				for myMedia2 in myMedias2:
+					myRow = {}
+					# Get the Audio Info
+					audio.getAudioInfo(Part, myRow, MYHEADER, csvwriter, myMedia2)
+					csvwriter.writerow(myRow)			
+				Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, misc.GetRegInfo(Part, 'title') + '-' + misc.GetRegInfo(myMedia2, 'parentTitle')))
+			# Got to the end of the line?		
+			if int(partMedias.get('size')) == 0:
+				break
+		csvfile.close
 	except:
 		Log.Critical("Detected an exception in scanArtistDB")
 		bScanStatus = 99
 		raise # Dumps the error so you can see what the problem is
 	Log.Debug("******* Ending scanArtistDB ***********")
-
-
-
-	
 
