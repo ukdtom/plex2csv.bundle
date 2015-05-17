@@ -4,7 +4,7 @@
 ####################################################################################################
 
 # APP specific stuff
-VERSION = ' V0.0.3.0 - DEV'
+VERSION = ' V0.0.3.0'
 NAME = 'Plex2csv'
 DESCRIPTION = 'Export Plex libraries to CSV-Files'
 ART = 'art-default.jpg'
