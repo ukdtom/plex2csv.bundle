@@ -6,6 +6,12 @@
 		"default":"None"
 	},
 	{
+		"id":"Auto_Path",
+		"label":"Auto Select Export path to match the section exported",
+		"type":"bool",
+		"default":"true"
+	},
+	{
 		"id":"Delimiter",
 		"label":"Delimiter between fields in CSV file....NOTE.....Only one character!!!",
 		"type":"text",

@@ -27,6 +27,7 @@ bScanStatusCount = 0	# Number of item currently been investigated
 
 LOOPBACK = ''					# Loopback address in use. Gets set from the misc module
 MYHEADER={}						# Header to be used when accessing PMS
+EXPORTPATH = ''				# Path to export file
 
 ####################################################################################################
 # Start function
@@ -82,6 +83,8 @@ def MainMenu(random=0):
 @route(consts.PREFIX + '/ValidateExportPath')
 def ValidateExportPath():
 	Log.Debug('Entering ValidateExportPath')
+	if Prefs['Auto_Path']:
+		return True
 	# Let's check that the provided path is actually valid
 	myPath = Prefs['Export_Path']
 	Log.Debug('My master set the Export path to: %s' %(myPath))
@@ -118,7 +121,7 @@ def complete(title=''):
 	global bScanStatus
 	Log.Debug("*******  All done, tell my Master  ***********")
 	title = ('Export Completed for %s' %(title))
-	message = 'Check the directory: %s' %(os.path.join(Prefs['Export_Path'], consts.NAME)) 
+	message = 'Check the file: %s' %(EXPORTPATH) 
 	oc2 = ObjectContainer(title1=title, no_cache=True, message=message)
 	oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="Go to the Main Menu"))
 	# Reset the scanner status
@@ -218,6 +221,7 @@ def backgroundScanThread(title, key, sectiontype):
 	global bScanStatus
 	global bScanStatusCount
 	global bScanStatusCountOf	
+	global EXPORTPATH
 	try:
 		bScanStatus = 1
 		Log.Debug("Section type is %s" %(sectiontype))
@@ -234,7 +238,17 @@ def backgroundScanThread(title, key, sectiontype):
 			myLevel = Prefs['Artist_Level']
 		# Remove invalid caracters, if on Windows......
 		newtitle = re.sub('[\/[:#*?"<>|]', '_', title)
-		myCSVFile = os.path.join(Prefs['Export_Path'], consts.NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
+		if Prefs['Auto_Path']:
+			# Need to grap the first location for the section
+			locations = XML.ElementFromURL('http://127.0.0.1:32400/library/sections/').xpath('.//Directory[@key="' + key + '"]')[0]
+			location = locations[0].get('path')
+			myCSVFile = os.path.join(location, consts.NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
+			if not os.path.exists(os.path.join(location, consts.NAME)):
+				os.makedirs(os.path.join(location, consts.NAME))
+				Log.Debug('Created directory named: %s' %(os.path.join(location, consts.NAME)))
+		else:
+			myCSVFile = os.path.join(Prefs['Export_Path'], consts.NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
+		EXPORTPATH = myCSVFile
 		Log.Debug('Output file is named %s' %(myCSVFile))
 		# Scan the database based on the type of section
 		if sectiontype == "movie":

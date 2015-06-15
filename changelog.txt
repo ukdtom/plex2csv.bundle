@@ -1,3 +1,9 @@
+V0.0.3.1:
+-	General:
+	-	Added a new pref. setting named "Auto Select Export path to match the section exported"
+		-	When above is selected, the export file will be created in the same directory as the items scanned.
+		-	This should help people having trouble setting a custom export path
+
 V0.0.3.0
 - General:
 	- Since we are back into the framework, token auth. is no longer needed, and as such, has been removed
