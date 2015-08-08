@@ -58,7 +58,7 @@ def MainMenu(random=0):
 	oc = ObjectContainer()
 	try:
 		if ValidateExportPath():
-			sections = XML.ElementFromURL(LOOPBACK + '/library/sections?', headers=MYHEADER).xpath('//Directory')
+			sections = XML.ElementFromURL(LOOPBACK + '/library/sections', headers=MYHEADER).xpath('//Directory')
 			for section in sections:
 				sectiontype = section.get('type')
 #				if sectiontype != "photo" and sectiontype != 'artist': # ToDo: Remove artist when code is in place for it.
