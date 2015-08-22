@@ -1,3 +1,7 @@
+V0.0.3.3:
+- Audio:
+	- Added Extended level...See github Wiki for the new fields
+
 V0.0.3.2:
 -	General:
 	- Fixed a bug causing the sections not to show on newer versions of PMS

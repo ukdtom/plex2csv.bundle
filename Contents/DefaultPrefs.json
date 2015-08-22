@@ -53,7 +53,7 @@
 		"id": "Artist_Level",
 		"label": "Audio Export Level..",
 		"type": "enum",
-		"values" : ["Simple", "Basic"],
+		"values" : ["Simple","Basic","Extended"],
 		"default": "Simple"
 	}
 ]
