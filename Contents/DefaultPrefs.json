@@ -7,7 +7,7 @@
 	},
 	{
 		"id":"Auto_Path",
-		"label":"Auto Select Export path to match the section exported",
+		"label":"Auto Select Export path to match the section exported. When used, Export Path is ignored",
 		"type":"bool",
 		"default":"true"
 	},
@@ -54,6 +54,13 @@
 		"label": "Audio Export Level..",
 		"type": "enum",
 		"values" : ["Simple","Basic","Extended"],
+		"default": "Simple"
+	},
+	{
+		"id": "PlayList_Level",
+		"label": "PlayList Export Level..",
+		"type": "enum",
+		"values" : ["Simple"],
 		"default": "Simple"
 	}
 ]

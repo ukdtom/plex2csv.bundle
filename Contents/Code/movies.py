@@ -35,7 +35,8 @@ def getMovieHeader(PrefsLevel):
 			'Locked Fields',
 			'Extras',
 			'Labels',
-			'IMDB Id'
+			'IMDB Id',
+			'Country'
 			)
 	# Extended fields
 	if PrefsLevel in ['Extended','Extreme', 'Extreme 2', 'Extreme 3']:
@@ -84,7 +85,7 @@ def getMovieHeader(PrefsLevel):
 def getMovieInfo(myMedia, myRow, MYHEADER, csvwriter):
 		# Get Extended info if needed
 		if Prefs['Movie_Level'] not in ['Simple']:				
-			myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + misc.GetRegInfo(myMedia, 'ratingKey') + '?includeExtras=1&'
+			myExtendedInfoURL = 'http://127.0.0.1:32400/library/metadata/' + misc.GetRegInfo(myMedia, 'ratingKey') + '?includeExtras=1'
 			ExtInfo = XML.ElementFromURL(myExtendedInfoURL, headers=MYHEADER).xpath('//Video')[0]
 		# Get Simple Info
 		myRow = getMovieSimple(myMedia, myRow)
@@ -273,6 +274,18 @@ def getMovieBasic(myMedia, myRow, ExtInfo):
 			Author = Author + Prefs['Seperator'] + myWriter
 	Author = misc.WrapStr(Author)
 	myRow['Writers'] = Author.encode('utf8')
+	# Get the Country
+	Countries = myMedia.xpath('Country/@tag')
+	if not Countries:
+		Countries = ['N/A']
+	Country = ''
+	for myCountry in Countries:
+		if Country == '':
+			Country = myCountry
+		else:
+			Country = Country + Prefs['Seperator'] + myCountry
+	Country = misc.WrapStr(Country)
+	myRow['Country'] = Country.encode('utf8')
 	# Get the duration of the movie
 	duration = misc.ConvertTimeStamp(misc.GetRegInfo(myMedia, 'duration', '0'))
 	myRow['Duration'] = duration.encode('utf8')

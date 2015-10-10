@@ -17,7 +17,7 @@ import io
 import csv
 import re
 import movies, tvseries, audio
-import consts, misc
+import consts, misc, playlists
 
 # Threading stuff
 bScanStatus = 0				# Current status of the background scan
@@ -33,12 +33,27 @@ EXPORTPATH = ''				# Path to export file
 # Start function
 ####################################################################################################
 def Start():
-	print("********  Started %s on %s  **********" %(consts.NAME  + consts.VERSION, Platform.OS))
+#	print("********  Started %s on %s  **********" %(consts.NAME  + consts.VERSION, Platform.OS))
 	Log.Debug("*******  Started %s on %s  ***********" %(consts.NAME  + consts.VERSION, Platform.OS))
+
+#view_modes = {
+#  "List": 65586, "InfoList": 65592, "MediaPreview": 458803, "Showcase": 458810, "Coverflow": 65591, 
+#  "PanelStream": 131124, "WallStream": 131125, "Songs": 65593, "Seasons": 65593, "Albums": 131123, 
+#  "Episodes": 65590,"ImageStream":458809,"Pictures":131123
+#	}
+
+
+
 	Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
+#	Plugin.AddViewGroup('Posters', viewMode='Posters', mediaType='items')
+	Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
+
+
+
 	ObjectContainer.art = R(consts.ART)
 	ObjectContainer.title1 = consts.NAME  + consts.VERSION
-	ObjectContainer.view_group = 'List'
+#	ObjectContainer.view_group = 'Details'
+#	ObjectContainer.viewGroup = 'List'
 	DirectoryObject.thumb = R(consts.ICON)
 	HTTP.CacheTime = 0
 	# Get the loopback address
@@ -55,9 +70,24 @@ def Start():
 def MainMenu(random=0):
 	Log.Debug("**********  Starting MainMenu  **********")
 	global sectiontype
+#	oc = ObjectContainer()
+#	oc.viewGroup = 'List'
+
+	ObjectContainer.art = R(consts.ART)
+	ObjectContainer.title1 = consts.NAME  + consts.VERSION
+#	ObjectContainer.view_group = 'Details'
 	oc = ObjectContainer()
+	oc.view_group = 'List'
 	try:
 		if ValidateExportPath():
+			title = 'playlists'
+			key = '-1'
+			thumb = R(consts.PLAYLIST)
+			sectiontype = title
+# Remove rem from line below when playlists are done
+
+#			oc.add(DirectoryObject(key=Callback(backgroundScan, title=title, sectiontype=sectiontype, key=key, random=time.clock()), thumb=thumb, title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
+			oc.add(DirectoryObject(key=Callback(selectPList), thumb=thumb, title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
 			sections = XML.ElementFromURL(LOOPBACK + '/library/sections', headers=MYHEADER).xpath('//Directory')
 			for section in sections:
 				sectiontype = section.get('type')
@@ -225,29 +255,41 @@ def backgroundScanThread(title, key, sectiontype):
 	try:
 		bScanStatus = 1
 		Log.Debug("Section type is %s" %(sectiontype))
-		myMediaURL = LOOPBACK + '/library/sections/' + key + "/all"
-		Log.Debug("Path to medias in section is %s" %(myMediaURL))
+		if sectiontype == 'playlists':
+			myMediaURL = LOOPBACK + key
+			playListType = title
+			title = XML.ElementFromURL(myMediaURL).get('title')
+		else:
+			myMediaURL = LOOPBACK + '/library/sections/' + key + "/all"
+		Log.Debug("Path to medias in selection is %s" %(myMediaURL))
 		# Get current date and time
 		timestr = time.strftime("%Y%m%d-%H%M%S")
 		# Generate Output FileName
 		if sectiontype == 'show':
 			myLevel = Prefs['TV_Level']
-		if sectiontype == 'movie':
+		elif sectiontype == 'movie':
 			myLevel = Prefs['Movie_Level']
-		if sectiontype == 'artist':
+		elif sectiontype == 'artist':
 			myLevel = Prefs['Artist_Level']
+		else:
+			myLevel = ''
 		# Remove invalid caracters, if on Windows......
 		newtitle = re.sub('[\/[:#*?"<>|]', '_', title)
-		if Prefs['Auto_Path']:
-			# Need to grap the first location for the section
-			locations = XML.ElementFromURL('http://127.0.0.1:32400/library/sections/').xpath('.//Directory[@key="' + key + '"]')[0]
-			location = locations[0].get('path')
-			myCSVFile = os.path.join(location, consts.NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
-			if not os.path.exists(os.path.join(location, consts.NAME)):
-				os.makedirs(os.path.join(location, consts.NAME))
-				Log.Debug('Created directory named: %s' %(os.path.join(location, consts.NAME)))
+		if sectiontype == 'playlists':
+			myCSVFile = os.path.join(Prefs['Export_Path'], consts.NAME, 'Playlist-' + newtitle + '-' + myLevel + '-' + timestr + '.csv')
 		else:
-			myCSVFile = os.path.join(Prefs['Export_Path'], consts.NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
+			if Prefs['Auto_Path']:
+				# Need to grap the first location for the section
+				locations = XML.ElementFromURL('http://127.0.0.1:32400/library/sections/').xpath('.//Directory[@key="' + key + '"]')[0]
+				location = locations[0].get('path')
+				myCSVFile = os.path.join(location, consts.NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
+				if not os.path.exists(os.path.join(location, consts.NAME)):
+					os.makedirs(os.path.join(location, consts.NAME))
+					Log.Debug('Auto Created directory named: %s' %(os.path.join(location, consts.NAME)))
+				else:
+					Log.Debug('Auto directory named: %s already exists' %(os.path.join(location, consts.NAME)))
+			else:
+				myCSVFile = os.path.join(Prefs['Export_Path'], consts.NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
 		EXPORTPATH = myCSVFile
 		Log.Debug('Output file is named %s' %(myCSVFile))
 		# Scan the database based on the type of section
@@ -257,6 +299,9 @@ def backgroundScanThread(title, key, sectiontype):
 			scanArtistDB(myMediaURL, myCSVFile)
 		elif sectiontype == "show":
 			scanShowDB(myMediaURL, myCSVFile)
+		elif sectiontype == "playlists":
+
+			scanPList(myMediaURL, playListType, myCSVFile)
 		else:
 			Log.Debug("Error: unknown section type: %s" %(sectiontype))
 			bScanStatus = 91
@@ -271,6 +316,8 @@ def backgroundScanThread(title, key, sectiontype):
 		raise
 	Log.Debug("*******  Ending backgroundScanThread  ***********")
 
+
+#*************************** IS THIS USED ANYMORE? TODO ******************
 def getValues(tree, category):
     parent = tree.find(".//parent[@name='%s']" % category)
     return [child.get('value') for child in parent]
@@ -428,4 +475,67 @@ def scanArtistDB(myMediaURL, myCSVFile):
 		bScanStatus = 99
 		raise # Dumps the error so you can see what the problem is
 	Log.Debug("******* Ending scanArtistDB ***********")
+
+####################################################################################################
+# This function will show a menu with playlists
+####################################################################################################
+@route(consts.PREFIX + '/selectPList')
+def selectPList():
+	Log.Debug("User selected to export a playlist")
+	# Abort if set to auto path
+	if Prefs['Auto_Path']:
+		message = 'Playlists can not be exported when path is set to auto. You need to specify a manual path in the prefs'
+		oc = ObjectContainer(title1='Error!. Playlists can not be exported when path is set to auto. You need to specify a manual path in the prefs', no_cache=True, message=message)
+		oc.add(DirectoryObject(key=Callback(MainMenu), title="Go to the Main Menu"))
+		Log.Debug('Can not continue, since on AutoPath')
+		return oc
+	# Else build up a menu of the playlists
+	oc = ObjectContainer(title1='Select Playlist to export', no_cache=True)
+	playlists = XML.ElementFromURL(LOOPBACK + '/playlists/all').xpath('//Playlist')
+	for playlist in playlists:
+		title = playlist.get('title')
+		thumb = LOOPBACK + playlist.get('composite')
+		playlistType= playlist.get('playlistType')
+		key = playlist.get('key')
+		if playlistType in ['video','audio']:
+			Log.Debug("Added playlist: " + title + " to the listing with a key of: " + key)
+			oc.add(DirectoryObject(key=Callback(backgroundScan, title=playlistType, sectiontype='playlists', key=key, random=time.clock()), thumb=thumb, title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
+	oc.add(DirectoryObject(key=Callback(MainMenu), title="Go to the Main Menu"))
+	return oc
+
+####################################################################################################
+# Here we go for the actual playlist
+####################################################################################################
+@route(consts.PREFIX + '/getPListContents')
+def scanPList(key, playListType, myCSVFile):
+	Log.Debug("******* Starting scanPList with an URL of: %s" %(key))
+	global bScanStatusCount
+	global bScanStatusCountOf
+	global bScanStatus
+	bScanStatusCount = 0
+	try:
+		mySepChar = Prefs['Seperator']
+		Log.Debug('Writing headers for Playlist Export')
+		csvfile = io.open(myCSVFile,'wb')
+		csvwriter = csv.DictWriter(csvfile, fieldnames=playlists.getPlayListHeader(playListType, Prefs['PlayList_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
+		csvwriter.writeheader()
+		iCount = bScanStatusCount
+		Log.Debug('Starting to fetch the list of items in this section')
+		myRow = {}
+		if playListType == 'video':
+			playListItems = XML.ElementFromURL(key).xpath('//Video')
+		elif playListType == 'audio':
+			playListItems = XML.ElementFromURL(key).xpath('//Track')
+		for playListItem in playListItems:
+			playlists.getPlayListInfo(playListItem, myRow, playListType)
+			csvwriter.writerow(myRow)
+	except:
+		Log.Critical("Detected an exception in scanPList")
+		bScanStatus = 99
+		raise # Dumps the error so you can see what the problem is
+	message = 'All done'
+	oc = ObjectContainer(title1='Playlists', no_cache=True, message=message)
+	oc.add(DirectoryObject(key=Callback(MainMenu), title="Go to the Main Menu"))
+	Log.Debug("******* Ending scanPListDB ***********")
+	return oc
 

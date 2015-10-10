@@ -1,3 +1,10 @@
+V0.0.3.4:
+- Movies:
+	- Added Country as field for export level Basic and above
+- Playlists:
+	- Can now export a simple info for an movies/tv-shows playlist
+	- Can now export a simple info for an audio playlist
+
 V0.0.3.3:
 - Audio:
 	- Added Extended level...See github Wiki for the new fields
