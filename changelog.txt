@@ -1,3 +1,15 @@
+V0.0.3.5:
+- Playlists:
+	- Movie/TV-Shows:
+		- Added Playlist Item Id
+		- Added Basic export level
+	- Audio:
+		- Added Playlist Item Id
+		- Added Basic export level
+	- Photo:
+		- Added simple info for a photo playlist
+		- Added Basic export level
+
 V0.0.3.4:
 - Movies:
 	- Added Country as field for export level Basic and above

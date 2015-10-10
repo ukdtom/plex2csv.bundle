@@ -33,7 +33,7 @@ EXPORTPATH = ''				# Path to export file
 # Start function
 ####################################################################################################
 def Start():
-#	print("********  Started %s on %s  **********" %(consts.NAME  + consts.VERSION, Platform.OS))
+	print("********  Started %s on %s  **********" %(consts.NAME  + consts.VERSION, Platform.OS))
 	Log.Debug("*******  Started %s on %s  ***********" %(consts.NAME  + consts.VERSION, Platform.OS))
 
 #view_modes = {
@@ -271,6 +271,8 @@ def backgroundScanThread(title, key, sectiontype):
 			myLevel = Prefs['Movie_Level']
 		elif sectiontype == 'artist':
 			myLevel = Prefs['Artist_Level']
+		elif sectiontype == 'playlists':
+			myLevel = Prefs['PlayList_Level']
 		else:
 			myLevel = ''
 		# Remove invalid caracters, if on Windows......
@@ -497,7 +499,7 @@ def selectPList():
 		thumb = LOOPBACK + playlist.get('composite')
 		playlistType= playlist.get('playlistType')
 		key = playlist.get('key')
-		if playlistType in ['video','audio']:
+		if playlistType in ['video','audio', 'photo']:
 			Log.Debug("Added playlist: " + title + " to the listing with a key of: " + key)
 			oc.add(DirectoryObject(key=Callback(backgroundScan, title=playlistType, sectiontype='playlists', key=key, random=time.clock()), thumb=thumb, title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
 	oc.add(DirectoryObject(key=Callback(MainMenu), title="Go to the Main Menu"))
@@ -526,6 +528,8 @@ def scanPList(key, playListType, myCSVFile):
 			playListItems = XML.ElementFromURL(key).xpath('//Video')
 		elif playListType == 'audio':
 			playListItems = XML.ElementFromURL(key).xpath('//Track')
+		elif playListType == 'photo':
+			playListItems = XML.ElementFromURL(key).xpath('//Photo')
 		for playListItem in playListItems:
 			playlists.getPlayListInfo(playListItem, myRow, playListType)
 			csvwriter.writerow(myRow)

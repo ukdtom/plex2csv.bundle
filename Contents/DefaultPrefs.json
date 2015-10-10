@@ -60,7 +60,7 @@
 		"id": "PlayList_Level",
 		"label": "PlayList Export Level..",
 		"type": "enum",
-		"values" : ["Simple"],
+		"values" : ["Simple", "Basic"],
 		"default": "Simple"
 	}
 ]
