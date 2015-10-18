@@ -10,7 +10,8 @@ import misc
 ####################################################################################################
 def getMusicHeader(PrefsLevel):
 	# Simple fields
-	fieldnames = ('Track ID',
+	fieldnames = (
+			'Track ID',
 			'Artist', 
 			'Album',
 			'Title',
@@ -18,7 +19,7 @@ def getMusicHeader(PrefsLevel):
 	# Basic fields
 	if (PrefsLevel in ['Basic','Extended','Extreme', 'Extreme2']):
 		fieldnames = fieldnames + (
-			'Artist Summery',
+			'Rating Count',
 			'Track No',
 			'Duration',
 			'Added',
@@ -38,52 +39,50 @@ def getMusicHeader(PrefsLevel):
 ####################################################################################################
 # This function will return the info for Audio
 ####################################################################################################
-def getAudioInfo(myMedia, myRow, MYHEADER, csvwriter, myMedia2):
+def getAudioInfo(track, myRow,):
 		# Get Simple Info
-		myRow = getAudioSimple(myMedia, myRow, myMedia2)
+		myRow = getAudioSimple(track, myRow)
 		# Get Basic Info
 		if Prefs['Artist_Level'] in ['Basic', "Extended", "Extreme", "Extreme 2", "Extreme 3"]:
-			myRow = getAudioBasic(myMedia, myRow, myMedia2)
+			myRow = getAudioBasic(track, myRow)
 		if Prefs['Artist_Level'] in ["Extended", "Extreme", "Extreme 2", "Extreme 3"]:
-			myRow = getAudioExtended(myMedia, myRow, myMedia2)
+			myRow = getAudioExtended(track, myRow)
 		return myRow
-
-####################################################################################################
-# This function will return the extended info for Audio
-####################################################################################################
-def getAudioExtended(myMedia, myRow, myMedia2):
-	for track in myMedia2.xpath('//Track'):
-		if track.get('ratingKey') == myRow['Track ID']:
-			myRow['Media ID'] = track.get('ratingKey')
-			for Media in track.xpath('//Media'):
-				myRow['bitrate'] = Media.get('bitrate')
-				myRow['audioChannels'] = Media.get('audioChannels')
-				myRow['audioCodec'] = Media.get('audioCodec')
-				myRow['container'] = Media.get('container')
-	return myRow
 
 ####################################################################################################
 # This function will return the simple info for Audio
 ####################################################################################################
-def getAudioSimple(myMedia, myRow, myMedia2):
+def getAudioSimple(track, myRow):
 	# Get episode rating key
-	myRow['Track ID'] = misc.GetRegInfo(myMedia2, 'ratingKey')
+	myRow['Track ID'] = misc.GetRegInfo(track, 'ratingKey', 'N/A')
 	# Get Track title
-	myRow['Title'] = misc.GetRegInfo(myMedia2, 'title')	
+	myRow['Title'] = misc.GetRegInfo(track, 'title')	
 	# Get Artist
-	myRow['Artist'] = misc.GetRegInfo(myMedia, 'title')	
+	myRow['Artist'] = misc.GetRegInfo(track, 'grandparentTitle')	
 	# Get Album
-	myRow['Album'] = misc.GetRegInfo(myMedia2, 'parentTitle')		
+	myRow['Album'] = misc.GetRegInfo(track, 'parentTitle')		
 	return myRow
 
 ####################################################################################################
 # This function will return the basic info for Audio
 ####################################################################################################
-def getAudioBasic(myMedia, myRow, myMedia2):
-	myRow['Artist Summery'] = misc.GetRegInfo(myMedia, 'summary')
-	myRow['Track No'] = misc.GetRegInfo(myMedia2, 'index')
-	myRow['Duration'] = misc.ConvertTimeStamp(misc.GetRegInfo(myMedia2, 'duration', '0'))
-	myRow['Added'] = misc.ConvertDateStamp(misc.GetRegInfo(myMedia2, 'addedAt', '0'))
-	myRow['Updated'] = misc.ConvertDateStamp(misc.GetRegInfo(myMedia2, 'updatedAt', '0'))
+def getAudioBasic(track, myRow):
+	myRow['Rating Count'] = misc.GetRegInfo(track, 'ratingCount', 'N/A')
+	myRow['Track No'] = misc.GetRegInfo(track, 'index')
+	myRow['Duration'] = misc.ConvertTimeStamp(misc.GetRegInfo(track, 'duration', '0'))
+	myRow['Added'] = misc.ConvertDateStamp(misc.GetRegInfo(track, 'addedAt', '0'))
+	myRow['Updated'] = misc.ConvertDateStamp(misc.GetRegInfo(track, 'updatedAt', '0'))
+	return myRow
+
+####################################################################################################
+# This function will return the extended info for Audio
+####################################################################################################
+def getAudioExtended(track, myRow):
+	for media in track.xpath('//Media'):
+		myRow['Media ID'] = media.get('id')
+		myRow['bitrate'] = media.get('bitrate')
+		myRow['audioChannels'] = media.get('audioChannels')
+		myRow['audioCodec'] = media.get('audioCodec')
+		myRow['container'] = media.get('container')
 	return myRow
 

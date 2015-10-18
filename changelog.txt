@@ -1,3 +1,11 @@
+v0.0.3.6:
+-	Audio:
+	- Fixed a problem with very large albums would make the plugin crash
+		(Various Artists mostly)
+		This sadly meant a complete rewrite of the Audio export, but sadly
+		caused a different output than before. Export is however faster :-)
+			-	And Kudo goes to OttoKerner for spoting this issue
+
 V0.0.3.5:
 - Playlists:
 	- Movie/TV-Shows:
