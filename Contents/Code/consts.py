@@ -4,7 +4,7 @@
 ####################################################################################################
 
 # APP specific stuff
-VERSION = ' V0.0.3.5'
+VERSION = ' V0.0.3.6'
 NAME = 'Plex2csv'
 DESCRIPTION = 'Export Plex libraries to CSV-Files'
 ART = 'art-default.jpg'
@@ -16,5 +16,5 @@ PLAYLIST = 'playlist.png'
 # How many items we ask for each time
 CONTAINERSIZEMOVIES = 20
 CONTAINERSIZETV = 5
-CONTAINERSIZEAUDIO = 3			# With the new fancy Vevo, some summery is very large, like the Beatles, so we step with not more than 3 here
+CONTAINERSIZEAUDIO = 10			
 

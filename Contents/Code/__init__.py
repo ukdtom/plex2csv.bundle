@@ -96,6 +96,10 @@ def MainMenu(random=0):
 					title = section.get('title')
 					key = section.get('key')
 					thumb = LOOPBACK + section.get('thumb')
+
+			
+
+
 					Log.Debug('Title of section is %s with a key of %s' %(title, key))
 					oc.add(DirectoryObject(key=Callback(backgroundScan, title=title, sectiontype=sectiontype, key=key, random=time.clock()), thumb=thumb, title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
 		else:
@@ -427,58 +431,6 @@ def scanShowDB(myMediaURL, myCSVFile):
 	Log.Debug("******* Ending scanShowDB ***********")
 
 ####################################################################################################
-# This function will scan a Music section.
-####################################################################################################
-@route(consts.PREFIX + '/scanArtistDB')
-def scanArtistDB(myMediaURL, myCSVFile):
-	Log.Debug("******* Starting scanArtistDB with an URL of %s ***********" %(myMediaURL))
-	global bScanStatusCount
-	global bScanStatusCountOf
-	global bScanStatus
-	bScanStatusCount = 0
-	try:
-		mySepChar = Prefs['Seperator']
-		Log.Debug('Writing headers for Audio Export')
-		csvfile = io.open(myCSVFile,'wb')
-		csvwriter = csv.DictWriter(csvfile, fieldnames=audio.getMusicHeader(Prefs['Artist_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
-		csvwriter.writeheader()
-		iCount = bScanStatusCount
-		Log.Debug('Starting to fetch the list of items in this section')
-		while True:
-			Log.Debug("Walking medias")
-			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCount) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEAUDIO)	
-			partMedias = XML.ElementFromURL(fetchURL, headers=MYHEADER)
-			if bScanStatusCount == 0:
-				bScanStatusCountOf = partMedias.get('totalSize')
-				Log.Debug('Amount of items in this section is %s' %bScanStatusCountOf)
-			# HERE WE DO STUFF
-			Log.Debug("Retrieved part of medias okay [%s of %s]" %(str(iCount), str(bScanStatusCountOf)))
-			AllParts = partMedias.xpath('.//Directory')
-			for Part in AllParts:
-				bScanStatusCount += 1
-				iCount += 1
-				ratingKey = Part.get("ratingKey")
-				title = Part.get("title")
-				myURL = LOOPBACK + '/library/metadata/' + ratingKey + '/allLeaves'				
-				Log.Debug("Album %s of %s with a RatingKey of %s at myURL: %s" %(bScanStatusCount, bScanStatusCountOf, ratingKey, myURL))		
-				myMedias2 = XML.ElementFromURL(myURL, headers=MYHEADER).xpath('//Track')			
-				for myMedia2 in myMedias2:
-					myRow = {}
-					# Get the Audio Info
-					audio.getAudioInfo(Part, myRow, MYHEADER, csvwriter, myMedia2)
-					csvwriter.writerow(myRow)			
-				Log.Debug("Media #%s from database: '%s'" %(bScanStatusCount, misc.GetRegInfo(Part, 'title') + '-' + misc.GetRegInfo(myMedia2, 'parentTitle')))
-			# Got to the end of the line?		
-			if int(partMedias.get('size')) == 0:
-				break
-		csvfile.close
-	except:
-		Log.Critical("Detected an exception in scanArtistDB")
-		bScanStatus = 99
-		raise # Dumps the error so you can see what the problem is
-	Log.Debug("******* Ending scanArtistDB ***********")
-
-####################################################################################################
 # This function will show a menu with playlists
 ####################################################################################################
 @route(consts.PREFIX + '/selectPList')
@@ -542,4 +494,47 @@ def scanPList(key, playListType, myCSVFile):
 	oc.add(DirectoryObject(key=Callback(MainMenu), title="Go to the Main Menu"))
 	Log.Debug("******* Ending scanPListDB ***********")
 	return oc
+
+####################################################################################################
+# This function will scan a Music section.
+####################################################################################################
+@route(consts.PREFIX + '/scanArtistDB')
+def scanArtistDB(myMediaURL, myCSVFile):
+	Log.Debug("******* Starting scanArtistDB with an URL of %s ***********" %(myMediaURL))
+	global bScanStatusCount
+	global bScanStatusCountOf
+	global bScanStatus
+	bScanStatusCount = 0
+	try:
+		mySepChar = Prefs['Seperator']
+		Log.Debug('Writing headers for Audio Export')
+		csvfile = io.open(myCSVFile,'wb')
+		csvwriter = csv.DictWriter(csvfile, fieldnames=audio.getMusicHeader(Prefs['Artist_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
+		csvwriter.writeheader()
+		Log.Debug('Starting to fetch the list of items in this section')
+		fetchURL = myMediaURL + '?type=10&X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=0'
+		medias = XML.ElementFromURL(fetchURL)
+		if bScanStatusCount == 0:
+			bScanStatusCountOf = medias.get('totalSize')
+			Log.Debug('Amount of items in this section is %s' %bScanStatusCountOf)
+		Log.Debug("Walking medias")
+		while True:
+			fetchURL = myMediaURL + '?type=10&sort=artist.titleSort,album.titleSort:asc&X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEAUDIO)	
+			medias = XML.ElementFromURL(fetchURL)
+			if medias.get('size') == '0':
+				break
+			# HERE WE DO STUFF
+			tracks = medias.xpath('.//Track')
+			for track in tracks:
+				bScanStatusCount += 1
+				# Get the Audio Info
+				myRow = {}
+				audio.getAudioInfo(track, myRow)
+				csvwriter.writerow(myRow)	
+		csvfile.close
+	except:
+		Log.Critical("Detected an exception in scanArtistDB")
+		bScanStatus = 99
+		raise # Dumps the error so you can see what the problem is
+	Log.Debug("******* Ending scanArtistDB ***********")
 
