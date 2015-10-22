@@ -16,5 +16,5 @@ PLAYLIST = 'playlist.png'
 # How many items we ask for each time
 CONTAINERSIZEMOVIES = 20
 CONTAINERSIZETV = 5
-CONTAINERSIZEAUDIO = 20			# With the new fancy Vevo, some summery is very large, like the Beatles, so we step with not more than 20 here
+CONTAINERSIZEAUDIO = 10			
 

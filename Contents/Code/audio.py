@@ -78,11 +78,19 @@ def getAudioBasic(track, myRow):
 # This function will return the extended info for Audio
 ####################################################################################################
 def getAudioExtended(track, myRow):
-	for media in track.xpath('//Media'):
-		myRow['Media ID'] = media.get('id')
-		myRow['bitrate'] = media.get('bitrate')
-		myRow['audioChannels'] = media.get('audioChannels')
-		myRow['audioCodec'] = media.get('audioCodec')
-		myRow['container'] = media.get('container')
+#TODO: Fix if more than one media for a track
+	media = track.xpath('.//Media')[0]
+	myRow['Media ID'] = media.get('id')
+	myRow['bitrate'] = media.get('bitrate')
+	myRow['audioChannels'] = media.get('audioChannels')
+	myRow['audioCodec'] = media.get('audioCodec')
+	myRow['container'] = media.get('container')
+
+#	for media in track.xpath('.//Media'):
+#		myRow['Media ID'] = media.get('id')
+#		myRow['bitrate'] = media.get('bitrate')
+#		myRow['audioChannels'] = media.get('audioChannels')
+#		myRow['audioCodec'] = media.get('audioCodec')
+#		myRow['container'] = media.get('container')
 	return myRow
 

@@ -531,7 +531,6 @@ def scanArtistDB(myMediaURL, myCSVFile):
 				myRow = {}
 				audio.getAudioInfo(track, myRow)
 				csvwriter.writerow(myRow)	
-				ratingKey = track.get("ratingKey")
 		csvfile.close
 	except:
 		Log.Critical("Detected an exception in scanArtistDB")
