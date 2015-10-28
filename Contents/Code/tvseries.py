@@ -57,7 +57,8 @@ def getTVHeader(PrefsLevel):
 			'Locked fields',
 			'Extras',
 			'Audio Languages',
-			'Subtitle Languages'
+			'Subtitle Languages',
+			'Subtitle Codec'
 			)
 	# Extreme fields
 	if PrefsLevel in ['Extreme', 'Extreme 2']:
@@ -210,14 +211,28 @@ def getTVExtended(Episode, myRow, EpisodeMedias):
 				AudioLanguages = AudioLanguages + Prefs['Seperator'] + misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
 		myRow['Audio Languages'] = AudioLanguages
 		#Get Subtitle languages
-		SubtitleStreamsLanguages = EpisodeMedia.xpath('//Stream[@streamType=3][@languageCode]')
 		SubtitleLanguages = ''
+		SubtitleStreamsLanguages = EpisodeMedia.xpath('//Stream[@streamType=3][@languageCode]')
 		for langCode in SubtitleStreamsLanguages:
+			thisSub = misc.GetRegInfo(langCode, 'languageCode', 'N/A')
+			if 'N/A' == misc.GetRegInfo(langCode, 'key', 'N/A'):
+				thisSub = thisSub + '(Internal)'
 			if SubtitleLanguages == '':
-				SubtitleLanguages = misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
+					SubtitleLanguages = thisSub
 			else:
-				SubtitleLanguages = SubtitleLanguages + Prefs['Seperator'] + misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
+				SubtitleLanguages = SubtitleLanguages + Prefs['Seperator'] + thisSub
 		myRow['Subtitle Languages'] = misc.WrapStr(SubtitleLanguages)
+		#Get Subtitle Codec
+		SubtitleCodec = ''
+		SubtitleStreamsCodec = EpisodeMedia.xpath('//Stream[@streamType=3][@codec]')
+		for subtitleFormat in SubtitleStreamsCodec:
+			if SubtitleCodec == '':
+				SubtitleCodec = misc.GetRegInfo(subtitleFormat, 'codec', 'N/A')
+			else:
+				SubtitleCodec = SubtitleCodec + Prefs['Seperator'] + misc.GetRegInfo(subtitleFormat, 'codec', 'N/A')
+		myRow['Subtitle Codec'] = misc.WrapStr(SubtitleCodec)
+
+
 	return myRow
 
 ####################################################################################################

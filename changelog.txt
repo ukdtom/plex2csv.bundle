@@ -1,3 +1,11 @@
+v0.0.3.7:
+- Movies:
+	- Added info about if subs are internal or not
+	- Added info about the format of the subs
+- TV-Shows:
+	- Added info about if subs are internal or not
+	- Added info about the format of the subs
+
 v0.0.3.6:
 -	Audio:
 	- Fixed a problem with very large albums would make the plugin crash
