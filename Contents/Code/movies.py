@@ -233,16 +233,19 @@ def getMovieExtended(myMedia, myRow, ExtInfo):
 	AudioLanguages = ''
 	AudioStreamsLanguages = ExtInfo.xpath('Media/Part/Stream[@streamType=2][@languageCode]')
 	for langCode in AudioStreamsLanguages:
+		thisAudioLanguage = misc.GetMoviePartInfo(langCode, 'languageCode', 'none')
+		if thisAudioLanguage == 'zxx':
+			thisAudioLanguage = 'non-linguistic content'
 		if AudioLanguages == '':
-			AudioLanguages = misc.GetRegInfo(langCode, 'languageCode', 'N/A')
+			AudioLanguages = thisAudioLanguage
 		else:
-			AudioLanguages = AudioLanguages + Prefs['Seperator'] + misc.GetRegInfo(langCode, 'languageCode', 'N/A')
+			AudioLanguages = AudioLanguages + Prefs['Seperator'] + thisAudioLanguage
 	myRow['Audio Languages'] = AudioLanguages
 	#Get Audio title
 	AudioTitles = ''
 	AudioStreamsTitles = ExtInfo.xpath('Media/Part/Stream[@streamType=2]')
 	for title in AudioStreamsTitles:
-		thisAudioTitle = misc.GetRegInfo(title, 'title', 'N/A')
+		thisAudioTitle = misc.GetRegInfo(title, 'title', 'none')
 		if AudioTitles == '':
 				AudioTitles = thisAudioTitle
 		else:
@@ -252,7 +255,7 @@ def getMovieExtended(myMedia, myRow, ExtInfo):
 	SubtitleLanguages = ''
 	SubtitleStreams = ExtInfo.xpath('Media/Part/Stream[@streamType=3]')
 	for subStream in SubtitleStreams:
-		thisLangCode = misc.GetRegInfo(subStream, 'languageCode', 'N/A')
+		thisLangCode = misc.GetRegInfo(subStream, 'languageCode', 'none')
 		if 'N/A' == misc.GetRegInfo(subStream, 'key', 'N/A'):
 			thisLangCode = thisLangCode + '(Internal)'
 		if SubtitleLanguages == '':
@@ -263,7 +266,7 @@ def getMovieExtended(myMedia, myRow, ExtInfo):
 	# Get Subtitle title
 	SubtitleTitles = ''
 	for subStream in SubtitleStreams:
-		thisSubTitle = misc.GetRegInfo(subStream, 'title', 'N/A')
+		thisSubTitle = misc.GetRegInfo(subStream, 'title', 'none')
 		if SubtitleTitles == '':
 				SubtitleTitles = thisSubTitle
 		else:

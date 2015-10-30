@@ -207,16 +207,19 @@ def getTVExtended(Episode, myRow, EpisodeMedias):
 		AudioStreamsLanguages = EpisodeMedia.xpath('//Stream[@streamType=2][@languageCode]')
 		AudioLanguages = ''
 		for langCode in AudioStreamsLanguages:
+			thisAudioLanguage = misc.GetMoviePartInfo(langCode, 'languageCode', 'none')
+			if thisAudioLanguage == 'zxx':
+				thisAudioLanguage = 'non-linguistic content'
 			if AudioLanguages == '':
-				AudioLanguages = misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
+				AudioLanguages = thisAudioLanguage
 			else:
-				AudioLanguages = AudioLanguages + Prefs['Seperator'] + misc.GetMoviePartInfo(langCode, 'languageCode', 'N/A')
+				AudioLanguages = AudioLanguages + Prefs['Seperator'] + thisAudioLanguage
 		myRow['Audio Languages'] = AudioLanguages
 		#Get Audio title
 		AudioTitles = ''
 		AudioStreamsTitles = EpisodeMedia.xpath('Media/Part/Stream[@streamType=2]')
 		for title in AudioStreamsTitles:
-			thisAudioTitle = misc.GetRegInfo(title, 'title', 'N/A')
+			thisAudioTitle = misc.GetRegInfo(title, 'title', 'none')
 			if AudioTitles == '':
 					AudioTitles = thisAudioTitle
 			else:
@@ -237,7 +240,7 @@ def getTVExtended(Episode, myRow, EpisodeMedias):
 		# Get Subtitle title
 		SubtitleTitles = ''
 		for subStream in SubtitleStreams:
-			thisSubTitle = misc.GetRegInfo(subStream, 'title', 'N/A')
+			thisSubTitle = misc.GetRegInfo(subStream, 'title', 'none')
 			if SubtitleTitles == '':
 					SubtitleTitles = thisSubTitle
 			else:
