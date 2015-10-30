@@ -2,9 +2,13 @@ v0.0.3.7:
 - Movies:
 	- Added info about if subs are internal or not
 	- Added info about the format of the subs
+	- Added title of the Audio track
+	- Added title of the subtitle track
 - TV-Shows:
 	- Added info about if subs are internal or not
 	- Added info about the format of the subs
+	- Added title of the Audio track
+	- Added title of the subtitle track
 
 v0.0.3.6:
 -	Audio:

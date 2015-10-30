@@ -46,7 +46,9 @@ def getMovieHeader(PrefsLevel):
 			'Added',
 			'Updated',
 			'Audio Languages',
+			'Audio Title',
 			'Subtitle Languages',
+			'Subtitle Title',
 			'Subtitle Codec'
 			)
 	# Extreme fields
@@ -236,18 +238,37 @@ def getMovieExtended(myMedia, myRow, ExtInfo):
 		else:
 			AudioLanguages = AudioLanguages + Prefs['Seperator'] + misc.GetRegInfo(langCode, 'languageCode', 'N/A')
 	myRow['Audio Languages'] = AudioLanguages
+	#Get Audio title
+	AudioTitles = ''
+	AudioStreamsTitles = ExtInfo.xpath('Media/Part/Stream[@streamType=2]')
+	for title in AudioStreamsTitles:
+		thisAudioTitle = misc.GetRegInfo(title, 'title', 'N/A')
+		if AudioTitles == '':
+				AudioTitles = thisAudioTitle
+		else:
+			AudioTitles = AudioTitles + Prefs['Seperator'] + thisAudioTitle
+	myRow['Audio Title'] = misc.WrapStr(AudioTitles)
 	#Get Subtitle languages
 	SubtitleLanguages = ''
-	SubtitleStreamsLanguages = ExtInfo.xpath('Media/Part/Stream[@streamType=3][@languageCode]')
-	for langCode in SubtitleStreamsLanguages:
-		thisSub = misc.GetRegInfo(langCode, 'languageCode', 'N/A')
-		if 'N/A' == misc.GetRegInfo(langCode, 'key', 'N/A'):
-			thisSub = thisSub + '(Internal)'
+	SubtitleStreams = ExtInfo.xpath('Media/Part/Stream[@streamType=3]')
+	for subStream in SubtitleStreams:
+		thisLangCode = misc.GetRegInfo(subStream, 'languageCode', 'N/A')
+		if 'N/A' == misc.GetRegInfo(subStream, 'key', 'N/A'):
+			thisLangCode = thisLangCode + '(Internal)'
 		if SubtitleLanguages == '':
-				SubtitleLanguages = thisSub
+				SubtitleLanguages = thisLangCode
 		else:
-			SubtitleLanguages = SubtitleLanguages + Prefs['Seperator'] + thisSub
+			SubtitleLanguages = SubtitleLanguages + Prefs['Seperator'] + thisLangCode
 	myRow['Subtitle Languages'] = misc.WrapStr(SubtitleLanguages)
+	# Get Subtitle title
+	SubtitleTitles = ''
+	for subStream in SubtitleStreams:
+		thisSubTitle = misc.GetRegInfo(subStream, 'title', 'N/A')
+		if SubtitleTitles == '':
+				SubtitleTitles = thisSubTitle
+		else:
+			SubtitleTitles = SubtitleTitles + Prefs['Seperator'] + thisSubTitle
+	myRow['Subtitle Title'] = misc.WrapStr(SubtitleTitles)
 	#Get Subtitle Codec
 	SubtitleCodec = ''
 	SubtitleStreamsCodec = ExtInfo.xpath('Media/Part/Stream[@streamType=3][@codec]')
