@@ -1,3 +1,27 @@
+v0.0.3.8:
+- Movies:
+	- ****** New Level : Extreme 4 **********
+		- Added Video stream info for field 'Video Stream Codec'
+		- Added Video stream info for field 'Video Stream bitrate'
+		- Added Video stream info for field	'Video Stream language'
+		- Added Video stream info for field	'Video Stream language Code'
+		- Added Video stream info for field	'Video Stream anamorphic'
+		- Added Video stream info for field 'Video Stream bitDepth'
+		- Added Video stream info for field	'Video Stream cabac'
+		- Added Video stream info for field	'Video Stream chromaSubsampling'
+		- Added Video stream info for field	'Video Stream codecID'
+		- Added Video stream info for field 'Video Stream frameRate'
+		- Added Video stream info for field	'Video Stream frameRateMode'
+		- Added Video stream info for field	'Video Stream hasScalingMatrix'
+		- Added Video stream info for field	'Video Stream height'
+		- Added Video stream info for field	'Video Stream pixelAspectRatio'
+		- Added Video stream info for field	'Video Stream pixelFormat'
+		- Added Video stream info for field	'Video Stream profile'
+		- Added Video stream info for field	'Video Stream refFrames'
+		- Added Video stream info for field	'Video Stream scanType'
+		- Added Video stream info for field	'Video Stream streamIdentifier'
+		- Added Video stream info for field	'Video Stream width'
+
 v0.0.3.7:
 - Movies:
 	- Added info about if subs are internal or not

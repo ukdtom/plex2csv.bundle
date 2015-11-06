@@ -374,7 +374,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 	except ValueError, Argument:
 		Log.Critical('Unknown error in scanMovieDb %s' %(Argument))
 		bScanStatus = 99
-		raise e
+		raise 
 	Log.Debug("******* Ending scanMovieDB ***********")
 
 ####################################################################################################

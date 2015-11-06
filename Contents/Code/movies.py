@@ -22,7 +22,7 @@ def getMovieHeader(PrefsLevel):
 			'Genres'
 			)
 	# Basic fields
-	if (PrefsLevel in ['Basic','Extended','Extreme', 'Extreme 2', 'Extreme 3']):
+	if (PrefsLevel in ['Basic','Extended','Extreme', 'Extreme 2', 'Extreme 3', 'Extreme 4']):
 		fieldnames = fieldnames + (
 			'View Count',
 			'Last Viewed at',
@@ -39,7 +39,7 @@ def getMovieHeader(PrefsLevel):
 			'Country'
 			)
 	# Extended fields
-	if PrefsLevel in ['Extended','Extreme', 'Extreme 2', 'Extreme 3']:
+	if PrefsLevel in ['Extended','Extreme', 'Extreme 2', 'Extreme 3', 'Extreme 4']:
 		fieldnames = fieldnames + (
 			'Original Title',
 			'Collections',
@@ -52,7 +52,7 @@ def getMovieHeader(PrefsLevel):
 			'Subtitle Codec'
 			)
 	# Extreme fields
-	if PrefsLevel in ['Extreme', 'Extreme 2', 'Extreme 3']:
+	if PrefsLevel in ['Extreme', 'Extreme 2', 'Extreme 3', 'Extreme 4']:
 		fieldnames = fieldnames + (
 			'Video Resolution',
 			'Bitrate',
@@ -66,7 +66,7 @@ def getMovieHeader(PrefsLevel):
 			'Video FrameRate'
 			)
 	# Part info
-	if PrefsLevel in ['Extreme 2', 'Extreme 3']:			
+	if PrefsLevel in ['Extreme 2', 'Extreme 3', 'Extreme 4']:			
 		fieldnames = fieldnames + (
 			'Part File',
 			'Part Size',
@@ -75,10 +75,34 @@ def getMovieHeader(PrefsLevel):
 			'Part Container'
 			)
 	# Extreme 3 level
-	if PrefsLevel in ['Extreme 3']:			
+	if PrefsLevel in ['Extreme 3', 'Extreme 4']:			
 		fieldnames = fieldnames + (
 			'PMS Media Path',
 			''
+			)
+	# Extreme 4 level
+	if PrefsLevel in ['Extreme 4']:			
+		fieldnames = fieldnames + (
+			'Video Stream Codec',
+			'Video Stream bitrate',
+			'Video Stream language',
+			'Video Stream language Code',
+			'Video Stream anamorphic',
+			'Video Stream bitDepth',
+			'Video Stream cabac',
+			'Video Stream chromaSubsampling',
+			'Video Stream codecID',
+			'Video Stream frameRate',
+			'Video Stream frameRateMode',
+			'Video Stream hasScalingMatrix',
+			'Video Stream height',
+			'Video Stream pixelAspectRatio',
+			'Video Stream pixelFormat',
+			'Video Stream profile',
+			'Video Stream refFrames',
+			'Video Stream scanType',
+			'Video Stream streamIdentifier',
+			'Video Stream width'
 			)
 	return fieldnames
 
@@ -93,30 +117,206 @@ def getMovieInfo(myMedia, myRow, MYHEADER, csvwriter):
 		# Get Simple Info
 		myRow = getMovieSimple(myMedia, myRow)
 		# Get Basic Info
-		if Prefs['Movie_Level'] in ['Basic', "Extended", "Extreme", "Extreme 2", "Extreme 3"]:
+		if Prefs['Movie_Level'] in ['Basic', "Extended", "Extreme", "Extreme 2", "Extreme 3", "Extreme 4"]:
 			myRow = getMovieBasic(myMedia, myRow, ExtInfo)
 		# Get Extended Info
-		if Prefs['Movie_Level'] in ["Extended", "Extreme", "Extreme 2", "Extreme 3"]:
+		if Prefs['Movie_Level'] in ["Extended", "Extreme", "Extreme 2", "Extreme 3", "Extreme 4"]:
 			myRow = getMovieExtended(myMedia, myRow, ExtInfo)	
 		# Get Extreme Info
-		if Prefs['Movie_Level'] in ["Extreme", "Extreme 2", "Extreme 3"]:
+		if Prefs['Movie_Level'] in ["Extreme", "Extreme 2", "Extreme 3", "Extreme 4"]:
 			myRow = getMovieExtreme(myMedia, myRow, ExtInfo)	
 		# Get Extreme 2 Info
-		if Prefs['Movie_Level'] in ["Extreme 2", "Extreme 3"]:
+		if Prefs['Movie_Level'] in ["Extreme 2", "Extreme 3", "Extreme 4"]:
 			myRow = getMovieExtreme2(myMedia, myRow, ExtInfo)	
-		# Get Extreme 2 Info
-		if Prefs['Movie_Level'] in ["Extreme 3"]:
-			myRow = getMovieExtreme3(myMedia, myRow, ExtInfo, MYHEADER)	
+		# Get Extreme 3 Info
+		if Prefs['Movie_Level'] in ["Extreme 3", "Extreme 4"]:
+			myRow = getMovieExtreme3(myMedia, myRow, ExtInfo)	
+		# Get Extreme 4 Info
+		if Prefs['Movie_Level'] in ["Extreme 4"]:
+			myRow = getMovieExtreme4(myMedia, myRow, ExtInfo)	
 		return myRow
 
 ####################################################################################################
-# This function will return the extreme 2 info for movies
+# This function will return the extreme 4 info for movies
 ####################################################################################################
-def getMovieExtreme3(myMedia, myRow, ExtInfo, MYHEADER):
+def getMovieExtreme4(myMedia, myRow, ExtInfo):
+
+
+	#Get Video Streams Info
+	#Video Stream Codec
+	vSCodec = ''
+	#Video Stream bitrate	
+	vSBitRate = ''
+	#Video Stream language
+	vSLanguage = ''
+	#Video Stream language Code
+	vSLanguageCode = ''
+	#Video Stream anamorphic
+	vSAnamorphic = ''
+	#Video Stream bitDepth
+	vSBitDepth = ''
+	#Video Stream cabac
+	vSCabac = ''
+	#Video Stream chromaSubsampling
+	vSChromaSubsampling = ''
+	#Video Stream codecID
+	vSCodecID = ''
+	#Video Stream frameRate
+	vSFrameRate = ''
+	#Video Stream frameRateMode
+	vSFrameRateMode = ''
+	#Video Stream hasScalingMatrix
+	vSHasScalingMatrix = ''
+	#Video Stream height
+	vSHeight = ''
+	#Video Stream pixelAspectRatio
+	vSPixelAspectRatio = ''
+	#Video Stream pixelFormat
+	vSPixelFormat = ''
+	#Video Stream profile
+	vSProfile = ''
+	#Video Stream refFrames
+	vSRefFrames = ''
+	#Video Stream scanType
+	vSScanType = ''
+	#Video Stream streamIdentifier
+	vSStreamIdentifier = ''
+	#Video Stream width
+	vSWidth = ''
+	# Walk the info, and grap the details
+	vStreams = ExtInfo.xpath('Media/Part/Stream[@streamType=1]')
+	for vStream in vStreams:
+		thisvSCodec = misc.GetRegInfo(vStream, 'codec', 'N/A')
+		if vSCodec == '':
+				vSCodec = thisvSCodec
+		else:
+			vSCodec = vSCodec + Prefs['Seperator'] + thisvSCodec
+		thisvSBitRate = misc.GetRegInfo(vStream, 'bitrate', 'N/A')
+		if vSBitRate == '':
+				vSBitRate = thisvSBitRate
+		else:
+			vSBitRate = vSBitRate + Prefs['Seperator'] + thisvSBitRate
+		thisvSLanguage = misc.GetRegInfo(vStream, 'language', 'N/A')
+		if vSLanguage == '':
+				vSLanguage = thisvSLanguage
+		else:
+			vSLanguage = vSLanguage + Prefs['Seperator'] + thisvSLanguage
+		thisvSLanguageCode = misc.GetRegInfo(vStream, 'languageCode', 'N/A')
+		if vSLanguageCode == '':
+				vSLanguageCode = thisvSLanguageCode
+		else:
+			vSLanguageCode = vSLanguageCode + Prefs['Seperator'] + thisvSLanguageCode
+		thisvSAnamorphic = misc.GetRegInfo(vStream, 'anamorphic', 'N/A')
+		if vSAnamorphic == '':
+				vSAnamorphic = thisvSAnamorphic
+		else:
+			vSAnamorphic = vSAnamorphic + Prefs['Seperator'] + thisvSAnamorphic
+		thisvSBitDepth = misc.GetRegInfo(vStream, 'bitDepth', 'N/A')
+		if vSBitDepth == '':
+				vSBitDepth = thisvSBitDepth
+		else:
+			vSBitDepth = vSBitDepth + Prefs['Seperator'] + thisvSBitDepth
+		thisvSCabac = misc.GetRegInfo(vStream, 'cabac', 'N/A')
+		if vSCabac == '':
+				vSCabac = thisvSCabac
+		else:
+			vSCabac = vSCabac + Prefs['Seperator'] + thisvSCabac
+		thisvSChromaSubsampling = misc.GetRegInfo(vStream, 'chromaSubsampling', 'N/A')
+		if vSChromaSubsampling == '':
+				vSChromaSubsampling = thisvSChromaSubsampling
+		else:
+			vSChromaSubsampling = vSChromaSubsampling + Prefs['Seperator'] + thisvSChromaSubsampling
+		thisvSCodecID = misc.GetRegInfo(vStream, 'codecID', 'N/A')
+		if vSCodecID == '':
+				vSCodecID = thisvSCodecID
+		else:
+			vSCodecID = vSCodecID + Prefs['Seperator'] + thisvSCodecID
+		thisvSFrameRate = misc.GetRegInfo(vStream, 'frameRate', 'N/A')
+		if vSFrameRate == '':
+				vSFrameRate = thisvSFrameRate
+		else:
+			vSFrameRate = vSFrameRate + Prefs['Seperator'] + thisvSFrameRate
+		thisvSFrameRateMode = misc.GetRegInfo(vStream, 'frameRateMode', 'N/A')
+		if vSFrameRateMode == '':
+				vSFrameRateMode = thisvSFrameRateMode
+		else:
+			vSFrameRateMode = vSFrameRateMode + Prefs['Seperator'] + thisvSFrameRateMode
+		thisvSHasScalingMatrix = misc.GetRegInfo(vStream, 'hasScalingMatrix', 'N/A')
+		if vSHasScalingMatrix == '':
+				vSHasScalingMatrix = thisvSHasScalingMatrix
+		else:
+			vSHasScalingMatrix = vSHasScalingMatrix + Prefs['Seperator'] + thisvSHasScalingMatrix
+		thisvSHeight = misc.GetRegInfo(vStream, 'height', 'N/A')
+		if vSHeight == '':
+				vSHeight = thisvSHeight
+		else:
+			vSHeight = vSHeight + Prefs['Seperator'] + thisvSHeight
+		thisvSPixelAspectRatio = misc.GetRegInfo(vStream, 'height', 'N/A')
+		if vSPixelAspectRatio == '':
+				vSPixelAspectRatio = thisvSPixelAspectRatio
+		else:
+			vSPixelAspectRatio = vSPixelAspectRatio + Prefs['Seperator'] + thisvSPixelAspectRatio
+		thisvSPixelFormat = misc.GetRegInfo(vStream, 'pixelFormat', 'N/A')
+		if vSPixelFormat == '':
+				vSPixelFormat = thisvSPixelFormat
+		else:
+			vSPixelFormat = vSPixelFormat + Prefs['Seperator'] + thisvSPixelFormat
+		thisvSProfile = misc.GetRegInfo(vStream, 'profile', 'N/A')
+		if vSProfile == '':
+				vSProfile = thisvSProfile
+		else:
+			vSProfile = vSProfile + Prefs['Seperator'] + thisvSProfile
+		thisvSRefFrames = misc.GetRegInfo(vStream, 'refFrames', 'N/A')
+		if vSRefFrames == '':
+				vSRefFrames = thisvSRefFrames
+		else:
+			vSRefFrames = vSRefFrames + Prefs['Seperator'] + thisvSRefFrames
+		thisvSScanType = misc.GetRegInfo(vStream, 'scanType', 'N/A')
+		if vSScanType == '':
+				vSScanType = thisvSScanType
+		else:
+			vSScanType = vSScanType + Prefs['Seperator'] + thisvSScanType
+		thisvSStreamIdentifier = misc.GetRegInfo(vStream, 'streamIdentifier', 'N/A')
+		if vSStreamIdentifier == '':
+				vSStreamIdentifier = thisvSStreamIdentifier
+		else:
+			vSStreamIdentifier = vSStreamIdentifier + Prefs['Seperator'] + thisvSStreamIdentifier
+		thisvSWidth = misc.GetRegInfo(vStream, 'width', 'N/A')
+		if vSWidth == '':
+				vSWidth = thisvSWidth
+		else:
+			vSWidth = vSWidth + Prefs['Seperator'] + thisvSWidth
+	# save Video stream info
+	myRow['Video Stream Codec'] = vSCodec
+	myRow['Video Stream bitrate'] = vSBitRate
+	myRow['Video Stream language'] = vSLanguage
+	myRow['Video Stream language Code'] = vSLanguageCode
+	myRow['Video Stream anamorphic'] = vSAnamorphic
+	myRow['Video Stream bitDepth'] = vSBitDepth
+	myRow['Video Stream cabac'] = vSCabac
+	myRow['Video Stream chromaSubsampling'] = vSChromaSubsampling
+	myRow['Video Stream codecID'] = vSCodecID
+	myRow['Video Stream frameRate'] = vSFrameRate
+	myRow['Video Stream frameRateMode'] = vSFrameRateMode
+	myRow['Video Stream hasScalingMatrix'] = vSHasScalingMatrix
+	myRow['Video Stream height'] = vSHeight
+	myRow['Video Stream pixelAspectRatio'] = vSPixelAspectRatio
+	myRow['Video Stream pixelFormat'] = vSPixelFormat
+	myRow['Video Stream profile'] = vSProfile
+	myRow['Video Stream refFrames'] = vSRefFrames
+	myRow['Video Stream scanType'] = vSScanType
+	myRow['Video Stream streamIdentifier'] = vSStreamIdentifier
+	myRow['Video Stream width'] = vSWidth
+	return myRow
+
+####################################################################################################
+# This function will return the extreme 3 info for movies
+####################################################################################################
+def getMovieExtreme3(myMedia, myRow, ExtInfo):
 
 	# Get tree info for media
 	myMediaTreeInfoURL = 'http://127.0.0.1:32400/library/metadata/' + misc.GetRegInfo(myMedia, 'ratingKey') + '/tree'
-	TreeInfo = XML.ElementFromURL(myMediaTreeInfoURL, headers=MYHEADER).xpath('//MediaPart')
+	TreeInfo = XML.ElementFromURL(myMediaTreeInfoURL).xpath('//MediaPart')
 	for myPart in TreeInfo:
 		MediaHash = misc.GetRegInfo(myPart, 'hash')
 		PMSMediaPath = os.path.join(Core.app_support_path, 'Media', 'localhost', MediaHash[0], MediaHash[1:]+ '.bundle', 'Contents')
