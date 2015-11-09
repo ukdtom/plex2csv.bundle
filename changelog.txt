@@ -1,5 +1,7 @@
 v0.0.3.8:
 - Movies:
+	- Changed the way the Movies info is extracted all together.
+		- Info about all Movie info and fields are stored in the file named moviefields.py
 	- ****** New Level : Extreme 4 **********
 		- Added Video stream info for field 'Video Stream Codec'
 		- Added Video stream info for field 'Video Stream bitrate'

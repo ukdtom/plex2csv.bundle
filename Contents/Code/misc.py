@@ -6,11 +6,12 @@
 #
 ####################################################################################################
 
-VERSION='0.0.0.1'
+VERSION='0.0.0.2'
 
 from textwrap import wrap, fill
 import re
 import datetime
+import moviefields
 
 ####################################################################################################
 # This function will return the version of the misc module
@@ -103,7 +104,6 @@ def GetMoviePartInfo(ExtInfo, myField, default = ''):
 #		Log.Debug('Failed to lookup field %s. Reverting to default' %(myField))
 	return myLookUp.encode('utf8')
 
-
 ####################################################################################################
 #	Pull's a field from the xml
 ####################################################################################################
@@ -121,7 +121,56 @@ def GetRegInfo(myMedia, myField, default = ''):
 	return myLookUp.encode('utf8')
 
 ####################################################################################################
-#	Wraps a string if needed
+#	Pull's a field from the xml
+####################################################################################################
+def GetRegInfo2(myMedia, myField, default = 'N/A'):
+	returnVal = ''	
+	try:
+		fieldsplit = myField.rsplit('@', 1)
+		# Singe attribute lookup
+		if fieldsplit[0] == '':
+			try:
+				returnVal = myMedia.get(fieldsplit[1])
+				if returnVal == None:
+					returnVal = default
+				elif fieldsplit[1] in moviefields.dateTimeFields:
+					returnVal = ConvertDateStamp(returnVal)
+					if returnVal == '01/01/1970':
+						returnVal = default
+				# IMDB?
+				elif fieldsplit[1] == 'guid':
+					tmp = returnVal[26:].rsplit('?',1)
+					returnVal = tmp[0]
+			except:
+				Log.Debug('Exception on field: ' + myField)
+		else:
+			# Attributes from xpath
+			retVals = myMedia.xpath(fieldsplit[0][:-1])
+			for retVal2 in retVals:
+				try:
+					# Get attribute
+					retVal = retVal2.get(fieldsplit[1])
+					# Did it exists?
+					if retVal == None:
+						retVal = default
+					# Is it a timeStamp?
+					elif fieldsplit[1] in moviefields.dateTimeFields:
+						if myField not in moviefields.timeFields:
+							retVal = ConvertDateStamp(retVal)
+						else:
+							retVal = ConvertTimeStamp(retVal)
+					if returnVal == '': 
+						returnVal = retVal
+					else:
+						returnVal = returnVal + Prefs['Seperator'] + retVal
+				except:
+					Log.Debug('Exception happend in field: ' + myField)		
+		return WrapStr(fixCRLF(returnVal)).encode('utf8')
+	except:
+		returnVal = default
+
+####################################################################################################
+#	Fix CR/LF
 ####################################################################################################
 def fixCRLF(myString):
 	myString = myString.decode('utf-8').replace('\r\n', ' ')

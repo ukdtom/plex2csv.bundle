@@ -39,7 +39,7 @@
 		"id": "Movie_Level",
 		"label": "Movie Export Level..",
 		"type": "enum",
-		"values" : ["Simple","Basic","Extended", "Extreme", "Extreme 2", "Extreme 3", "Extreme 4"],
+		"values" : ["Simple","Basic","Extended", "Extreme", "Extreme 2", "Extreme 3", "Above All"],
 		"default": "Basic"
 	},
 	{
