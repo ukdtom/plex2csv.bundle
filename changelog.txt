@@ -1,3 +1,16 @@
+v0.0.4.0:
+- Movies:
+	- Changed the way the Movies info is extracted all together.
+		- Info about all Movie info and fields are stored in the file named moviefields.py
+		- Level names has now changed, so you MUST go into the prefs of this Channel, and select the desirered level, if
+			this is an upgrade!
+		-	To see the levels, and the exported fields, go here: https://github.com/ukdtom/plex2csv.bundle/wiki/Movie-Export-Level
+		- Individual stream info is now also exported in level 6
+		- Note that level 1 & 2 are a lot faster, since they req. min. requests towards the Plex Media Server
+		- Note that levels above that req. a call towards the Plex Media Server for each movie (Like it always has been)
+		- Note that level 666 req. 2 calls against the Plex Media Server for each Movie!
+- The way noted above will sooner or later makes it to other export types as well!
+
 v0.0.3.7:
 - Movies:
 	- Added info about if subs are internal or not

@@ -348,11 +348,16 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		csvwriter = csv.DictWriter(csvfile, fieldnames=movies.getMovieHeader(Prefs['Movie_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		Log.Debug("Writing header")
 		csvwriter.writeheader()
+
+		if Prefs['Movie_Level'] in ['Level 1', 'Level 2']:
+			bExtraInfo = False
+		else:
+			bExtraInfo = True	
 		while True:
 			Log.Debug("Walking medias")
 			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCurrent) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEMOVIES)
 			iCount = bScanStatusCount
-			partMedias = XML.ElementFromURL(fetchURL, headers=MYHEADER)
+			partMedias = XML.ElementFromURL(fetchURL)
 			if bScanStatusCount == 0:
 				bScanStatusCountOf = partMedias.get('totalSize')
 				Log.Debug('Amount of items in this section is %s' %bScanStatusCountOf)
@@ -361,8 +366,12 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			medias = partMedias.xpath('.//Video')
 			for media in medias:
 				myRow = {}
+				# Was extra info needed here?
+				if bExtraInfo:
+					myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(media, 'ratingKey') + '?includeExtras=1'			
+					media = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
 				# Export the info			
-				myRow = movies.getMovieInfo(media, myRow, MYHEADER, csvwriter)
+				myRow = movies.getMovieInfo(media, myRow, csvwriter)
 				csvwriter.writerow(myRow)
 				iCurrent += 1
 				bScanStatusCount += 1
@@ -374,7 +383,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 	except ValueError, Argument:
 		Log.Critical('Unknown error in scanMovieDb %s' %(Argument))
 		bScanStatus = 99
-		raise e
+		raise 
 	Log.Debug("******* Ending scanMovieDB ***********")
 
 ####################################################################################################
