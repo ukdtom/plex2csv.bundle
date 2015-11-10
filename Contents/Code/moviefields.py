@@ -14,7 +14,8 @@ dateTimeFields = ['addedAt', 'updatedAt', 'lastViewedAt', 'duration']
 
 timeFields =['Media/Part/@duration']
 
-simpleFields = [
+# Define rows and element name for level 1 (Single call)
+Level_1 = [
 	('Media ID' , '@ratingKey'),
 	('Title' , '@title'),
 	('Sort title' , '@titleSort'),
@@ -26,8 +27,8 @@ simpleFields = [
 	('Genres' , 'Genre/@tag')
 ]	
 
-# Define rows and element name for basic level
-basicFields = [
+# Define rows and element name for level 2 (Single Call)
+Level_2 = [
 	('View Count' , '@viewCount'),
 	('Last Viewed at' , '@lastViewedAt'),
 	('Tagline' , '@tagline'),
@@ -36,15 +37,15 @@ basicFields = [
 	('Country' , 'Country/@tag'),
 	('Duration' , '@duration'),
 	('Directors' , 'Director/@tag'),
-	('Labels' , 'Label/@tag'),
-	('Locked Fields' , 'Field/@name'),
-	('Extras' , 'Extras/@size'),
 	('Roles' , 'Role/@tag'),
 	('IMDB Id' , '@guid')
 	]
 
-# Define rows and element name for extended level
-extendedFields = [
+# Define rows and element name for level 3 (One call pr. movie)
+Level_3 = [
+	('Labels' , 'Label/@tag'),
+	('Locked Fields' , 'Field/@name'),
+	('Extras' , 'Extras/@size'),
 	('Collections' , 'Collection/@tag'),
 	('Original Title' , '@originalTitle'),
 	('Added' , '@addedAt'),	
@@ -56,8 +57,8 @@ extendedFields = [
 	('Subtitle Codec' , 'Media/Part/Stream[@streamType=3]/@codec')
 	]
 
-# Define rows and element name for extreme level
-extremeFields = [
+# Define rows and element name for level 4 (One call pr. movie)
+Level_4 = [
 	('Video Resolution' , 'Media/@videoResolution'),
 	('Bitrate' , 'Media/@bitrate'),
 	('Width' , 'Media/@width'),
@@ -70,8 +71,8 @@ extremeFields = [
 	('Video FrameRate' , 'Media/@videoFrameRate')
 	]
 
-# Define rows and element name for extreme2 level (Part info)
-extreme2Fields = [
+# Define rows and element name for level 5 (Part info) (One call pr. movie)
+Level_5 = [
 	('Part File' , 'Media/Part/@file'),
 	('Part Size' , 'Media/Part/@size'),
 	('Part Indexed' , 'Media/Part/@indexes'),
@@ -80,8 +81,8 @@ extreme2Fields = [
 	('Part Optimized for Streaming' , 'Media/Part/@optimizedForStreaming')
 	]
 
-# Define rows and element name for level 3 (Video Stream Info)
-extreme3Fields = [
+# Define rows and element name for level 6 (Video Stream Info) (One call pr. movie)
+Level_6 = [
 	('Video Stream pixelFormat' , 'Media/Part/Stream[@streamType=1]/@pixelFormat'),
 	('Video Stream profile' , 'Media/Part/Stream[@streamType=1]/@profile'),
 	('Video Stream refFrames' , 'Media/Part/Stream[@streamType=1]/@refFrames'),
@@ -104,20 +105,20 @@ extreme3Fields = [
 	('Video Stream Codec' , 'Media/Part/Stream[@streamType=1]/@codec')
 	]
 
-# Define rows and element name for extreme level 4
-extreme4Fields = [
+# Define rows and element name for extreme level 7 (One call pr. movie)
+Level_7 = [
 	]
 
-# Define rows and element name for extreme level 5
-extreme5Fields = [
+# Define rows and element name for extreme level 8 (One call pr. movie)
+Level_8 = [
 	]
 
-# Define rows and element name for extreme level 6
-extreme6Fields = {
+# Define rows and element name for extreme level 9 (One call pr. movie)
+Level_9 = {
 	}
 
-# Define rows and element name for level "Above All"
-aboveAllFields = [
+# Define rows and element name for level 666 (Two calls pr. movie)
+Level_666 = [
 	('PMS Media Path' , 'hash')
 	]
 

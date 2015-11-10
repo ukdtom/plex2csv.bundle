@@ -10,26 +10,26 @@ import misc, moviefields
 ####################################################################################################
 def getMovieHeader(PrefsLevel):
 	fieldnames = ()
-	# Simple fields
-	fieldnames = getLevelFields(moviefields.simpleFields, fieldnames)		
+	# Level 1 fields
+	fieldnames = getLevelFields(moviefields.Level_1, fieldnames)		
 	# Basic fields
-	if (PrefsLevel in ['Basic','Extended','Extreme', 'Extreme 2', 'Extreme 3', 'Extreme 4', 'Extreme 5', 'Extreme 6', 'Above All']):
-		fieldnames = getLevelFields(moviefields.basicFields, fieldnames)		
+	if PrefsLevel in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		fieldnames = getLevelFields(moviefields.Level_2, fieldnames)		
 	# Extended fields
-	if PrefsLevel in ['Extended','Extreme', 'Extreme 2', 'Extreme 3', 'Extreme 4', 'Extreme 5', 'Extreme 6', 'Above All']:
-		fieldnames = getLevelFields(moviefields.extendedFields, fieldnames)		
+	if PrefsLevel in ['Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		fieldnames = getLevelFields(moviefields.Level_3, fieldnames)		
 	# Extreme fields
-	if PrefsLevel in ['Extreme', 'Extreme 2', 'Extreme 3', 'Extreme 4', 'Extreme 5', 'Extreme 6', 'Above All']:
-		fieldnames = getLevelFields(moviefields.extremeFields, fieldnames)
+	if PrefsLevel in ['Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		fieldnames = getLevelFields(moviefields.Level_4, fieldnames)
 	# Extreme 2 (Part) level
-	if PrefsLevel in ['Extreme 2', 'Extreme 3', 'Extreme 4', 'Extreme 5', 'Extreme 6', 'Above All']:
-		fieldnames = getLevelFields(moviefields.extreme2Fields, fieldnames)			
+	if PrefsLevel in ['Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		fieldnames = getLevelFields(moviefields.Level_5, fieldnames)			
 	# Extreme 3 level
-	if PrefsLevel in ['Extreme 3', 'Extreme 4', 'Extreme 5', 'Extreme 6', 'Above All']:			
-		fieldnames = getLevelFields(moviefields.extreme3Fields, fieldnames)
+	if PrefsLevel in ['Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		fieldnames = getLevelFields(moviefields.Level_6, fieldnames)
 	# Above All level
-	if PrefsLevel in ['Above All']:			
-		fieldnames = getLevelFields(moviefields.aboveAllFields, fieldnames)
+	if PrefsLevel in ['Level 666']:			
+		fieldnames = getLevelFields(moviefields.Level_666, fieldnames)
 	return fieldnames
 
 ####################################################################################################
@@ -44,30 +44,26 @@ def getLevelFields(levelFields, fieldnames):
 ####################################################################################################
 # This function will return the info for movies
 ####################################################################################################
-def getMovieInfo(myMedia, myRow, MYHEADER, csvwriter):
-		# Get Extended info if needed
-		if Prefs['Movie_Level'] not in ['Simple']:				
-			myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(myMedia, 'ratingKey') + '?includeExtras=1'
-			ExtInfo = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
+def getMovieInfo(myMedia, myRow, csvwriter):
 		# Get Simple Info
-		myRow = getItemInfo(myMedia, myRow, moviefields.simpleFields)
+		myRow = getItemInfo(myMedia, myRow, moviefields.Level_1)
 		# Get Basic Info
-		if Prefs['Movie_Level'] in ['Basic', "Extended", "Extreme", "Extreme 2", "Extreme 3", "Extreme 4", "Extreme 5", "Extreme 6", "Above All"]:
-			myRow = getItemInfo(ExtInfo, myRow, moviefields.basicFields)
+		if Prefs['Movie_Level'] in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+			myRow = getItemInfo(myMedia, myRow, moviefields.Level_2)
 		# Get Extended Info
-		if Prefs['Movie_Level'] in ["Extended", "Extreme", "Extreme 2", "Extreme 3", "Extreme 4", "Extreme 5", "Extreme 6", "Above All"]:
-			myRow = getItemInfo(ExtInfo, myRow, moviefields.extendedFields)
+		if Prefs['Movie_Level'] in ['Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+			myRow = getItemInfo(myMedia, myRow, moviefields.Level_3)
 		# Get Extreme Info
-		if Prefs['Movie_Level'] in ["Extreme", "Extreme 2", "Extreme 3", "Extreme 4", "Extreme 5", "Extreme 6", "Above All"]:
-			myRow = getItemInfo(myMedia, myRow, moviefields.extremeFields)
+		if Prefs['Movie_Level'] in ['Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+			myRow = getItemInfo(myMedia, myRow, moviefields.Level_4)
 		# Get Extreme 2 Info
-		if Prefs['Movie_Level'] in ["Extreme 2", "Extreme 3", "Extreme 4", "Extreme 5", "Extreme 6", "Above All"]:
-			myRow = getItemInfo(myMedia, myRow, moviefields.extreme2Fields)
+		if Prefs['Movie_Level'] in ['Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+			myRow = getItemInfo(myMedia, myRow, moviefields.Level_5)
 		# Get Extreme 3 Info
-		if Prefs['Movie_Level'] in ["Extreme 3", "Extreme 4", "Extreme 5", "Extreme 6", "Above All"]:
-			myRow = getItemInfo(ExtInfo, myRow, moviefields.extreme3Fields)
+		if Prefs['Movie_Level'] in ['Level 6', 'Level 7', 'Level 8', 'Level 666']:
+			myRow = getItemInfo(myMedia, myRow, moviefields.Level_6)
 		# Get All of Above Info
-		if Prefs['Movie_Level'] in ["Above All"]:
+		if Prefs['Movie_Level'] in ['Level 666']:
 			myRow = getAboveAll(myMedia, myRow)	
 		return myRow
 

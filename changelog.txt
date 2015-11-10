@@ -1,28 +1,15 @@
-v0.0.3.8:
+v0.0.4.0:
 - Movies:
 	- Changed the way the Movies info is extracted all together.
 		- Info about all Movie info and fields are stored in the file named moviefields.py
-	- ****** New Level : Extreme 4 **********
-		- Added Video stream info for field 'Video Stream Codec'
-		- Added Video stream info for field 'Video Stream bitrate'
-		- Added Video stream info for field	'Video Stream language'
-		- Added Video stream info for field	'Video Stream language Code'
-		- Added Video stream info for field	'Video Stream anamorphic'
-		- Added Video stream info for field 'Video Stream bitDepth'
-		- Added Video stream info for field	'Video Stream cabac'
-		- Added Video stream info for field	'Video Stream chromaSubsampling'
-		- Added Video stream info for field	'Video Stream codecID'
-		- Added Video stream info for field 'Video Stream frameRate'
-		- Added Video stream info for field	'Video Stream frameRateMode'
-		- Added Video stream info for field	'Video Stream hasScalingMatrix'
-		- Added Video stream info for field	'Video Stream height'
-		- Added Video stream info for field	'Video Stream pixelAspectRatio'
-		- Added Video stream info for field	'Video Stream pixelFormat'
-		- Added Video stream info for field	'Video Stream profile'
-		- Added Video stream info for field	'Video Stream refFrames'
-		- Added Video stream info for field	'Video Stream scanType'
-		- Added Video stream info for field	'Video Stream streamIdentifier'
-		- Added Video stream info for field	'Video Stream width'
+		- Level names has now changed, so you MUST go into the prefs of this Channel, and select the desirered level, if
+			this is an upgrade!
+		-	To see the levels, and the exported fields, go here: https://github.com/ukdtom/plex2csv.bundle/wiki/Movie-Export-Level
+		- Individual stream info is now also exported in level 6
+		- Note that level 1 & 2 are a lot faster, since they req. min. requests towards the Plex Media Server
+		- Note that levels above that req. a call towards the Plex Media Server for each movie (Like it always has been)
+		- Note that level 666 req. 2 calls against the Plex Media Server for each Movie!
+- The way noted above will sooner or later makes it to other export types as well!
 
 v0.0.3.7:
 - Movies:
