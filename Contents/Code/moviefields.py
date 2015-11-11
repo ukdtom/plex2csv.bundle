@@ -102,7 +102,22 @@ Level_6 = [
 	('Video Stream language Code' , 'Media/Part/Stream[@streamType=1]/@languageCode'),
 	('Video Stream language' , 'Media/Part/Stream[@streamType=1]/@language'),
 	('Video Stream bitrate' , 'Media/Part/Stream[@streamType=1]/@bitrate'),
-	('Video Stream Codec' , 'Media/Part/Stream[@streamType=1]/@codec')
+	('Video Stream Codec' , 'Media/Part/Stream[@streamType=1]/@codec'),
+	('Audio Stream Selected' , 'Media/Part/Stream[@streamType=2]/@selected'),
+	('Audio Stream Default' , 'Media/Part/Stream[@streamType=2]/@default'),
+	('Audio Stream Codec' , 'Media/Part/Stream[@streamType=2]/@codec'),
+	('Audio Stream Index' , 'Media/Part/Stream[@streamType=2]/@index'),
+	('Audio Stream Channels' , 'Media/Part/Stream[@streamType=2]/@channels'),
+	('Audio Stream Bitrate' , 'Media/Part/Stream[@streamType=2]/@bitrate'),
+	('Audio Stream Language' , 'Media/Part/Stream[@streamType=2]/@language'),
+	('Audio Stream Language Code' , 'Media/Part/Stream[@streamType=2]/@languageCode'),
+	('Audio Stream Audio Channel Layout' , 'Media/Part/Stream[@streamType=2]/@audioChannelLayout'),
+	('Audio Stream Bit Depth' , 'Media/Part/Stream[@streamType=2]/@bitDepth'),
+	('Audio Stream Bitrate Mode' , 'Media/Part/Stream[@streamType=2]/@bitrateMode'),
+	('Audio Stream Codec ID' , 'Media/Part/Stream[@streamType=2]/@codecID'),
+	('Audio Stream Duration' , 'Media/Part/Stream[@streamType=2]/@duration'),
+	('Audio Stream Profile' , 'Media/Part/Stream[@streamType=2]/@profile'),
+	('Audio Stream Sampling Rate' , 'Media/Part/Stream[@streamType=2]/@samplingRate')
 	]
 
 # Define rows and element name for extreme level 7 (One call pr. movie)
