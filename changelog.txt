@@ -1,3 +1,21 @@
+v0.0.4.2:
+- Movies:
+	- Added the following Subtitle stream info to level 6:
+		- Subtitle Stream Codec
+		- Subtitle Stream Index
+		- Subtitle Stream Language
+		- Subtitle Stream Language Code
+		- Subtitle Stream Codec ID
+		- Subtitle Stream Format
+		- Subtitle Stream Title
+		- Subtitle Stream Selected
+	- Added the following Video stream info to level 6:
+		- Video Stream Default
+		- Video Stream Index
+		- Video Stream Duration
+		- Video Stream Level
+		- Video Stream Title
+
 v0.0.4.1:
 - Movies:
 	- Added the following Audio Stream info to level 6:
