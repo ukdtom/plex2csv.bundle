@@ -11,7 +11,7 @@ VERSION='0.0.0.2'
 from textwrap import wrap, fill
 import re
 import datetime
-import moviefields
+import moviefields, audiofields
 
 ####################################################################################################
 # This function will return the version of the misc module
@@ -210,5 +210,41 @@ def ConvertTimeStamp(timeStamp):
 ####################################################################################################
 def ConvertDateStamp(timeStamp):
 	return Datetime.FromTimestamp(float(timeStamp)).strftime('%m/%d/%Y')
+
+####################################################################################################
+# This function will return fieldnames for a level
+####################################################################################################
+def getLevelFields(levelFields, fieldnames):
+	fieldnamesList = list(fieldnames)
+	for item in levelFields:
+		fieldnamesList.append(str(item[0]))
+	return fieldnamesList
+
+####################################################################################################
+# This function fetch the actual info for the element
+####################################################################################################
+def getItemInfo(et, myRow, fieldList):
+	for item in fieldList:
+		key = str(item[0])
+		value = str(item[1])
+		element = GetRegInfo2(et, value, 'N/A')
+		if key in myRow:
+			myRow[key] = myRow[key] + Prefs['Seperator'] + element
+		else:
+			myRow[key] = element
+	return myRow
+
+####################################################################################################
+# This function will return the media path info for movies
+####################################################################################################
+def getMediaPath(myMedia, myRow):
+	# Get tree info for media
+	myMediaTreeInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia, 'ratingKey') + '/tree'
+	TreeInfo = XML.ElementFromURL(myMediaTreeInfoURL).xpath('//MediaPart')
+	for myPart in TreeInfo:
+		MediaHash = GetRegInfo(myPart, 'hash')
+		PMSMediaPath = os.path.join(Core.app_support_path, 'Media', 'localhost', MediaHash[0], MediaHash[1:]+ '.bundle', 'Contents')
+		myRow['PMS Media Path'] = PMSMediaPath.encode('utf8')
+	return myRow
 
 

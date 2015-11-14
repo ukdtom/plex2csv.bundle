@@ -18,6 +18,9 @@ dateTimeFields = ['addedAt', 'updatedAt', 'lastViewedAt']
 # Fields that contains a timestamp and should return a time
 timeFields =['duration']
 
+# Levels that only req. a single call towards PMS
+singleCall = ['Level 1', 'Level 2']
+
 # Define rows and element name for level 1 (Single call)
 Level_1 = [
 	('Media ID' , '@ratingKey'),

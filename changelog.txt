@@ -32,6 +32,45 @@ v0.0.4.2:
 		- Video Stream Duration
 		- Video Stream Level
 		- Video Stream Title
+- Audio
+	- Audio now migrated to the new fancy methode of extracting info as well. This means a rename of the 
+		different levels, so if you are upgrading, you MUST go into the prefs. and select the desired level.
+		Also lots of more info has been added to Audio export, so the levels for Audio is now:
+		- Level 1:
+			- Track ID
+			- Title
+			- Artist
+			- Album
+		Level 2:
+			- Rating Count
+			- Track No
+			- Duration
+			- Added
+			- Updated
+		Level 3:
+			- Media ID
+			- Bitrate
+			- Audio Channels
+			- Audio Codec
+			- Container
+			- Media Title
+		Level 4:
+			- Part Duration
+			- Part File
+			- Part Size
+			- Part Container
+		Level 5:
+			- Stream Selected
+			- Stream Codec
+			- Stream Index
+			- Stream Channels
+			- Stream Bitrate
+			- Stream Audio Channel Layout
+			- Stream Bitrate Mode
+			- Stream Duration
+			- Stream Sampling Rate
+		Level 666:
+			- PMS Media Path
 
 v0.0.4.1:
 - Movies:

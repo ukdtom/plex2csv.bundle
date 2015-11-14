@@ -4,93 +4,91 @@
 ####################################################################################################
 
 import misc
+import audiofields
 
 ####################################################################################################
 # This function will return the header for the CSV file for Audio
 ####################################################################################################
 def getMusicHeader(PrefsLevel):
-	# Simple fields
-	fieldnames = (
-			'Track ID',
-			'Artist', 
-			'Album',
-			'Title',
-			)
+	fieldnames = ()	
+	if PrefsLevel.startswith('Special Level'):
+		if PrefsLevel == 'Special Level 1':
+			fieldnames = misc.getLevelFields(audiofields.SLevel_1, fieldnames)
+		if PrefsLevel == 'Special Level 2':
+			fieldnames = misc.getLevelFields(audiofields.SLevel_2, fieldnames)
+		if PrefsLevel == 'Special Level 3':
+			fieldnames = misc.getLevelFields(audiofields.SLevel_3, fieldnames)
+		if PrefsLevel == 'Special Level 4':
+			fieldnames = misc.getLevelFields(audiofields.SLevel_4, fieldnames)
+		if PrefsLevel == 'Special Level 666':
+			fieldnames = misc.getLevelFields(audiofields.SLevel_666, fieldnames)
+		if PrefsLevel == 'Special Level 666-2':
+			fieldnames = misc.getLevelFields(audiofields.SLevel_666, fieldnames)
+		# Do we need the PMS path?
+		if '666' in PrefsLevel:
+			fieldnames.append('PMS Media Path')
+		return fieldnames
+	# Level 1 fields
+	fieldnames = misc.getLevelFields(audiofields.Level_1, fieldnames)		
 	# Basic fields
-	if (PrefsLevel in ['Basic','Extended','Extreme', 'Extreme2']):
-		fieldnames = fieldnames + (
-			'Rating Count',
-			'Track No',
-			'Duration',
-			'Added',
-			'Updated',
-			)
+	if PrefsLevel in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		fieldnames = misc.getLevelFields(audiofields.Level_2, fieldnames)		
 	# Extended fields
-	if (PrefsLevel in ['Extended','Extreme', 'Extreme2']):
-		fieldnames = fieldnames + (
-			'Media ID',
-			'bitrate',
-			'audioChannels',
-			'audioCodec',
-			'container',
-			)
+	if PrefsLevel in ['Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		fieldnames = misc.getLevelFields(audiofields.Level_3, fieldnames)		
+	# Extreme fields
+	if PrefsLevel in ['Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		fieldnames = misc.getLevelFields(audiofields.Level_4, fieldnames)
+	# Extreme 2 (Part) level
+	if PrefsLevel in ['Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		fieldnames = misc.getLevelFields(audiofields.Level_5, fieldnames)			
+	# Extreme 3 level
+	if PrefsLevel in ['Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		fieldnames = misc.getLevelFields(audiofields.Level_6, fieldnames)
+	# PMS Path also needs to be exported
+	if '666' in PrefsLevel:
+		fieldnames.append('PMS Media Path')
 	return fieldnames
 
 ####################################################################################################
-# This function will return the info for Audio
+# This function will return the info for audio
 ####################################################################################################
-def getAudioInfo(track, myRow,):
-		# Get Simple Info
-		myRow = getAudioSimple(track, myRow)
-		# Get Basic Info
-		if Prefs['Artist_Level'] in ['Basic', "Extended", "Extreme", "Extreme 2", "Extreme 3"]:
-			myRow = getAudioBasic(track, myRow)
-		if Prefs['Artist_Level'] in ["Extended", "Extreme", "Extreme 2", "Extreme 3"]:
-			myRow = getAudioExtended(track, myRow)
+def getAudioInfo(myMedia, myRow):
+	prefsLevel = Prefs['Artist_Level']
+	if 'Special' in prefsLevel:
+		if prefsLevel == 'Special Level 1':
+			myRow = misc.getItemInfo(myMedia, myRow, audiofields.SLevel_1)
+		elif prefsLevel == 'Special Level 2':
+			myRow = misc.getItemInfo(myMedia, myRow, audiofields.SLevel_2)
+		elif prefsLevel == 'Special Level 3':
+			myRow = misc.getItemInfo(myMedia, myRow, audiofields.SLevel_3)
+		elif prefsLevel == 'Special Level 4':
+			myRow = misc.getItemInfo(myMedia, myRow, audiofields.SLevel_4)
+		elif prefsLevel == 'Special Level 666':
+			myRow = misc.getItemInfo(myMedia, myRow, audiofields.SLevel_666)
+		if '666' in prefsLevel:
+			myRow = misc.getMediaPath(myMedia, myRow)			
 		return myRow
-
-####################################################################################################
-# This function will return the simple info for Audio
-####################################################################################################
-def getAudioSimple(track, myRow):
-	# Get episode rating key
-	myRow['Track ID'] = misc.GetRegInfo(track, 'ratingKey', 'N/A')
-	# Get Track title
-	myRow['Title'] = misc.GetRegInfo(track, 'title')	
-	# Get Artist
-	myRow['Artist'] = misc.GetRegInfo(track, 'grandparentTitle')	
-	# Get Album
-	myRow['Album'] = misc.GetRegInfo(track, 'parentTitle')		
-	return myRow
-
-####################################################################################################
-# This function will return the basic info for Audio
-####################################################################################################
-def getAudioBasic(track, myRow):
-	myRow['Rating Count'] = misc.GetRegInfo(track, 'ratingCount', 'N/A')
-	myRow['Track No'] = misc.GetRegInfo(track, 'index')
-	myRow['Duration'] = misc.ConvertTimeStamp(misc.GetRegInfo(track, 'duration', '0'))
-	myRow['Added'] = misc.ConvertDateStamp(misc.GetRegInfo(track, 'addedAt', '0'))
-	myRow['Updated'] = misc.ConvertDateStamp(misc.GetRegInfo(track, 'updatedAt', '0'))
-	return myRow
-
-####################################################################################################
-# This function will return the extended info for Audio
-####################################################################################################
-def getAudioExtended(track, myRow):
-#TODO: Fix if more than one media for a track
-	media = track.xpath('.//Media')[0]
-	myRow['Media ID'] = media.get('id')
-	myRow['bitrate'] = media.get('bitrate')
-	myRow['audioChannels'] = media.get('audioChannels')
-	myRow['audioCodec'] = media.get('audioCodec')
-	myRow['container'] = media.get('container')
-
-#	for media in track.xpath('.//Media'):
-#		myRow['Media ID'] = media.get('id')
-#		myRow['bitrate'] = media.get('bitrate')
-#		myRow['audioChannels'] = media.get('audioChannels')
-#		myRow['audioCodec'] = media.get('audioCodec')
-#		myRow['container'] = media.get('container')
-	return myRow
+	else:
+		# Get Simple Info
+		myRow = misc.getItemInfo(myMedia, myRow, audiofields.Level_1)
+		# Get Basic Info
+		if prefsLevel in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+			myRow = misc.getItemInfo(myMedia, myRow, audiofields.Level_2)
+		# Get Extended Info
+		if prefsLevel in ['Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+			myRow = misc.getItemInfo(myMedia, myRow, audiofields.Level_3)
+		# Get Extreme Info
+		if prefsLevel in ['Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+			myRow = misc.getItemInfo(myMedia, myRow, audiofields.Level_4)
+		# Get Extreme 2 Info
+		if prefsLevel in ['Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+			myRow = misc.getItemInfo(myMedia, myRow, audiofields.Level_5)
+		# Get Extreme 3 Info
+		if prefsLevel in ['Level 6', 'Level 7', 'Level 8', 'Level 666']:
+			myRow = misc.getItemInfo(myMedia, myRow, audiofields.Level_6)
+		# Get Media Path as well
+		if '666' in prefsLevel:
+			myRow = misc.getMediaPath(myMedia, myRow)	
+		return myRow
 

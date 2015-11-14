@@ -18,6 +18,7 @@ import csv
 import re
 import movies, tvseries, audio
 import consts, misc, playlists
+import moviefields, audiofields
 
 # Threading stuff
 bScanStatus = 0				# Current status of the background scan
@@ -348,7 +349,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		csvwriter = csv.DictWriter(csvfile, fieldnames=movies.getMovieHeader(Prefs['Movie_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		Log.Debug("Writing header")
 		csvwriter.writeheader()
-		if Prefs['Movie_Level'] in ['Level 1', 'Level 2']:
+		if Prefs['Movie_Level'] in moviefields.singleCall:
 			bExtraInfo = False
 		else:
 			bExtraInfo = True	
@@ -519,6 +520,10 @@ def scanArtistDB(myMediaURL, myCSVFile):
 		csvfile = io.open(myCSVFile,'wb')
 		csvwriter = csv.DictWriter(csvfile, fieldnames=audio.getMusicHeader(Prefs['Artist_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		csvwriter.writeheader()
+		if Prefs['Artist_Level'] in audiofields.singleCall:
+			bExtraInfo = False
+		else:
+			bExtraInfo = True
 		Log.Debug('Starting to fetch the list of items in this section')
 		fetchURL = myMediaURL + '?type=10&X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=0'
 		medias = XML.ElementFromURL(fetchURL)
@@ -537,6 +542,10 @@ def scanArtistDB(myMediaURL, myCSVFile):
 				bScanStatusCount += 1
 				# Get the Audio Info
 				myRow = {}
+				# Was extra info needed here?
+				if bExtraInfo:
+					myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(track, 'ratingKey') + '?includeExtras=1'			
+					track = XML.ElementFromURL(myExtendedInfoURL).xpath('//Track')[0]
 				audio.getAudioInfo(track, myRow)
 				csvwriter.writerow(myRow)	
 		csvfile.close
