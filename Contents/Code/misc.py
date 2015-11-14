@@ -137,6 +137,10 @@ def GetRegInfo2(myMedia, myField, default = 'N/A'):
 					returnVal = ConvertDateStamp(returnVal)
 					if returnVal == '01/01/1970':
 						returnVal = default
+				elif fieldsplit[1] in moviefields.timeFields:
+					returnVal = ConvertTimeStamp(returnVal)
+					if returnVal == '01/01/1970':
+						returnVal = default
 				# IMDB?
 				elif fieldsplit[1] == 'guid':
 					tmp = returnVal[26:].rsplit('?',1)
@@ -153,12 +157,12 @@ def GetRegInfo2(myMedia, myField, default = 'N/A'):
 					# Did it exists?
 					if retVal == None:
 						retVal = default
-					# Is it a timeStamp?
-					elif fieldsplit[1] in moviefields.dateTimeFields:
-						if myField not in moviefields.timeFields:
-							retVal = ConvertDateStamp(retVal)
-						else:
-							retVal = ConvertTimeStamp(retVal)
+					# Is it a dateStamp?
+					elif fieldsplit[1] in moviefields.dateTimeFields:					
+						retVal = ConvertDateStamp(retVal)
+					# Got a timestamp?
+					elif fieldsplit[1] in moviefields.timeFields:
+						retVal = ConvertTimeStamp(retVal)
 					if returnVal == '': 
 						returnVal = retVal
 					else:

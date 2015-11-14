@@ -10,30 +10,23 @@ import misc, moviefields
 ####################################################################################################
 def getMovieHeader(PrefsLevel):
 	fieldnames = ()	
-
-	print 'GED 1223: ', PrefsLevel
-
 	if PrefsLevel.startswith('Special Level'):
 		if PrefsLevel == 'Special Level 1':
 			fieldnames = getLevelFields(moviefields.SLevel_1, fieldnames)
-			print 'GED: Special Level 1'
-			return fieldnames
 		if PrefsLevel == 'Special Level 2':
 			fieldnames = getLevelFields(moviefields.SLevel_2, fieldnames)
-			print 'GED: Special Level 2'
-			return fieldnames
 		if PrefsLevel == 'Special Level 3':
 			fieldnames = getLevelFields(moviefields.SLevel_3, fieldnames)
-			print 'GED: Special Level 3'
-			return fieldnames
 		if PrefsLevel == 'Special Level 4':
 			fieldnames = getLevelFields(moviefields.SLevel_4, fieldnames)
-			print 'GED: Special Level 4'
-			return fieldnames
 		if PrefsLevel == 'Special Level 666':
 			fieldnames = getLevelFields(moviefields.SLevel_666, fieldnames)
-			print 'GED: Special Level 666'
-			return fieldnames
+		if PrefsLevel == 'Special Level 666-2':
+			fieldnames = getLevelFields(moviefields.SLevel_666, fieldnames)
+		# Do we need the PMS path?
+		if '666' in PrefsLevel:
+			fieldnames.append('PMS Media Path')
+		return fieldnames
 	# Level 1 fields
 	fieldnames = getLevelFields(moviefields.Level_1, fieldnames)		
 	# Basic fields
@@ -51,9 +44,9 @@ def getMovieHeader(PrefsLevel):
 	# Extreme 3 level
 	if PrefsLevel in ['Level 6', 'Level 7', 'Level 8', 'Level 666']:
 		fieldnames = getLevelFields(moviefields.Level_6, fieldnames)
-	# Above All level
-	if PrefsLevel in ['Level 666']:			
-		fieldnames = getLevelFields(moviefields.Level_666, fieldnames)
+	# PMS Path also needs to be exported
+	if '666' in PrefsLevel:
+		fieldnames.append('PMS Media Path')
 	return fieldnames
 
 ####################################################################################################
@@ -70,25 +63,19 @@ def getLevelFields(levelFields, fieldnames):
 ####################################################################################################
 def getMovieInfo(myMedia, myRow, csvwriter):
 	prefsLevel = Prefs['Movie_Level']
-	if prefsLevel == 'Special Level 1':
-		myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_1)
-		print 'GED FETCHING: Special Level 1'
-		return myRow
-	elif prefsLevel == 'Special Level 2':
-		myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_2)
-		print 'GED FETCHING: Special Level 2'
-		return myRow
-	elif prefsLevel == 'Special Level 3':
-		myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_3)
-		print 'GED FETCHING: Special Level 3'
-		return myRow
-	elif prefsLevel == 'Special Level 4':
-		myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_4)
-		print 'GED FETCHING: Special Level 4'
-		return myRow
-	elif prefsLevel == 'Special Level 666':
-		myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_666)
-		print 'GED FETCHING: Special Level 666'
+	if 'Special' in prefsLevel:
+		if prefsLevel == 'Special Level 1':
+			myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_1)
+		elif prefsLevel == 'Special Level 2':
+			myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_2)
+		elif prefsLevel == 'Special Level 3':
+			myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_3)
+		elif prefsLevel == 'Special Level 4':
+			myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_4)
+		elif prefsLevel == 'Special Level 666':
+			myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_666)
+		if '666' in prefsLevel:
+			myRow = getMediaPath(myMedia, myRow)			
 		return myRow
 	else:
 		# Get Simple Info
@@ -108,15 +95,15 @@ def getMovieInfo(myMedia, myRow, csvwriter):
 		# Get Extreme 3 Info
 		if prefsLevel in ['Level 6', 'Level 7', 'Level 8', 'Level 666']:
 			myRow = getItemInfo(myMedia, myRow, moviefields.Level_6)
-		# Get All of Above Info
-		if prefsLevel in ['Level 666']:
-			myRow = getAboveAll(myMedia, myRow)	
+		# Get Media Path as well
+		if '666' in prefsLevel:
+			myRow = getMediaPath(myMedia, myRow)	
 		return myRow
 
 ####################################################################################################
-# This function will return the Above All info for movies
+# This function will return the media path info for movies
 ####################################################################################################
-def getAboveAll(myMedia, myRow):
+def getMediaPath(myMedia, myRow):
 	# Get tree info for media
 	myMediaTreeInfoURL = 'http://127.0.0.1:32400/library/metadata/' + misc.GetRegInfo(myMedia, 'ratingKey') + '/tree'
 	TreeInfo = XML.ElementFromURL(myMediaTreeInfoURL).xpath('//MediaPart')

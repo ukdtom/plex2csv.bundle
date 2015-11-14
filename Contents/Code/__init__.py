@@ -348,7 +348,6 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		csvwriter = csv.DictWriter(csvfile, fieldnames=movies.getMovieHeader(Prefs['Movie_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		Log.Debug("Writing header")
 		csvwriter.writeheader()
-
 		if Prefs['Movie_Level'] in ['Level 1', 'Level 2']:
 			bExtraInfo = False
 		else:

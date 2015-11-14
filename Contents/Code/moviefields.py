@@ -7,12 +7,16 @@
 # To disable a field not needed, simply put a # sign in front of the line, and it'll be ommited.
 # After above, a PMS restart is sadly req. though
 # Note though, that this will be overwritten, if/when this plugin is updated
+#
+# If level has the number 666 in it, a column named 'PMS Media Path' will
+# automaticly be added to the end
 ####################################################################################################
 
-# Fields that contains a timestamp
-dateTimeFields = ['addedAt', 'updatedAt', 'lastViewedAt', 'duration']
+# Fields that contains a timestamp and should return a date
+dateTimeFields = ['addedAt', 'updatedAt', 'lastViewedAt']
 
-timeFields =['Media/Part/@duration', 'Media/Part/Stream[@streamType=1]/@duration']
+# Fields that contains a timestamp and should return a time
+timeFields =['duration']
 
 # Define rows and element name for level 1 (Single call)
 Level_1 = [
@@ -147,7 +151,7 @@ Level_9 = {
 
 # Define rows and element name for level 666 (Two calls pr. movie)
 Level_666 = [
-	('PMS Media Path' , 'hash')
+#	('PMS Media Path' , 'hash')   # Field auto added
 	]
 
 # Define rows and element name for Special level 1 (one call pr. movie)
@@ -162,7 +166,11 @@ SLevel_1 = [
 # Define rows and element name for Special level 2 (one call pr. movie)
 SLevel_2 = [
 	('Media ID' , '@ratingKey'),
-	('Title' , '@title')
+	('Title' , '@title'),
+	('Duration' , '@duration'),
+	('Part Duration' , 'Media/Part/@duration'),
+	('Video Stream Duration' , 'Media/Part/Stream[@streamType=1]/@duration'),
+	('Audio Stream Duration' , 'Media/Part/Stream[@streamType=2]/@duration')
 	]
 
 # Define rows and element name for Special level 3 (one call pr. movie)
@@ -179,8 +187,7 @@ SLevel_666 = [
 	('Title' , '@title'),
 	('Video Stream Title' , 'Media/Part/Stream[@streamType=1]/@title'),
 	('Video Stream Default' , 'Media/Part/Stream[@streamType=1]/@default'),
-	('Video Stream Index' , 'Media/Part/Stream[@streamType=1]/@index'),
-	('PMS Media Path' , 'hash')
+	('Video Stream Index' , 'Media/Part/Stream[@streamType=1]/@index')
 	]
 
 # Define rows and element name for Special level 4 (two call pr. movie)
@@ -189,8 +196,7 @@ SLevel_666_2 = [
 	('Title' , '@title'),
 	('Video Stream Title' , 'Media/Part/Stream[@streamType=1]/@title'),
 	('Video Stream Default' , 'Media/Part/Stream[@streamType=1]/@default'),
-	('Video Stream Index' , 'Media/Part/Stream[@streamType=1]/@index'),
-	('PMS Media Path' , 'hash')
+	('Video Stream Index' , 'Media/Part/Stream[@streamType=1]/@index')
 	]
 
 
