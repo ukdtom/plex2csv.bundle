@@ -9,7 +9,31 @@ import misc, moviefields
 # This function will return the header for the CSV file for movies
 ####################################################################################################
 def getMovieHeader(PrefsLevel):
-	fieldnames = ()
+	fieldnames = ()	
+
+	print 'GED 1223: ', PrefsLevel
+
+	if PrefsLevel.startswith('Special Level'):
+		if PrefsLevel == 'Special Level 1':
+			fieldnames = getLevelFields(moviefields.SLevel_1, fieldnames)
+			print 'GED: Special Level 1'
+			return fieldnames
+		if PrefsLevel == 'Special Level 2':
+			fieldnames = getLevelFields(moviefields.SLevel_2, fieldnames)
+			print 'GED: Special Level 2'
+			return fieldnames
+		if PrefsLevel == 'Special Level 3':
+			fieldnames = getLevelFields(moviefields.SLevel_3, fieldnames)
+			print 'GED: Special Level 3'
+			return fieldnames
+		if PrefsLevel == 'Special Level 4':
+			fieldnames = getLevelFields(moviefields.SLevel_4, fieldnames)
+			print 'GED: Special Level 4'
+			return fieldnames
+		if PrefsLevel == 'Special Level 666':
+			fieldnames = getLevelFields(moviefields.SLevel_666, fieldnames)
+			print 'GED: Special Level 666'
+			return fieldnames
 	# Level 1 fields
 	fieldnames = getLevelFields(moviefields.Level_1, fieldnames)		
 	# Basic fields
@@ -45,25 +69,47 @@ def getLevelFields(levelFields, fieldnames):
 # This function will return the info for movies
 ####################################################################################################
 def getMovieInfo(myMedia, myRow, csvwriter):
+	prefsLevel = Prefs['Movie_Level']
+	if prefsLevel == 'Special Level 1':
+		myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_1)
+		print 'GED FETCHING: Special Level 1'
+		return myRow
+	elif prefsLevel == 'Special Level 2':
+		myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_2)
+		print 'GED FETCHING: Special Level 2'
+		return myRow
+	elif prefsLevel == 'Special Level 3':
+		myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_3)
+		print 'GED FETCHING: Special Level 3'
+		return myRow
+	elif prefsLevel == 'Special Level 4':
+		myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_4)
+		print 'GED FETCHING: Special Level 4'
+		return myRow
+	elif prefsLevel == 'Special Level 666':
+		myRow = getItemInfo(myMedia, myRow, moviefields.SLevel_666)
+		print 'GED FETCHING: Special Level 666'
+		return myRow
+	else:
 		# Get Simple Info
 		myRow = getItemInfo(myMedia, myRow, moviefields.Level_1)
 		# Get Basic Info
-		if Prefs['Movie_Level'] in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		if prefsLevel in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
 			myRow = getItemInfo(myMedia, myRow, moviefields.Level_2)
 		# Get Extended Info
-		if Prefs['Movie_Level'] in ['Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		if prefsLevel in ['Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
 			myRow = getItemInfo(myMedia, myRow, moviefields.Level_3)
 		# Get Extreme Info
-		if Prefs['Movie_Level'] in ['Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		if prefsLevel in ['Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
 			myRow = getItemInfo(myMedia, myRow, moviefields.Level_4)
 		# Get Extreme 2 Info
-		if Prefs['Movie_Level'] in ['Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		if prefsLevel in ['Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
 			myRow = getItemInfo(myMedia, myRow, moviefields.Level_5)
 		# Get Extreme 3 Info
-		if Prefs['Movie_Level'] in ['Level 6', 'Level 7', 'Level 8', 'Level 666']:
+		if prefsLevel in ['Level 6', 'Level 7', 'Level 8', 'Level 666']:
 			myRow = getItemInfo(myMedia, myRow, moviefields.Level_6)
 		# Get All of Above Info
-		if Prefs['Movie_Level'] in ['Level 666']:
+		if prefsLevel in ['Level 666']:
 			myRow = getAboveAll(myMedia, myRow)	
 		return myRow
 

@@ -150,3 +150,47 @@ Level_666 = [
 	('PMS Media Path' , 'hash')
 	]
 
+# Define rows and element name for Special level 1 (one call pr. movie)
+SLevel_1 = [
+	('Media ID' , '@ratingKey'),
+	('Title' , '@title'),
+	('Video Stream Title' , 'Media/Part/Stream[@streamType=1]/@title'),
+	('Video Stream Default' , 'Media/Part/Stream[@streamType=1]/@default'),
+	('Video Stream Index' , 'Media/Part/Stream[@streamType=1]/@index')
+	]
+
+# Define rows and element name for Special level 2 (one call pr. movie)
+SLevel_2 = [
+	('Media ID' , '@ratingKey'),
+	('Title' , '@title')
+	]
+
+# Define rows and element name for Special level 3 (one call pr. movie)
+SLevel_3 = [
+	]
+
+# Define rows and element name for Special level 4 (one call pr. movie)
+SLevel_4 = [
+	]
+
+# Define rows and element name for Special level 4 (two call pr. movie)
+SLevel_666 = [
+	('Media ID' , '@ratingKey'),
+	('Title' , '@title'),
+	('Video Stream Title' , 'Media/Part/Stream[@streamType=1]/@title'),
+	('Video Stream Default' , 'Media/Part/Stream[@streamType=1]/@default'),
+	('Video Stream Index' , 'Media/Part/Stream[@streamType=1]/@index'),
+	('PMS Media Path' , 'hash')
+	]
+
+# Define rows and element name for Special level 4 (two call pr. movie)
+SLevel_666_2 = [
+	('Media ID' , '@ratingKey'),
+	('Title' , '@title'),
+	('Video Stream Title' , 'Media/Part/Stream[@streamType=1]/@title'),
+	('Video Stream Default' , 'Media/Part/Stream[@streamType=1]/@default'),
+	('Video Stream Index' , 'Media/Part/Stream[@streamType=1]/@index'),
+	('PMS Media Path' , 'hash')
+	]
+
+
