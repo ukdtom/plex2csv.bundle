@@ -142,6 +142,7 @@ v0.0.4.2:
 		Level 2:
 			- Rating Count
 			- Track No
+			-	Year
 			- Duration
 			- Added
 			- Updated

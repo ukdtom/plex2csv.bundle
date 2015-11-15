@@ -32,9 +32,11 @@ Level_1 = [
 Level_2 = [
 	('Rating Count' , '@ratingCount'),
 	('Track No' , '@index'),
+	('Year' , '@year'),
 	('Duration' , '@duration'),
 	('Added' , '@addedAt'),
 	('Updated' , '@updatedAt')
+
 	]
 
 Level_3 = [
@@ -79,5 +81,4 @@ Level_9 = [
 
 Level_666 = [
 	]
-
 
