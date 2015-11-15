@@ -11,7 +11,7 @@ VERSION='0.0.0.3'
 from textwrap import wrap, fill
 import re
 import datetime
-import moviefields, audiofields, tvfields
+import moviefields, audiofields, tvfields, photofields
 
 ####################################################################################################
 # This function will return the version of the misc module

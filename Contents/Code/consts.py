@@ -16,5 +16,5 @@ PLAYLIST = 'playlist.png'
 # How many items we ask for each time, when accing a section
 CONTAINERSIZEMOVIES = 20
 CONTAINERSIZETV = 5
-CONTAINERSIZEAUDIO = 10			
-
+CONTAINERSIZEAUDIO = 10
+CONTAINERSIZEPHOTO = 10

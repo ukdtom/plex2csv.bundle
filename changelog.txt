@@ -16,6 +16,27 @@ v0.0.4.2:
 			- TODO
 		- Special Level 666-2:
 			- TODO
+- Photos:
+	- Yep...Photos can now be exported as well :-)
+		And here's the levels:
+		-	Level 1:
+			- Photo ID
+			-	Title
+			-	Summary
+			-	Originally Available At
+			-	Added At
+			-	Updated At
+		-	Level 2:
+			-	Media Width
+			-	Media Height
+			-	Media Aspect Ratio
+			-	Media Container
+			-	Media Title
+		-	Level 3:
+			-	Part File
+			-	Part Size
+			-	Part Container
+			-	Part Orientation
 - Movies:
 	- Added the following Subtitle stream info to level 6:
 		- Subtitle Stream Codec

@@ -58,6 +58,14 @@
 
 	},
 	{
+		"id": "Photo_Level",
+		"label": "Photo Export Level..",
+		"type": "enum",
+		"values" : ["Level 1", "Level 2", "Level 3"],
+		"default": "Level 1"
+
+	},
+	{
 		"id": "PlayList_Level",
 		"label": "PlayList Export Level..",
 		"type": "enum",

@@ -16,9 +16,9 @@ import time
 import io
 import csv
 import re
-import movies, tvseries, audio
+import movies, tvseries, audio, photo
 import consts, misc, playlists
-import moviefields, audiofields, tvfields
+import moviefields, audiofields, tvfields, photofields
 
 # Threading stuff
 bScanStatus = 0				# Current status of the background scan
@@ -93,7 +93,7 @@ def MainMenu(random=0):
 			for section in sections:
 				sectiontype = section.get('type')
 #				if sectiontype != "photo" and sectiontype != 'artist': # ToDo: Remove artist when code is in place for it.
-				if sectiontype != "photo": # ToDo: Remove artist when code is in place for it.
+				if sectiontype != "photook": # ToDo: Remove artist when code is in place for it.
 					title = section.get('title')
 					key = section.get('key')
 					thumb = LOOPBACK + section.get('thumb')
@@ -307,8 +307,9 @@ def backgroundScanThread(title, key, sectiontype):
 		elif sectiontype == "show":
 			scanShowDB(myMediaURL, myCSVFile)
 		elif sectiontype == "playlists":
-
 			scanPList(myMediaURL, playListType, myCSVFile)
+		elif sectiontype == "photo":
+			scanPhotoDB(myMediaURL, myCSVFile)
 		else:
 			Log.Debug("Error: unknown section type: %s" %(sectiontype))
 			bScanStatus = 91
@@ -568,4 +569,75 @@ def scanArtistDB(myMediaURL, myCSVFile):
 		bScanStatus = 99
 		raise # Dumps the error so you can see what the problem is
 	Log.Debug("******* Ending scanArtistDB ***********")
+
+####################################################################################################
+# This function will scan a Photo section.
+####################################################################################################
+@route(consts.PREFIX + '/scanPhotoDB')
+def scanPhotoDB(myMediaURL, myCSVFile):
+	Log.Debug("******* Starting scanPhotoDB with an URL of %s ***********" %(myMediaURL))
+	global bScanStatusCount
+	global bScanStatusCountOf
+	global bScanStatus
+	bScanStatusCount = 0
+	try:
+		mySepChar = Prefs['Seperator']
+		Log.Debug('Writing headers for Photo Export')
+		csvfile = io.open(myCSVFile,'wb')
+		csvwriter = csv.DictWriter(csvfile, fieldnames=photo.getHeader(Prefs['Photo_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
+		csvwriter.writeheader()
+		if Prefs['Photo_Level'] in photofields.singleCall:
+			bExtraInfo = False
+		else:
+			bExtraInfo = True
+		Log.Debug('Starting to fetch the list of items in this section')
+		fetchURL = myMediaURL + '?type=10&X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=0'
+		medias = XML.ElementFromURL(fetchURL)
+		bScanStatusCountOf = 'N/A'
+		Log.Debug("Walking medias")
+		fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEPHOTO)	
+		medias = XML.ElementFromURL(fetchURL)
+		if medias.get('size') == '0':
+			break
+		getPhotoItems(medias, csvwriter)
+		csvfile.close
+	except:
+		Log.Critical("Detected an exception in scanPhotoDB")
+		bScanStatus = 99
+		raise # Dumps the error so you can see what the problem is
+	Log.Debug("******* Ending scanPhotoDB ***********")
+	return
+
+####################################################################################################
+# This function will walk directories in a photo section
+####################################################################################################
+@route(consts.PREFIX + '/getPhotoItems')
+def getPhotoItems(medias, csvwriter):
+	global bScanStatusCount
+	# Start by grapping pictures here
+	et = medias.xpath('.//Photo')
+	for element in et:
+		myRow = {}
+		bScanStatusCount += 1
+		photo.getInfo(element, myRow)
+		csvwriter.writerow(myRow)			
+
+	# Elements that are directories
+	et = medias.xpath('.//Directory')
+	for element in et:
+		myExtendedInfoURL = misc.GetLoopBack() + element.get('key') + '?includeExtras=1'
+
+		# TODO: Make small steps here when req. photos
+
+		elements = XML.ElementFromURL(myExtendedInfoURL)
+		getPhotoItems(elements, csvwriter)
+
+
+
+
+
+
+
+	
+
 
