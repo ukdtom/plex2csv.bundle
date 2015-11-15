@@ -36,7 +36,6 @@ Level_2 = [
 	('Duration' , '@duration'),
 	('Added' , '@addedAt'),
 	('Updated' , '@updatedAt')
-
 	]
 
 Level_3 = [
@@ -56,6 +55,7 @@ Level_4 = [
 	]
 
 Level_5 = [
+	('Mood', 'Mood/@tag'),
 	('Stream Selected' , 'Media/Part/Stream[@streamType=2]/@selected'),
 	('Stream Codec' , 'Media/Part/Stream[@streamType=2]/@codec'),
 	('Stream Index' , 'Media/Part/Stream[@streamType=2]/@index'),
