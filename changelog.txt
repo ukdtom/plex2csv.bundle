@@ -32,9 +32,107 @@ v0.0.4.2:
 		- Video Stream Duration
 		- Video Stream Level
 		- Video Stream Title
+- TV Shows
+	- TV Shows is now migrated to the new fancy methode of extracting info as well. This means a rename of the 
+		different levels, so if you are upgrading, you MUST go into the prefs. and select the desired level.
+		Note that level 1 -> 3 is a lot faster, since they only req. a single call towards the PMS
+		Also lots of more info has been added to TV Shows export, so the levels for TV Shows is now:
+		- Level 1:
+			- TV Show ID
+			- Series Title
+			- Episode Sort Title
+			- Episode Title
+			- Year
+			- Season
+			- Episode
+			- Content Rating
+			- Summary
+			- Rating
+		- Level 2:
+			- Studio
+			- Originally Aired
+			- Directors
+			- Writers
+			- Duration
+			- Added
+			- Updated
+		- Level 3:
+			- Media Video Resolution
+			- Media Video Duration
+			- Media Video Bitrate
+			- Media Video Width
+			- Media Video Height
+			- Media Video Aspect Ratio
+			- Media Video Audio Channels
+			- Media Video Audio Codec
+			- Media Video Video Codec
+			- Media Video Container
+			- Media Video FrameRate
+			- Media Video Profile
+			- Media Video Title
+		- Level 4:
+			- Part File
+			- Part Duration
+			- Part Size
+			- Part Container
+			- Part Video Profile
+			- Part Optimized for Streaming
+			- Part Indexed
+			- Locked Fields
+			- Extras
+		- Level 5:
+			- Video Stream Title
+			- Video Stream Default
+			- Video Stream Codec
+			- Video Stream Index
+			- Video Stream Bitrate
+			- Video Stream Language
+			- Video Stream Language Code
+			- Video Stream Bit Depth
+			- Video Stream Cabac
+			- Video Stream Chroma Sub Sampling
+			- Video Stream Codec ID
+			- Video Stream Color Range
+			- Video Stream Color Space
+			- Video Stream Duration
+			- Video Stream Frame Rate
+			- Video Stream Frame Rate Mode
+			- Video Stream Has Scaling Matrix
+			- Video Stream Height
+			- Video Stream Width
+			- Video Stream Level
+			- Video Stream Pixel Format
+			- Video Stream Profile
+			- Video Stream Ref Frames
+			- Video Stream Scan Type
+		- Level 6:
+			- Audio Stream Selected
+			- Audio Stream Default
+			- Audio Stream Codec
+			- Audio Stream Index
+			- Audio Stream Channels
+			- Audio Stream Bitrate
+			- Audio Stream Language
+			- Audio Stream Language Code
+			- Audio Stream Audio Channel Layout
+			- Audio Stream Bit Depth
+			- Audio Stream Bitrate Mode
+			- Audio Stream Codec ID
+			- Audio Stream Duration
+			- Audio Stream Profile
+			- Audio Stream Sampling Rate
+			- Subtitle Stream Codec
+			- Subtitle Stream Index
+			- Subtitle Stream Language
+			- Subtitle Stream Language Code
+			- Subtitle Stream Codec ID
+			- Subtitle Stream Format
+			- Subtitle Stream Title
+			- Subtitle Stream Selected
 - Audio
 	- Audio now migrated to the new fancy methode of extracting info as well. This means a rename of the 
 		different levels, so if you are upgrading, you MUST go into the prefs. and select the desired level.
+		Note that level 1 -> 4 is a lot faster, since they only req. a single call towards the PMS
 		Also lots of more info has been added to Audio export, so the levels for Audio is now:
 		- Level 1:
 			- Track ID

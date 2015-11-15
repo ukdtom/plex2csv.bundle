@@ -18,7 +18,7 @@ import csv
 import re
 import movies, tvseries, audio
 import consts, misc, playlists
-import moviefields, audiofields
+import moviefields, audiofields, tvfields
 
 # Threading stuff
 bScanStatus = 0				# Current status of the background scan
@@ -404,6 +404,10 @@ def scanShowDB(myMediaURL, myCSVFile):
 		csvwriter = csv.DictWriter(csvfile, fieldnames=tvseries.getTVHeader(Prefs['TV_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		Log.Debug("Writing header")
 		csvwriter.writeheader()
+		if Prefs['TV_Level'] in tvfields.singleCall:
+			bExtraInfo = False
+		else:
+			bExtraInfo = True	
 		Log.Debug('Starting to fetch the list of items in this section')
 		while True:
 			Log.Debug("Walking medias")
@@ -423,13 +427,23 @@ def scanShowDB(myMediaURL, myCSVFile):
 				title = TVShows.get("title")
 				myURL = LOOPBACK + '/library/metadata/' + ratingKey + '/allLeaves'
 				Log.Debug('Show %s of %s with a RatingKey of %s at myURL: %s with a title of "%s"' %(iCount, bScanStatusCountOf, ratingKey, myURL, title))			
-				MainEpisodes = XML.ElementFromURL(myURL, headers=MYHEADER)
+				MainEpisodes = XML.ElementFromURL(myURL)
 				Episodes = MainEpisodes.xpath('//Video')
 				Log.Debug('Show %s with an index of %s contains %s episodes' %(MainEpisodes.get('parentTitle'), iCount, MainEpisodes.get('size')))
 				for Episode in Episodes:
 					myRow = {}	
-					myRow = tvseries.ExportTVShows(Episode, myRow, MYHEADER, TVShows)
-					Log.Debug("Show %s from database: %s Season %s Episode %s title: %s" %(bScanStatusCount, misc.GetRegInfo(Episode, 'grandparentTitle'), misc.GetRegInfo(Episode, 'parentIndex'), misc.GetRegInfo(Episode, 'index'), misc.GetRegInfo(Episode, 'title')))							
+
+					# Was extra info needed here?
+					if bExtraInfo:
+						myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(Episode, 'ratingKey') + '?includeExtras=1'			
+						Episode = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
+
+					# Export the info			
+					myRow = tvseries.getTvInfo(Episode, myRow)
+
+
+
+#					Log.Debug("Show %s from database: %s Season %s Episode %s title: %s" %(bScanStatusCount, misc.GetRegInfo(Episode, 'grandparentTitle'), misc.GetRegInfo(Episode, 'parentIndex'), misc.GetRegInfo(Episode, 'index'), misc.GetRegInfo(Episode, 'title')))							
 					csvwriter.writerow(myRow)								
 			# Got to the end of the line?		
 			if int(partMedias.get('size')) == 0:
