@@ -50,10 +50,10 @@ def getHeader(PrefsLevel):
 	return fieldnames
 
 ####################################################################################################
-# This function will return the info for audio
+# This function will return the info for photo
 ####################################################################################################
 def getInfo(myMedia, myRow):
-	prefsLevel = Prefs['Artist_Level']
+	prefsLevel = Prefs['Photo_Level']
 	if 'Special' in prefsLevel:
 		if prefsLevel == 'Special Level 1':
 			myRow = misc.getItemInfo(myMedia, myRow, photofields.SLevel_1)

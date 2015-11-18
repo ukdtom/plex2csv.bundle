@@ -276,6 +276,8 @@ def backgroundScanThread(title, key, sectiontype):
 			myLevel = Prefs['Movie_Level']
 		elif sectiontype == 'artist':
 			myLevel = Prefs['Artist_Level']
+		elif sectiontype == 'photo':
+			myLevel = Prefs['Photo_Level']
 		elif sectiontype == 'playlists':
 			myLevel = Prefs['PlayList_Level']
 		else:
@@ -619,9 +621,8 @@ def getPhotoItems(medias, csvwriter):
 	for element in et:
 		myRow = {}
 		bScanStatusCount += 1
-		photo.getInfo(element, myRow)
+		myRow = photo.getInfo(element, myRow)
 		csvwriter.writerow(myRow)			
-
 	# Elements that are directories
 	et = medias.xpath('.//Directory')
 	for element in et:
