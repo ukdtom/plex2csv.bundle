@@ -597,11 +597,13 @@ def scanPhotoDB(myMediaURL, myCSVFile):
 		medias = XML.ElementFromURL(fetchURL)
 		bScanStatusCountOf = 'N/A'
 		Log.Debug("Walking medias")
-		fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEPHOTO)	
-		medias = XML.ElementFromURL(fetchURL)
-		if medias.get('size') == '0':
-			break
-		getPhotoItems(medias, csvwriter)
+		while True:
+			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEPHOTO)	
+			medias = XML.ElementFromURL(fetchURL)
+			if medias.get('size') == '0':
+				break
+			getPhotoItems(medias, csvwriter)
+			bScanStatusCount += int(consts.CONTAINERSIZEPHOTO)	
 		csvfile.close
 	except:
 		Log.Critical("Detected an exception in scanPhotoDB")
@@ -615,30 +617,18 @@ def scanPhotoDB(myMediaURL, myCSVFile):
 ####################################################################################################
 @route(consts.PREFIX + '/getPhotoItems')
 def getPhotoItems(medias, csvwriter):
-	global bScanStatusCount
+#	global bScanStatusCount
 	# Start by grapping pictures here
 	et = medias.xpath('.//Photo')
 	for element in et:
 		myRow = {}
-		bScanStatusCount += 1
 		myRow = photo.getInfo(element, myRow)
 		csvwriter.writerow(myRow)			
 	# Elements that are directories
 	et = medias.xpath('.//Directory')
 	for element in et:
 		myExtendedInfoURL = misc.GetLoopBack() + element.get('key') + '?includeExtras=1'
-
 		# TODO: Make small steps here when req. photos
-
 		elements = XML.ElementFromURL(myExtendedInfoURL)
 		getPhotoItems(elements, csvwriter)
-
-
-
-
-
-
-
-	
-
 
