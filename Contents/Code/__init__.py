@@ -582,6 +582,7 @@ def scanPhotoDB(myMediaURL, myCSVFile):
 	global bScanStatusCountOf
 	global bScanStatus
 	bScanStatusCount = 0
+	iLocalCounter = 0
 	try:
 		mySepChar = Prefs['Seperator']
 		Log.Debug('Writing headers for Photo Export')
@@ -593,17 +594,17 @@ def scanPhotoDB(myMediaURL, myCSVFile):
 		else:
 			bExtraInfo = True
 		Log.Debug('Starting to fetch the list of items in this section')
-		fetchURL = myMediaURL + '?type=10&X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=0'
+		fetchURL = myMediaURL + '?type=10&X-Plex-Container-Start=' + str(iLocalCounter) + '&X-Plex-Container-Size=0'
 		medias = XML.ElementFromURL(fetchURL)
 		bScanStatusCountOf = 'N/A'
 		Log.Debug("Walking medias")
 		while True:
-			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEPHOTO)	
+			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iLocalCounter) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEPHOTO)	
 			medias = XML.ElementFromURL(fetchURL)
 			if medias.get('size') == '0':
 				break
 			getPhotoItems(medias, csvwriter)
-			bScanStatusCount += int(consts.CONTAINERSIZEPHOTO)	
+			iLocalCounter += int(consts.CONTAINERSIZEPHOTO)	
 		csvfile.close
 	except:
 		Log.Critical("Detected an exception in scanPhotoDB")
@@ -617,12 +618,15 @@ def scanPhotoDB(myMediaURL, myCSVFile):
 ####################################################################################################
 @route(consts.PREFIX + '/getPhotoItems')
 def getPhotoItems(medias, csvwriter):
-#	global bScanStatusCount
+	global bScanStatusCount
 	# Start by grapping pictures here
 	et = medias.xpath('.//Photo')
 	for element in et:
 		myRow = {}
 		myRow = photo.getInfo(element, myRow)
+		
+		bScanStatusCount += 1
+
 		csvwriter.writerow(myRow)			
 	# Elements that are directories
 	et = medias.xpath('.//Directory')

@@ -1,23 +1,9 @@
 v0.0.4.2:
 - General:
-	- A new level concept has now been introduced, and so far only for movies.
-		The levels start with the word Special, and the reason for that is simply, that
-		those levels are fixed when it boils down to exported fieldnames, and not acumulated from above levels.
-		Now what defines a special level you might ask, and so did I, so I turned to the
-		Ninja Hood, and looked for a specialist regarding media info, and....My good friend OttoKerner, 
-		as it turned out, use Plex2CSV as well.
-		So he defined the first couple of special levels, wich gives him excatly the needed
-		info he needs to digest a media
-		- Special Level 1:
-			- TODO
-		- Special Level 2:
-			- TODO
-		- Special Level 666:
-			- TODO
-		- Special Level 666-2:
-			- TODO
+	- So now all export types has been migrated to the new way, meaning that if you stumple on a field I missed, then it'll be very easy for me to add it :-) 
 - Photos:
 	- Yep...Photos can now be exported as well :-)
+	-	Total amount of pictures to be exported can however not be calculated, since pictures can be nested in multiple levels of folders
 		And here's the levels:
 		-	Level 1:
 			- Photo ID

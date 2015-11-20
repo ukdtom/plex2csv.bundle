@@ -159,21 +159,11 @@ Level_666 = [
 
 # Define rows and element name for Special level 1 (one call pr. movie)
 SLevel_1 = [
-	('Media ID' , '@ratingKey'),
-	('Title' , '@title'),
-	('Video Stream Title' , 'Media/Part/Stream[@streamType=1]/@title'),
-	('Video Stream Default' , 'Media/Part/Stream[@streamType=1]/@default'),
-	('Video Stream Index' , 'Media/Part/Stream[@streamType=1]/@index')
+
 	]
 
 # Define rows and element name for Special level 2 (one call pr. movie)
 SLevel_2 = [
-	('Media ID' , '@ratingKey'),
-	('Title' , '@title'),
-	('Duration' , '@duration'),
-	('Part Duration' , 'Media/Part/@duration'),
-	('Video Stream Duration' , 'Media/Part/Stream[@streamType=1]/@duration'),
-	('Audio Stream Duration' , 'Media/Part/Stream[@streamType=2]/@duration')
 	]
 
 # Define rows and element name for Special level 3 (one call pr. movie)
@@ -186,20 +176,10 @@ SLevel_4 = [
 
 # Define rows and element name for Special level 4 (two call pr. movie)
 SLevel_666 = [
-	('Media ID' , '@ratingKey'),
-	('Title' , '@title'),
-	('Video Stream Title' , 'Media/Part/Stream[@streamType=1]/@title'),
-	('Video Stream Default' , 'Media/Part/Stream[@streamType=1]/@default'),
-	('Video Stream Index' , 'Media/Part/Stream[@streamType=1]/@index')
 	]
 
 # Define rows and element name for Special level 4 (two call pr. movie)
 SLevel_666_2 = [
-	('Media ID' , '@ratingKey'),
-	('Title' , '@title'),
-	('Video Stream Title' , 'Media/Part/Stream[@streamType=1]/@title'),
-	('Video Stream Default' , 'Media/Part/Stream[@streamType=1]/@default'),
-	('Video Stream Index' , 'Media/Part/Stream[@streamType=1]/@index')
 	]
 
 
