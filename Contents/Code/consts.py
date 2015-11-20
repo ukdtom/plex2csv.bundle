@@ -4,7 +4,7 @@
 ####################################################################################################
 
 # APP specific stuff
-VERSION = ' V0.0.4.1'
+VERSION = ' V0.0.4.2'
 NAME = 'Plex2csv'
 DESCRIPTION = 'Export Plex libraries to CSV-Files'
 ART = 'art-default.jpg'
@@ -16,5 +16,5 @@ PLAYLIST = 'playlist.png'
 # How many items we ask for each time, when accing a section
 CONTAINERSIZEMOVIES = 20
 CONTAINERSIZETV = 5
-CONTAINERSIZEAUDIO = 10			
-
+CONTAINERSIZEAUDIO = 10
+CONTAINERSIZEPHOTO = 20

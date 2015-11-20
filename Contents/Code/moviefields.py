@@ -7,12 +7,19 @@
 # To disable a field not needed, simply put a # sign in front of the line, and it'll be ommited.
 # After above, a PMS restart is sadly req. though
 # Note though, that this will be overwritten, if/when this plugin is updated
+#
+# If level has the number 666 in it, a column named 'PMS Media Path' will
+# automaticly be added to the end
 ####################################################################################################
 
-# Fields that contains a timestamp
-dateTimeFields = ['addedAt', 'updatedAt', 'lastViewedAt', 'duration']
+# Fields that contains a timestamp and should return a date
+dateTimeFields = ['addedAt', 'updatedAt', 'lastViewedAt']
 
-timeFields =['Media/Part/@duration']
+# Fields that contains a timestamp and should return a time
+timeFields =['duration']
+
+# Levels that only req. a single call towards PMS
+singleCall = ['Level 1', 'Level 2']
 
 # Define rows and element name for level 1 (Single call)
 Level_1 = [
@@ -83,26 +90,31 @@ Level_5 = [
 
 # Define rows and element name for level 6 (Video Stream Info) (One call pr. movie)
 Level_6 = [
-	('Video Stream pixelFormat' , 'Media/Part/Stream[@streamType=1]/@pixelFormat'),
-	('Video Stream profile' , 'Media/Part/Stream[@streamType=1]/@profile'),
-	('Video Stream refFrames' , 'Media/Part/Stream[@streamType=1]/@refFrames'),
-	('Video Stream scanType' , 'Media/Part/Stream[@streamType=1]/@scanType'),
-	('Video Stream streamIdentifier' , 'Media/Part/Stream[@streamType=1]/@streamIdentifier'),
-	('Video Stream width' , 'Media/Part/Stream[@streamType=1]/@width'),
-	('Video Stream pixelAspectRatio' , 'Media/Part/Stream[@streamType=1]/@pixelAspectRatio'),
-	('Video Stream height' , 'Media/Part/Stream[@streamType=1]/@height'),
-	('Video Stream hasScalingMatrix' , 'Media/Part/Stream[@streamType=1]/@hasScalingMatrix'),
-	('Video Stream frameRateMode' , 'Media/Part/Stream[@streamType=1]/@frameRateMode'),
-	('Video Stream frameRate' , 'Media/Part/Stream[@streamType=1]/@frameRate'),
-	('Video Stream codecID' , 'Media/Part/Stream[@streamType=1]/@codecID'),
-	('Video Stream chromaSubsampling' , 'Media/Part/Stream[@streamType=1]/@chromaSubsampling'),
-	('Video Stream cabac' , 'Media/Part/Stream[@streamType=1]/@cabac'),
-	('Video Stream bitDepth' , 'Media/Part/Stream[@streamType=1]/@bitDepth'),
-	('Video Stream anamorphic' , 'Media/Part/Stream[@streamType=1]/@anamorphic'),
-	('Video Stream language Code' , 'Media/Part/Stream[@streamType=1]/@languageCode'),
-	('Video Stream language' , 'Media/Part/Stream[@streamType=1]/@language'),
-	('Video Stream bitrate' , 'Media/Part/Stream[@streamType=1]/@bitrate'),
+	('Video Stream Title' , 'Media/Part/Stream[@streamType=1]/@title'),
+	('Video Stream Default' , 'Media/Part/Stream[@streamType=1]/@default'),
+	('Video Stream Index' , 'Media/Part/Stream[@streamType=1]/@index'),
+	('Video Stream Pixel Format' , 'Media/Part/Stream[@streamType=1]/@pixelFormat'),
+	('Video Stream Profile' , 'Media/Part/Stream[@streamType=1]/@profile'),
+	('Video Stream Ref Frames' , 'Media/Part/Stream[@streamType=1]/@refFrames'),
+	('Video Stream Scan Type' , 'Media/Part/Stream[@streamType=1]/@scanType'),
+	('Video Stream Stream Identifier' , 'Media/Part/Stream[@streamType=1]/@streamIdentifier'),
+	('Video Stream Width' , 'Media/Part/Stream[@streamType=1]/@width'),
+	('Video Stream Pixel Aspect Ratio' , 'Media/Part/Stream[@streamType=1]/@pixelAspectRatio'),
+	('Video Stream Height' , 'Media/Part/Stream[@streamType=1]/@height'),
+	('Video Stream Has Scaling Matrix' , 'Media/Part/Stream[@streamType=1]/@hasScalingMatrix'),
+	('Video Stream Frame Rate Mode' , 'Media/Part/Stream[@streamType=1]/@frameRateMode'),
+	('Video Stream Frame Rate' , 'Media/Part/Stream[@streamType=1]/@frameRate'),
 	('Video Stream Codec' , 'Media/Part/Stream[@streamType=1]/@codec'),
+	('Video Stream Codec ID' , 'Media/Part/Stream[@streamType=1]/@codecID'),
+	('Video Stream Chroma Sub Sampling' , 'Media/Part/Stream[@streamType=1]/@chromaSubsampling'),
+	('Video Stream Cabac' , 'Media/Part/Stream[@streamType=1]/@cabac'),
+	('Video Stream Anamorphic' , 'Media/Part/Stream[@streamType=1]/@anamorphic'),
+	('Video Stream Language Code' , 'Media/Part/Stream[@streamType=1]/@languageCode'),
+	('Video Stream Language' , 'Media/Part/Stream[@streamType=1]/@language'),
+	('Video Stream Bitrate' , 'Media/Part/Stream[@streamType=1]/@bitrate'),
+	('Video Stream Bit Depth' , 'Media/Part/Stream[@streamType=1]/@bitDepth'),
+	('Video Stream Duration' , 'Media/Part/Stream[@streamType=1]/@duration'),
+	('Video Stream Level' , 'Media/Part/Stream[@streamType=1]/@level'),
 	('Audio Stream Selected' , 'Media/Part/Stream[@streamType=2]/@selected'),
 	('Audio Stream Default' , 'Media/Part/Stream[@streamType=2]/@default'),
 	('Audio Stream Codec' , 'Media/Part/Stream[@streamType=2]/@codec'),
@@ -117,7 +129,15 @@ Level_6 = [
 	('Audio Stream Codec ID' , 'Media/Part/Stream[@streamType=2]/@codecID'),
 	('Audio Stream Duration' , 'Media/Part/Stream[@streamType=2]/@duration'),
 	('Audio Stream Profile' , 'Media/Part/Stream[@streamType=2]/@profile'),
-	('Audio Stream Sampling Rate' , 'Media/Part/Stream[@streamType=2]/@samplingRate')
+	('Audio Stream Sampling Rate' , 'Media/Part/Stream[@streamType=2]/@samplingRate'),
+	('Subtitle Stream Codec' , 'Media/Part/Stream[@streamType=3]/@codec'),
+	('Subtitle Stream Index' , 'Media/Part/Stream[@streamType=3]/@index'),
+	('Subtitle Stream Language' , 'Media/Part/Stream[@streamType=3]/@language'),
+	('Subtitle Stream Language Code' , 'Media/Part/Stream[@streamType=3]/@languageCode'),
+	('Subtitle Stream Codec ID' , 'Media/Part/Stream[@streamType=3]/@codecID'),
+	('Subtitle Stream Format' , 'Media/Part/Stream[@streamType=3]/@format'),
+	('Subtitle Stream Title' , 'Media/Part/Stream[@streamType=3]/@title'),
+	('Subtitle Stream Selected' , 'Media/Part/Stream[@streamType=3]/@selected')
 	]
 
 # Define rows and element name for extreme level 7 (One call pr. movie)
@@ -134,6 +154,32 @@ Level_9 = {
 
 # Define rows and element name for level 666 (Two calls pr. movie)
 Level_666 = [
-	('PMS Media Path' , 'hash')
+#	('PMS Media Path' , 'hash')   # Field auto added
 	]
+
+# Define rows and element name for Special level 1 (one call pr. movie)
+SLevel_1 = [
+
+	]
+
+# Define rows and element name for Special level 2 (one call pr. movie)
+SLevel_2 = [
+	]
+
+# Define rows and element name for Special level 3 (one call pr. movie)
+SLevel_3 = [
+	]
+
+# Define rows and element name for Special level 4 (one call pr. movie)
+SLevel_4 = [
+	]
+
+# Define rows and element name for Special level 4 (two call pr. movie)
+SLevel_666 = [
+	]
+
+# Define rows and element name for Special level 4 (two call pr. movie)
+SLevel_666_2 = [
+	]
+
 

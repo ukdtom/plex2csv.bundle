@@ -16,8 +16,9 @@ import time
 import io
 import csv
 import re
-import movies, tvseries, audio
+import movies, tvseries, audio, photo
 import consts, misc, playlists
+import moviefields, audiofields, tvfields, photofields
 
 # Threading stuff
 bScanStatus = 0				# Current status of the background scan
@@ -92,7 +93,7 @@ def MainMenu(random=0):
 			for section in sections:
 				sectiontype = section.get('type')
 #				if sectiontype != "photo" and sectiontype != 'artist': # ToDo: Remove artist when code is in place for it.
-				if sectiontype != "photo": # ToDo: Remove artist when code is in place for it.
+				if sectiontype != "photook": # ToDo: Remove artist when code is in place for it.
 					title = section.get('title')
 					key = section.get('key')
 					thumb = LOOPBACK + section.get('thumb')
@@ -275,6 +276,8 @@ def backgroundScanThread(title, key, sectiontype):
 			myLevel = Prefs['Movie_Level']
 		elif sectiontype == 'artist':
 			myLevel = Prefs['Artist_Level']
+		elif sectiontype == 'photo':
+			myLevel = Prefs['Photo_Level']
 		elif sectiontype == 'playlists':
 			myLevel = Prefs['PlayList_Level']
 		else:
@@ -306,8 +309,9 @@ def backgroundScanThread(title, key, sectiontype):
 		elif sectiontype == "show":
 			scanShowDB(myMediaURL, myCSVFile)
 		elif sectiontype == "playlists":
-
 			scanPList(myMediaURL, playListType, myCSVFile)
+		elif sectiontype == "photo":
+			scanPhotoDB(myMediaURL, myCSVFile)
 		else:
 			Log.Debug("Error: unknown section type: %s" %(sectiontype))
 			bScanStatus = 91
@@ -348,8 +352,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 		csvwriter = csv.DictWriter(csvfile, fieldnames=movies.getMovieHeader(Prefs['Movie_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		Log.Debug("Writing header")
 		csvwriter.writeheader()
-
-		if Prefs['Movie_Level'] in ['Level 1', 'Level 2']:
+		if Prefs['Movie_Level'] in moviefields.singleCall:
 			bExtraInfo = False
 		else:
 			bExtraInfo = True	
@@ -404,6 +407,10 @@ def scanShowDB(myMediaURL, myCSVFile):
 		csvwriter = csv.DictWriter(csvfile, fieldnames=tvseries.getTVHeader(Prefs['TV_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		Log.Debug("Writing header")
 		csvwriter.writeheader()
+		if Prefs['TV_Level'] in tvfields.singleCall:
+			bExtraInfo = False
+		else:
+			bExtraInfo = True	
 		Log.Debug('Starting to fetch the list of items in this section')
 		while True:
 			Log.Debug("Walking medias")
@@ -423,13 +430,23 @@ def scanShowDB(myMediaURL, myCSVFile):
 				title = TVShows.get("title")
 				myURL = LOOPBACK + '/library/metadata/' + ratingKey + '/allLeaves'
 				Log.Debug('Show %s of %s with a RatingKey of %s at myURL: %s with a title of "%s"' %(iCount, bScanStatusCountOf, ratingKey, myURL, title))			
-				MainEpisodes = XML.ElementFromURL(myURL, headers=MYHEADER)
+				MainEpisodes = XML.ElementFromURL(myURL)
 				Episodes = MainEpisodes.xpath('//Video')
 				Log.Debug('Show %s with an index of %s contains %s episodes' %(MainEpisodes.get('parentTitle'), iCount, MainEpisodes.get('size')))
 				for Episode in Episodes:
 					myRow = {}	
-					myRow = tvseries.ExportTVShows(Episode, myRow, MYHEADER, TVShows)
-					Log.Debug("Show %s from database: %s Season %s Episode %s title: %s" %(bScanStatusCount, misc.GetRegInfo(Episode, 'grandparentTitle'), misc.GetRegInfo(Episode, 'parentIndex'), misc.GetRegInfo(Episode, 'index'), misc.GetRegInfo(Episode, 'title')))							
+
+					# Was extra info needed here?
+					if bExtraInfo:
+						myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(Episode, 'ratingKey') + '?includeExtras=1'			
+						Episode = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
+
+					# Export the info			
+					myRow = tvseries.getTvInfo(Episode, myRow)
+
+
+
+#					Log.Debug("Show %s from database: %s Season %s Episode %s title: %s" %(bScanStatusCount, misc.GetRegInfo(Episode, 'grandparentTitle'), misc.GetRegInfo(Episode, 'parentIndex'), misc.GetRegInfo(Episode, 'index'), misc.GetRegInfo(Episode, 'title')))							
 					csvwriter.writerow(myRow)								
 			# Got to the end of the line?		
 			if int(partMedias.get('size')) == 0:
@@ -520,6 +537,10 @@ def scanArtistDB(myMediaURL, myCSVFile):
 		csvfile = io.open(myCSVFile,'wb')
 		csvwriter = csv.DictWriter(csvfile, fieldnames=audio.getMusicHeader(Prefs['Artist_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
 		csvwriter.writeheader()
+		if Prefs['Artist_Level'] in audiofields.singleCall:
+			bExtraInfo = False
+		else:
+			bExtraInfo = True
 		Log.Debug('Starting to fetch the list of items in this section')
 		fetchURL = myMediaURL + '?type=10&X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=0'
 		medias = XML.ElementFromURL(fetchURL)
@@ -538,6 +559,10 @@ def scanArtistDB(myMediaURL, myCSVFile):
 				bScanStatusCount += 1
 				# Get the Audio Info
 				myRow = {}
+				# Was extra info needed here?
+				if bExtraInfo:
+					myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(track, 'ratingKey') + '?includeExtras=1'			
+					track = XML.ElementFromURL(myExtendedInfoURL).xpath('//Track')[0]
 				audio.getAudioInfo(track, myRow)
 				csvwriter.writerow(myRow)	
 		csvfile.close
@@ -546,4 +571,68 @@ def scanArtistDB(myMediaURL, myCSVFile):
 		bScanStatus = 99
 		raise # Dumps the error so you can see what the problem is
 	Log.Debug("******* Ending scanArtistDB ***********")
+
+####################################################################################################
+# This function will scan a Photo section.
+####################################################################################################
+@route(consts.PREFIX + '/scanPhotoDB')
+def scanPhotoDB(myMediaURL, myCSVFile):
+	Log.Debug("******* Starting scanPhotoDB with an URL of %s ***********" %(myMediaURL))
+	global bScanStatusCount
+	global bScanStatusCountOf
+	global bScanStatus
+	bScanStatusCount = 0
+	iLocalCounter = 0
+	try:
+		mySepChar = Prefs['Seperator']
+		Log.Debug('Writing headers for Photo Export')
+		csvfile = io.open(myCSVFile,'wb')
+		csvwriter = csv.DictWriter(csvfile, fieldnames=photo.getHeader(Prefs['Photo_Level']), delimiter=Prefs['Delimiter'], quoting=csv.QUOTE_NONNUMERIC)
+		csvwriter.writeheader()
+		if Prefs['Photo_Level'] in photofields.singleCall:
+			bExtraInfo = False
+		else:
+			bExtraInfo = True
+		Log.Debug('Starting to fetch the list of items in this section')
+		fetchURL = myMediaURL + '?type=10&X-Plex-Container-Start=' + str(iLocalCounter) + '&X-Plex-Container-Size=0'
+		medias = XML.ElementFromURL(fetchURL)
+		bScanStatusCountOf = 'N/A'
+		Log.Debug("Walking medias")
+		while True:
+			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iLocalCounter) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEPHOTO)	
+			medias = XML.ElementFromURL(fetchURL)
+			if medias.get('size') == '0':
+				break
+			getPhotoItems(medias, csvwriter)
+			iLocalCounter += int(consts.CONTAINERSIZEPHOTO)	
+		csvfile.close
+	except:
+		Log.Critical("Detected an exception in scanPhotoDB")
+		bScanStatus = 99
+		raise # Dumps the error so you can see what the problem is
+	Log.Debug("******* Ending scanPhotoDB ***********")
+	return
+
+####################################################################################################
+# This function will walk directories in a photo section
+####################################################################################################
+@route(consts.PREFIX + '/getPhotoItems')
+def getPhotoItems(medias, csvwriter):
+	global bScanStatusCount
+	# Start by grapping pictures here
+	et = medias.xpath('.//Photo')
+	for element in et:
+		myRow = {}
+		myRow = photo.getInfo(element, myRow)
+		
+		bScanStatusCount += 1
+
+		csvwriter.writerow(myRow)			
+	# Elements that are directories
+	et = medias.xpath('.//Directory')
+	for element in et:
+		myExtendedInfoURL = misc.GetLoopBack() + element.get('key') + '?includeExtras=1'
+		# TODO: Make small steps here when req. photos
+		elements = XML.ElementFromURL(myExtendedInfoURL)
+		getPhotoItems(elements, csvwriter)
 
