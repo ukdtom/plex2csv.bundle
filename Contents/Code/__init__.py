@@ -26,7 +26,7 @@ initialTimeOut = 12		# When starting a scan, how long in seconds to wait before 
 sectiontype = ''			# Type of section been exported
 bScanStatusCount = 0	# Number of item currently been investigated
 
-LOOPBACK = ''					# Loopback address in use. Gets set from the misc module
+#LOOPBACK = ''					# Loopback address in use. Gets set from the misc module
 MYHEADER={}						# Header to be used when accessing PMS
 EXPORTPATH = ''				# Path to export file
 
@@ -37,30 +37,13 @@ def Start():
 	print("********  Started %s on %s  **********" %(consts.NAME  + consts.VERSION, Platform.OS))
 	Log.Debug("*******  Started %s on %s  ***********" %(consts.NAME  + consts.VERSION, Platform.OS))
 
-#view_modes = {
-#  "List": 65586, "InfoList": 65592, "MediaPreview": 458803, "Showcase": 458810, "Coverflow": 65591, 
-#  "PanelStream": 131124, "WallStream": 131125, "Songs": 65593, "Seasons": 65593, "Albums": 131123, 
-#  "Episodes": 65590,"ImageStream":458809,"Pictures":131123
-#	}
-
-
 
 	Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
-#	Plugin.AddViewGroup('Posters', viewMode='Posters', mediaType='items')
 	Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
-
-
-
 	ObjectContainer.art = R(consts.ART)
 	ObjectContainer.title1 = consts.NAME  + consts.VERSION
-#	ObjectContainer.view_group = 'Details'
-#	ObjectContainer.viewGroup = 'List'
 	DirectoryObject.thumb = R(consts.ICON)
 	HTTP.CacheTime = 0
-	# Get the loopback address
-	global LOOPBACK
-	LOOPBACK = misc.GetLoopBack()
-	Log.Debug('Loopback address is: %s' %(LOOPBACK))
 	Log.Debug('Misc module is version: %s' %misc.getVersion())
 
 ####################################################################################################
@@ -71,12 +54,8 @@ def Start():
 def MainMenu(random=0):
 	Log.Debug("**********  Starting MainMenu  **********")
 	global sectiontype
-#	oc = ObjectContainer()
-#	oc.viewGroup = 'List'
-
 	ObjectContainer.art = R(consts.ART)
 	ObjectContainer.title1 = consts.NAME  + consts.VERSION
-#	ObjectContainer.view_group = 'Details'
 	oc = ObjectContainer()
 	oc.view_group = 'List'
 	try:
@@ -85,22 +64,15 @@ def MainMenu(random=0):
 			key = '-1'
 			thumb = R(consts.PLAYLIST)
 			sectiontype = title
-# Remove rem from line below when playlists are done
-
-#			oc.add(DirectoryObject(key=Callback(backgroundScan, title=title, sectiontype=sectiontype, key=key, random=time.clock()), thumb=thumb, title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
 			oc.add(DirectoryObject(key=Callback(selectPList), thumb=thumb, title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
-			sections = XML.ElementFromURL(LOOPBACK + '/library/sections', headers=MYHEADER).xpath('//Directory')
+			Log.Debug('Getting section List from: ' + misc.GetLoopBack() + '/library/sections')
+			sections = XML.ElementFromURL(misc.GetLoopBack() + '/library/sections').xpath('//Directory')
 			for section in sections:
 				sectiontype = section.get('type')
-#				if sectiontype != "photo" and sectiontype != 'artist': # ToDo: Remove artist when code is in place for it.
 				if sectiontype != "photook": # ToDo: Remove artist when code is in place for it.
 					title = section.get('title')
 					key = section.get('key')
-					thumb = LOOPBACK + section.get('thumb')
-
-			
-
-
+					thumb = misc.GetLoopBack() + section.get('thumb')		
 					Log.Debug('Title of section is %s with a key of %s' %(title, key))
 					oc.add(DirectoryObject(key=Callback(backgroundScan, title=title, sectiontype=sectiontype, key=key, random=time.clock()), thumb=thumb, title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
 		else:
@@ -261,11 +233,11 @@ def backgroundScanThread(title, key, sectiontype):
 		bScanStatus = 1
 		Log.Debug("Section type is %s" %(sectiontype))
 		if sectiontype == 'playlists':
-			myMediaURL = LOOPBACK + key
+			myMediaURL = misc.GetLoopBack() + key
 			playListType = title
 			title = XML.ElementFromURL(myMediaURL).get('title')
 		else:
-			myMediaURL = LOOPBACK + '/library/sections/' + key + "/all"
+			myMediaURL = misc.GetLoopBack() + '/library/sections/' + key + "/all"
 		Log.Debug("Path to medias in selection is %s" %(myMediaURL))
 		# Get current date and time
 		timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -428,7 +400,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 				iCount += 1
 				ratingKey = TVShows.get("ratingKey")
 				title = TVShows.get("title")
-				myURL = LOOPBACK + '/library/metadata/' + ratingKey + '/allLeaves'
+				myURL = misc.GetLoopBack() + '/library/metadata/' + ratingKey + '/allLeaves'
 				Log.Debug('Show %s of %s with a RatingKey of %s at myURL: %s with a title of "%s"' %(iCount, bScanStatusCountOf, ratingKey, myURL, title))			
 				MainEpisodes = XML.ElementFromURL(myURL)
 				Episodes = MainEpisodes.xpath('//Video')
@@ -471,10 +443,10 @@ def selectPList():
 		return oc
 	# Else build up a menu of the playlists
 	oc = ObjectContainer(title1='Select Playlist to export', no_cache=True)
-	playlists = XML.ElementFromURL(LOOPBACK + '/playlists/all').xpath('//Playlist')
+	playlists = XML.ElementFromURL(misc.GetLoopBack() + '/playlists/all').xpath('//Playlist')
 	for playlist in playlists:
 		title = playlist.get('title')
-		thumb = LOOPBACK + playlist.get('composite')
+		thumb = misc.GetLoopBack() + playlist.get('composite')
 		playlistType= playlist.get('playlistType')
 		key = playlist.get('key')
 		if playlistType in ['video','audio', 'photo']:

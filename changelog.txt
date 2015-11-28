@@ -1,3 +1,7 @@
+v0.0.4.3:
+- General:
+	- Fixed an issue, where Plex2CSV would not respond, if not used for a long time
+
 v0.0.4.2:
 - General:
 	- So now all export types has been migrated to the new way, meaning that if you stumple on a field I missed, then it'll be very easy for me to add it :-) 
