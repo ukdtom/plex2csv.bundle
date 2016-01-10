@@ -71,5 +71,11 @@
 		"type": "enum",
 		"values" : ["Simple", "Basic"],
 		"default": "Simple"
+	},
+	{
+		"id": "Timeout",
+		"label": "PMS Timeout",
+		"type": "text",
+		"default":"20"
 	}
 ]
