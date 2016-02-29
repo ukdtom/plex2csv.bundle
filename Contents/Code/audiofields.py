@@ -64,7 +64,9 @@ Level_5 = [
 	('Stream Audio Channel Layout' , 'Media/Part/Stream[@streamType=2]/@audioChannelLayout'),
 	('Stream Bitrate Mode' , 'Media/Part/Stream[@streamType=2]/@bitrateMode'),
 	('Stream Duration' , 'Media/Part/Stream[@streamType=2]/@duration'),
-	('Stream Sampling Rate' , 'Media/Part/Stream[@streamType=2]/@samplingRate')
+	('Stream Sampling Rate' , 'Media/Part/Stream[@streamType=2]/@samplingRate'),
+	('Accessible' , 'Media/Part/@accessible'),	
+	('Exists' , 'Media/Part/@exists')
 	]
 
 Level_6 = [
