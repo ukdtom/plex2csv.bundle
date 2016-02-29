@@ -13,7 +13,7 @@ PREFIX = '/applications/Plex2csv'
 APPGUID = '7608cf36-742b-11e4-8b39-00089bd210b2'
 PLAYLIST = 'playlist.png'
 
-# How many items we ask for each time, when accing a section
+# How many items we ask for each time, when accessing a section
 CONTAINERSIZEMOVIES = 20
 CONTAINERSIZETV = 5
 CONTAINERSIZEAUDIO = 10

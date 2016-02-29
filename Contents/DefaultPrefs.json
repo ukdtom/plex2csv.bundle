@@ -73,9 +73,9 @@
 		"default": "Simple"
 	},
 	{
-		"id": "Timeout",
-		"label": "PMS Timeout",
-		"type": "text",
-		"default":"20"
+		"id":"Check_Files",
+		"label":"Check if files actually exists",
+		"type":"bool",
+		"default":"false"
 	}
 ]
