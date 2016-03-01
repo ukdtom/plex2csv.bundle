@@ -71,5 +71,11 @@
 		"type": "enum",
 		"values" : ["Simple", "Basic"],
 		"default": "Simple"
+	},
+	{
+		"id":"Check_Files",
+		"label":"Check if files actually exists",
+		"type":"bool",
+		"default":"false"
 	}
 ]

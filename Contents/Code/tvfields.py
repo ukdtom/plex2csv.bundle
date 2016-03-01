@@ -70,7 +70,9 @@ Level_4 = [
 		('Part Optimized for Streaming' , 'Media/Part/@optimizedForStreaming'),
 		('Part Indexed' , 'Media/Part/@indexes'),
 		('Locked Fields' , 'Field/@name'),
-		('Extras' , 'Extras/@size')
+		('Extras' , 'Extras/@size'),
+		('Accessible' , 'Media/Part/@accessible'),	
+		('Exists' , 'Media/Part/@exists')	
 	]
 
 Level_5 = [

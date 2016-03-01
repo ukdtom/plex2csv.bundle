@@ -34,7 +34,7 @@ EXPORTPATH = ''				# Path to export file
 # Start function
 ####################################################################################################
 def Start():
-	print("********  Started %s on %s  **********" %(consts.NAME  + consts.VERSION, Platform.OS))
+#	print("********  Started %s on %s  **********" %(consts.NAME  + consts.VERSION, Platform.OS))
 	Log.Debug("*******  Started %s on %s  ***********" %(consts.NAME  + consts.VERSION, Platform.OS))
 
 
@@ -330,7 +330,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			bExtraInfo = True	
 		while True:
 			Log.Debug("Walking medias")
-			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCurrent) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEMOVIES)
+			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCurrent) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEMOVIES)	
 			iCount = bScanStatusCount
 			partMedias = XML.ElementFromURL(fetchURL)
 			if bScanStatusCount == 0:
@@ -343,7 +343,9 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				myRow = {}
 				# Was extra info needed here?
 				if bExtraInfo:
-					myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(media, 'ratingKey') + '?includeExtras=1'			
+					myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(media, 'ratingKey') + '?includeExtras=1'
+					if Prefs['Check_Files']:				
+						myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1'				
 					media = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
 				# Export the info			
 				myRow = movies.getMovieInfo(media, myRow, csvwriter)
@@ -407,16 +409,14 @@ def scanShowDB(myMediaURL, myCSVFile):
 				Log.Debug('Show %s with an index of %s contains %s episodes' %(MainEpisodes.get('parentTitle'), iCount, MainEpisodes.get('size')))
 				for Episode in Episodes:
 					myRow = {}	
-
 					# Was extra info needed here?
 					if bExtraInfo:
-						myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(Episode, 'ratingKey') + '?includeExtras=1'			
+						myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(Episode, 'ratingKey') + '?includeExtras=1'
+						if Prefs['Check_Files']:				
+							myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1'							
 						Episode = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
-
 					# Export the info			
 					myRow = tvseries.getTvInfo(Episode, myRow)
-
-
 
 #					Log.Debug("Show %s from database: %s Season %s Episode %s title: %s" %(bScanStatusCount, misc.GetRegInfo(Episode, 'grandparentTitle'), misc.GetRegInfo(Episode, 'parentIndex'), misc.GetRegInfo(Episode, 'index'), misc.GetRegInfo(Episode, 'title')))							
 					csvwriter.writerow(myRow)								
@@ -533,7 +533,9 @@ def scanArtistDB(myMediaURL, myCSVFile):
 				myRow = {}
 				# Was extra info needed here?
 				if bExtraInfo:
-					myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(track, 'ratingKey') + '?includeExtras=1'			
+					myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(track, 'ratingKey') + '?includeExtras=1'
+					if Prefs['Check_Files']:				
+						myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1'										
 					track = XML.ElementFromURL(myExtendedInfoURL).xpath('//Track')[0]
 				audio.getAudioInfo(track, myRow)
 				csvwriter.writerow(myRow)	
@@ -575,7 +577,7 @@ def scanPhotoDB(myMediaURL, myCSVFile):
 			medias = XML.ElementFromURL(fetchURL)
 			if medias.get('size') == '0':
 				break
-			getPhotoItems(medias, csvwriter)
+			getPhotoItems(medias, csvwriter, bExtraInfo)
 			iLocalCounter += int(consts.CONTAINERSIZEPHOTO)	
 		csvfile.close
 	except:
@@ -589,22 +591,28 @@ def scanPhotoDB(myMediaURL, myCSVFile):
 # This function will walk directories in a photo section
 ####################################################################################################
 @route(consts.PREFIX + '/getPhotoItems')
-def getPhotoItems(medias, csvwriter):
+def getPhotoItems(medias, csvwriter, bExtraInfo):
 	global bScanStatusCount
 	# Start by grapping pictures here
 	et = medias.xpath('.//Photo')
 	for element in et:
 		myRow = {}
-		myRow = photo.getInfo(element, myRow)
-		
+		myRow = photo.getInfo(element, myRow)		
 		bScanStatusCount += 1
-
 		csvwriter.writerow(myRow)			
 	# Elements that are directories
 	et = medias.xpath('.//Directory')
 	for element in et:
 		myExtendedInfoURL = misc.GetLoopBack() + element.get('key') + '?includeExtras=1'
+
+
+
+#		if bExtraInfo:
+#			if Prefs['Check_Files']:				
+#				myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1'										
 		# TODO: Make small steps here when req. photos
 		elements = XML.ElementFromURL(myExtendedInfoURL)
-		getPhotoItems(elements, csvwriter)
+#		if bExtraInfo:
+			
+		getPhotoItems(elements, csvwriter, bExtraInfo)
 

@@ -1,3 +1,7 @@
+v0.0.4.4:
+- General:
+	- Added a general preference, called "TimeOut", that might help with a slow NAS
+
 v0.0.4.3:
 - General:
 	- Fixed an issue, where Plex2CSV would not respond, if not used for a long time

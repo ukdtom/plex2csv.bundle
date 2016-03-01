@@ -19,7 +19,7 @@ dateTimeFields = ['addedAt', 'updatedAt', 'lastViewedAt']
 timeFields =['duration']
 
 # Levels that only req. a single call towards PMS
-singleCall = ['Level 1', 'Level 2', 'Level 3', 'Level 4']
+singleCall = ['Level 1', 'Level 2', 'Level 3']
 
 # Define rows and element name for level 1 (Single call)
 Level_1 = [
@@ -47,6 +47,8 @@ Level_3 = [
 	]
 
 Level_4 = [
+	('Accessible' , 'Media/Part/@accessible'),	
+	('Exists' , 'Media/Part/@exists')
 	]
 
 Level_5 = [

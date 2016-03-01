@@ -61,7 +61,9 @@ Level_3 = [
 	('Audio Title' , 'Media/Part/Stream[@streamType=2]/@title'),
 	('Subtitle Languages' , 'Media/Part/Stream[@streamType=3]/@languageCode'),
 	('Subtitle Title' , 'Media/Part/Stream[@streamType=3]/@title'),
-	('Subtitle Codec' , 'Media/Part/Stream[@streamType=3]/@codec')
+	('Subtitle Codec' , 'Media/Part/Stream[@streamType=3]/@codec'),
+	('Accessible' , 'Media/Part/@accessible'),	
+	('Exists' , 'Media/Part/@exists')	
 	]
 
 # Define rows and element name for level 4 (One call pr. movie)
