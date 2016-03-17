@@ -161,7 +161,10 @@ Level_666 = [
 
 # Define rows and element name for Special level 1 (one call pr. movie)
 SLevel_1 = [
-
+	('Title' , '@title'),
+	('Year' , '@year'),
+	('Release Date' , '@originallyAvailableAt'),
+	('Audio Languages' , 'Media/Part/Stream[@streamType=2]/@languageCode')
 	]
 
 # Define rows and element name for Special level 2 (one call pr. movie)
