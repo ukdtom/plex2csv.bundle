@@ -44,8 +44,7 @@ Level_2 = [
 	('Country' , 'Country/@tag'),
 	('Duration' , '@duration'),
 	('Directors' , 'Director/@tag'),
-	('Roles' , 'Role/@tag'),
-	('IMDB Id' , '@guid')
+	('Roles' , 'Role/@tag')
 	]
 
 # Define rows and element name for level 3 (One call pr. movie)
@@ -63,7 +62,8 @@ Level_3 = [
 	('Subtitle Title' , 'Media/Part/Stream[@streamType=3]/@title'),
 	('Subtitle Codec' , 'Media/Part/Stream[@streamType=3]/@codec'),
 	('Accessible' , 'Media/Part/@accessible'),	
-	('Exists' , 'Media/Part/@exists')	
+	('Exists' , 'Media/Part/@exists'),
+	('IMDB Id' , '@guid')
 	]
 
 # Define rows and element name for level 4 (One call pr. movie)
