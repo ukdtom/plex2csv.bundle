@@ -1,3 +1,8 @@
+v0.0.4.6:
+-	Movies:
+	- IMDB number didn't work :-(
+		-	Fixed by moving it to level 3
+
 v0.0.4.5:
 -	Movies:
 	- Added special level 1
