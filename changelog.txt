@@ -1,3 +1,9 @@
+v0.0.4.7:
+-	Movies:
+	- Added thumbs and art uri to level 3
+- TV-Shows:
+	- Added thumbs uri to level 2
+
 v0.0.4.6:
 -	Movies:
 	- IMDB number didn't work :-(
