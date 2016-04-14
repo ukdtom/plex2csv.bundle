@@ -63,7 +63,9 @@ Level_3 = [
 	('Subtitle Codec' , 'Media/Part/Stream[@streamType=3]/@codec'),
 	('Accessible' , 'Media/Part/@accessible'),	
 	('Exists' , 'Media/Part/@exists'),
-	('IMDB Id' , '@guid')
+	('IMDB Id' , '@guid'),
+	('Poster url' , '@thumb'),
+	('Art url' , '@art')
 	]
 
 # Define rows and element name for level 4 (One call pr. movie)

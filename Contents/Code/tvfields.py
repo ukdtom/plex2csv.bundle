@@ -42,7 +42,8 @@ Level_2 = [
 		('Writers' , 'Writer/@tag'),
 		('Duration' , '@duration'),
 		('Added' , '@addedAt'),
-		('Updated' , '@updatedAt')
+		('Updated' , '@updatedAt'),
+		('Poster url' , '@thumb')
 	]
 	
 Level_3 = [
