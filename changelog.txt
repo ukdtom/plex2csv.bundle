@@ -1,3 +1,8 @@
+v0.0.4.8:
+- TV-Shows:
+	- Added collections to level 2
+	- Added Locked Fields to level 2
+
 v0.0.4.7:
 -	Movies:
 	- Added thumbs and art uri to level 3

@@ -43,7 +43,10 @@ Level_2 = [
 		('Duration' , '@duration'),
 		('Added' , '@addedAt'),
 		('Updated' , '@updatedAt'),
-		('Poster url' , '@thumb')
+		('Poster url' , '@thumb'),
+		('Collection', ''),
+		('Locked Fields', '')
+
 	]
 	
 Level_3 = [
