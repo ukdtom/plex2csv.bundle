@@ -34,10 +34,16 @@ EXPORTPATH = ''				# Path to export file
 # Start function
 ####################################################################################################
 def Start():
-#	print("********  Started %s on %s  **********" %(consts.NAME  + consts.VERSION, Platform.OS))
-	Log.Debug("*******  Started %s on %s  ***********" %(consts.NAME  + consts.VERSION, Platform.OS))
-
-
+	global DEBUGMODE
+	# Switch to debug mode if needed
+	debugFile = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name, consts.NAME + '.bundle', 'debug')
+	DEBUGMODE = os.path.isfile(debugFile)
+	if DEBUGMODE:
+		VERSION = consts.VERSION + ' ****** WARNING Debug mode on *********'
+		print("********  Started %s on %s  **********" %(consts.NAME  + ' ' + VERSION, Platform.OS))
+	else:
+		VERSION = consts.VERSION
+	Log.Debug("*******  Started %s on %s  ***********" %(consts.NAME  + VERSION, Platform.OS))
 	Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
 	Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
 	ObjectContainer.art = R(consts.ART)
@@ -402,6 +408,29 @@ def scanShowDB(myMediaURL, myCSVFile):
 				iCount += 1
 				ratingKey = TVShows.get("ratingKey")
 				title = TVShows.get("title")
+				if Prefs['TV_Level'] in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+					# Getting stuff from the main TV-Show page
+					myURL = misc.GetLoopBack() + '/library/metadata/' + ratingKey
+					# Grab collections
+					serieInfo = XML.ElementFromURL(myURL).xpath('//Directory/Collection')
+					myCol = ''
+					for collection in serieInfo:
+						if myCol == '':
+							myCol = collection.get('tag')
+						else:
+							myCol = myCol + Prefs['Seperator'] + collection.get('tag')
+					if myCol == '':
+						myCol = 'N/A'
+					# Grab locked fields
+					serieInfo = XML.ElementFromURL(myURL).xpath('//Directory/Field')
+					myField = ''
+					for Field in serieInfo:
+						if myField == '':
+							myField = Field.get('name')
+						else:
+							myField = myField + Prefs['Seperator'] + Field.get('name')
+					if myField == '':
+						myField = 'N/A'
 				myURL = misc.GetLoopBack() + '/library/metadata/' + ratingKey + '/allLeaves'
 				Log.Debug('Show %s of %s with a RatingKey of %s at myURL: %s with a title of "%s"' %(iCount, bScanStatusCountOf, ratingKey, myURL, title))			
 				MainEpisodes = XML.ElementFromURL(myURL)
@@ -417,6 +446,12 @@ def scanShowDB(myMediaURL, myCSVFile):
 						Episode = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
 					# Export the info			
 					myRow = tvseries.getTvInfo(Episode, myRow)
+					if Prefs['TV_Level'] in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+						myRow['Collection'] = myCol
+						myRow['Locked Fields'] = myField
+
+
+
 
 #					Log.Debug("Show %s from database: %s Season %s Episode %s title: %s" %(bScanStatusCount, misc.GetRegInfo(Episode, 'grandparentTitle'), misc.GetRegInfo(Episode, 'parentIndex'), misc.GetRegInfo(Episode, 'index'), misc.GetRegInfo(Episode, 'title')))							
 					csvwriter.writerow(myRow)								
