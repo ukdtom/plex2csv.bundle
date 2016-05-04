@@ -228,6 +228,9 @@ def getItemInfo(et, myRow, fieldList):
 		key = str(item[0])
 		value = str(item[1])
 		element = GetRegInfo2(et, value, 'N/A')
+		if key in ['IMDB Id']:
+			if element != 'N/A':
+				element = 'http://www.imdb.com/title/' + element
 		if key in myRow:
 			myRow[key] = myRow[key] + Prefs['Seperator'] + element
 		else:

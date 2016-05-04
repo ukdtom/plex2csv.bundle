@@ -1,3 +1,7 @@
+v0.0.4.9:
+- Movies:
+	- Changed the IMDB id into the url towards IMDB
+
 v0.0.4.8:
 - TV-Shows:
 	- Added collections to level 2
