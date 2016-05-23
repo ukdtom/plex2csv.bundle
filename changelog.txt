@@ -1,6 +1,7 @@
 v0.0.4.9:
 - Movies:
 	- Changed the IMDB id into the url towards IMDB
+	- Part Size (Level 5) will now be shown in GB not Bytes
 
 v0.0.4.8:
 - TV-Shows:

@@ -163,7 +163,10 @@ def GetRegInfo2(myMedia, myField, default = 'N/A'):
 					# Got a timestamp?
 					elif fieldsplit[1] in moviefields.timeFields:
 						retVal = ConvertTimeStamp(retVal)
-					if returnVal == '': 
+					# size conversion?
+					elif fieldsplit[1] == 'size':
+						retVal = (str(ConvertSize(retVal))+' GB')
+					if returnVal == '':
 						returnVal = retVal
 					else:
 						returnVal = returnVal + Prefs['Seperator'] + retVal
@@ -250,4 +253,9 @@ def getMediaPath(myMedia, myRow):
 		myRow['PMS Media Path'] = PMSMediaPath.encode('utf8')
 	return myRow
 
-
+####################################################################################################
+# This function converts Byte to Gigabyte
+####################################################################################################
+def ConvertSize(SizeAsString):
+	ConvertedSize = round(float(SizeAsString)/(1024**3),2)
+	return ConvertedSize
