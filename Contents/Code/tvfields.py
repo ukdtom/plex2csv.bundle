@@ -45,8 +45,7 @@ Level_2 = [
 		('Updated' , '@updatedAt'),
 		('Poster url' , '@thumb'),
 		('Collection', ''),
-		('Locked Fields', '')
-
+		('Locked Fields', 'Field/@name')
 	]
 	
 Level_3 = [
@@ -66,6 +65,7 @@ Level_3 = [
 	]
 
 Level_4 = [
+		('MetaDB Link' , '@guid'),
 		('Part File' , 'Media/Part/@file'),
 		('Part Duration' , 'Media/Part/@duration'),
 		('Part Size' , 'Media/Part/@size'),

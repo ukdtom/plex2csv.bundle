@@ -449,10 +449,6 @@ def scanShowDB(myMediaURL, myCSVFile):
 					if Prefs['TV_Level'] in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
 						myRow['Collection'] = myCol
 						myRow['Locked Fields'] = myField
-
-
-
-
 #					Log.Debug("Show %s from database: %s Season %s Episode %s title: %s" %(bScanStatusCount, misc.GetRegInfo(Episode, 'grandparentTitle'), misc.GetRegInfo(Episode, 'parentIndex'), misc.GetRegInfo(Episode, 'index'), misc.GetRegInfo(Episode, 'title')))							
 					csvwriter.writerow(myRow)								
 			# Got to the end of the line?		

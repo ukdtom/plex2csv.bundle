@@ -63,7 +63,7 @@ Level_3 = [
 	('Subtitle Codec' , 'Media/Part/Stream[@streamType=3]/@codec'),
 	('Accessible' , 'Media/Part/@accessible'),	
 	('Exists' , 'Media/Part/@exists'),
-	('IMDB Id' , '@guid'),
+	('MetaDB Link' , '@guid'),
 	('Poster url' , '@thumb'),
 	('Art url' , '@art')
 	]
