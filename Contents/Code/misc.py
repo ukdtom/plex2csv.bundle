@@ -175,7 +175,7 @@ def GetRegInfo2(myMedia, myField, default = 'N/A'):
 					elif fieldsplit[1] in moviefields.timeFields:
 						retVal = ConvertTimeStamp(retVal)
 					# size conversion?
-					elif fieldsplit[1] == 'size':
+					elif myField == 'Media/Part/@size':
 						retVal = (str(ConvertSize(retVal))+' GB')
 					if returnVal == '':
 						returnVal = retVal
