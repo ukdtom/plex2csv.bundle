@@ -6,7 +6,7 @@
 #
 ####################################################################################################
 
-VERSION='0.0.0.3'
+VERSION='0.0.0.4'
 
 from textwrap import wrap, fill
 import re
@@ -157,7 +157,9 @@ def GetRegInfo2(myMedia, myField, default = 'N/A'):
 						#returnVal = sTmp
 						return sTmp.encode('utf8')
 			except:
-				Log.Exception('Exception on field: ' + myField)
+				Log.Critical('Exception on field: ' + myField)
+				returnVal = default
+				return WrapStr(fixCRLF(returnVal)).encode('utf8')
 		else:
 			# Attributes from xpath
 			retVals = myMedia.xpath(fieldsplit[0][:-1])
@@ -182,7 +184,8 @@ def GetRegInfo2(myMedia, myField, default = 'N/A'):
 					else:
 						returnVal = returnVal + Prefs['Seperator'] + retVal
 				except:
-					Log.Exception('Exception happend in field: ' + myField)		
+					Log.Exception('Exception happend in field: ' + myField)
+					returnVal = default		
 		return WrapStr(fixCRLF(returnVal)).encode('utf8')
 	except:
 		returnVal = default

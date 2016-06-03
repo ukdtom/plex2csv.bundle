@@ -3,6 +3,7 @@ v0.0.4.10:
 	- Changed the IMDB id column into MetaDB Link
 - TV-Shows:
 	- Added column MetaDB Link to export level 4
+	- TV Episodes now fetched in smaller chuncks
 
 v0.0.4.9:
 - Movies:
