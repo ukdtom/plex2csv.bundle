@@ -1,3 +1,14 @@
+v0.0.4.10:
+- General:
+	- Added a timeout parameter to all PMS calls, to prevent problems on a slow PMS
+- Movies:
+	- Changed the IMDB id column into MetaDB Link
+		( Now supports both imdb and the movie db)
+- TV-Shows:
+	- Added column MetaDB Link to export level 4
+		( Supports thetvdb )
+	- TV Episodes now fetched in smaller chuncks
+
 v0.0.4.9:
 - Movies:
 	- Changed the IMDB id into the url towards IMDB
