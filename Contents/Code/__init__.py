@@ -27,7 +27,10 @@ sectiontype = ''			# Type of section been exported
 bScanStatusCount = 0	# Number of item currently been investigated
 
 #LOOPBACK = ''					# Loopback address in use. Gets set from the misc module
-MYHEADER={}						# Header to be used when accessing PMS
+
+
+#MYHEADER={}						# Header to be used when accessing PMS
+
 EXPORTPATH = ''				# Path to export file
 
 ####################################################################################################
@@ -72,7 +75,7 @@ def MainMenu(random=0):
 			sectiontype = title
 			oc.add(DirectoryObject(key=Callback(selectPList), thumb=thumb, title='Export from "' + title + '"', summary='Export list from "' + title + '"'))
 			Log.Debug('Getting section List from: ' + misc.GetLoopBack() + '/library/sections')
-			sections = XML.ElementFromURL(misc.GetLoopBack() + '/library/sections').xpath('//Directory')
+			sections = XML.ElementFromURL(misc.GetLoopBack() + '/library/sections', timeout=float(consts.PMSTIMEOUT)).xpath('//Directory')
 			for section in sections:
 				sectiontype = section.get('type')
 				if sectiontype != "photook": # ToDo: Remove artist when code is in place for it.
@@ -241,7 +244,7 @@ def backgroundScanThread(title, key, sectiontype):
 		if sectiontype == 'playlists':
 			myMediaURL = misc.GetLoopBack() + key
 			playListType = title
-			title = XML.ElementFromURL(myMediaURL).get('title')
+			title = XML.ElementFromURL(myMediaURL, timeout=float(consts.PMSTIMEOUT)).get('title')
 		else:
 			myMediaURL = misc.GetLoopBack() + '/library/sections/' + key + "/all"
 		Log.Debug("Path to medias in selection is %s" %(myMediaURL))
@@ -267,7 +270,7 @@ def backgroundScanThread(title, key, sectiontype):
 		else:
 			if Prefs['Auto_Path']:
 				# Need to grap the first location for the section
-				locations = XML.ElementFromURL('http://127.0.0.1:32400/library/sections/').xpath('.//Directory[@key="' + key + '"]')[0]
+				locations = XML.ElementFromURL('http://127.0.0.1:32400/library/sections/', timeout=float(consts.PMSTIMEOUT)).xpath('.//Directory[@key="' + key + '"]')[0]
 				location = locations[0].get('path')
 				myCSVFile = os.path.join(location, consts.NAME, newtitle + '-' + myLevel + '-' + timestr + '.csv')
 				if not os.path.exists(os.path.join(location, consts.NAME)):
@@ -338,7 +341,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 			Log.Debug("Walking medias")
 			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCurrent) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEMOVIES)	
 			iCount = bScanStatusCount
-			partMedias = XML.ElementFromURL(fetchURL)
+			partMedias = XML.ElementFromURL(fetchURL, timeout=float(consts.PMSTIMEOUT))
 			if bScanStatusCount == 0:
 				bScanStatusCountOf = partMedias.get('totalSize')
 				Log.Debug('Amount of items in this section is %s' %bScanStatusCountOf)
@@ -352,7 +355,7 @@ def scanMovieDB(myMediaURL, myCSVFile):
 					myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(media, 'ratingKey') + '?includeExtras=1'
 					if Prefs['Check_Files']:				
 						myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1'				
-					media = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
+					media = XML.ElementFromURL(myExtendedInfoURL, timeout=float(consts.PMSTIMEOUT)).xpath('//Video')[0]
 				# Export the info			
 				myRow = movies.getMovieInfo(media, myRow, csvwriter)
 				csvwriter.writerow(myRow)
@@ -396,7 +399,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 			Log.Debug("Walking medias")
 			iCount = bScanStatusCount
 			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iCount) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZETV)			
-			partMedias = XML.ElementFromURL(fetchURL, headers=MYHEADER)
+			partMedias = XML.ElementFromURL(fetchURL, timeout=float(consts.PMSTIMEOUT))
 			if bScanStatusCount == 0:
 				bScanStatusCountOf = partMedias.get('totalSize')
 				Log.Debug('Amount of items in this section is %s' %bScanStatusCountOf)
@@ -410,7 +413,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 				title = TVShows.get("title")
 				if Prefs['TV_Level'] in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
 					myURL = misc.GetLoopBack() + '/library/metadata/' + ratingKey
-					tvSeriesInfo = XML.ElementFromURL(myURL)
+					tvSeriesInfo = XML.ElementFromURL(myURL, timeout=float(consts.PMSTIMEOUT))
 					# Getting stuff from the main TV-Show page
 					# Grab collections
 					serieInfo = tvSeriesInfo.xpath('//Directory/Collection')
@@ -433,14 +436,14 @@ def scanShowDB(myMediaURL, myCSVFile):
 					if myField == '':
 						myField = 'N/A'
 				# Get size of TV-Show
-				episodeTotalSize = XML.ElementFromURL(misc.GetLoopBack() + '/library/metadata/' + ratingKey + '/allLeaves?X-Plex-Container-Start=0&X-Plex-Container-Size=0').xpath('@totalSize')[0]
+				episodeTotalSize = XML.ElementFromURL(misc.GetLoopBack() + '/library/metadata/' + ratingKey + '/allLeaves?X-Plex-Container-Start=0&X-Plex-Container-Size=0', timeout=float(consts.PMSTIMEOUT)).xpath('@totalSize')[0]
 				Log.Debug('Show: %s has %s episodes' %(title, episodeTotalSize))
 				episodeCounter = 0
-				Log.Debug('Show %s of %s with a RatingKey of %s at myURL: %s with a title of "%s" episode %s of %s' %(iCount, bScanStatusCountOf, ratingKey, myURL, title, episodeCounter, episodeTotalSize))
 				baseURL = misc.GetLoopBack() + '/library/metadata/' + ratingKey + '/allLeaves'
 				while True:
 					myURL = baseURL + '?X-Plex-Container-Start=' + str(episodeCounter) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEEPISODES)
-					MainEpisodes = XML.ElementFromURL(myURL)
+					Log.Debug('Show %s of %s with a RatingKey of %s at myURL: %s with a title of "%s" episode %s of %s' %(iCount, bScanStatusCountOf, ratingKey, myURL, title, episodeCounter, episodeTotalSize))
+					MainEpisodes = XML.ElementFromURL(myURL, timeout=float(consts.PMSTIMEOUT))
 					Episodes = MainEpisodes.xpath('//Video')
 					for Episode in Episodes:
 						myRow = {}	
@@ -449,7 +452,7 @@ def scanShowDB(myMediaURL, myCSVFile):
 							myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(Episode, 'ratingKey') + '?includeExtras=1'
 							if Prefs['Check_Files']:				
 								myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1'							
-							Episode = XML.ElementFromURL(myExtendedInfoURL).xpath('//Video')[0]
+							Episode = XML.ElementFromURL(myExtendedInfoURL, timeout=float(consts.PMSTIMEOUT)).xpath('//Video')[0]
 						# Export the info			
 						myRow = tvseries.getTvInfo(Episode, myRow)
 						if Prefs['TV_Level'] in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
@@ -482,7 +485,7 @@ def selectPList():
 		return oc
 	# Else build up a menu of the playlists
 	oc = ObjectContainer(title1='Select Playlist to export', no_cache=True)
-	playlists = XML.ElementFromURL(misc.GetLoopBack() + '/playlists/all').xpath('//Playlist')
+	playlists = XML.ElementFromURL(misc.GetLoopBack() + '/playlists/all', timeout=float(consts.PMSTIMEOUT)).xpath('//Playlist')
 	for playlist in playlists:
 		title = playlist.get('title')
 		thumb = misc.GetLoopBack() + playlist.get('composite')
@@ -514,11 +517,11 @@ def scanPList(key, playListType, myCSVFile):
 		Log.Debug('Starting to fetch the list of items in this section')
 		myRow = {}
 		if playListType == 'video':
-			playListItems = XML.ElementFromURL(key).xpath('//Video')
+			playListItems = XML.ElementFromURL(key, timeout=float(consts.PMSTIMEOUT)).xpath('//Video')
 		elif playListType == 'audio':
-			playListItems = XML.ElementFromURL(key).xpath('//Track')
+			playListItems = XML.ElementFromURL(key, timeout=float(consts.PMSTIMEOUT)).xpath('//Track')
 		elif playListType == 'photo':
-			playListItems = XML.ElementFromURL(key).xpath('//Photo')
+			playListItems = XML.ElementFromURL(key, timeout=float(consts.PMSTIMEOUT)).xpath('//Photo')
 		for playListItem in playListItems:
 			playlists.getPlayListInfo(playListItem, myRow, playListType)
 			csvwriter.writerow(myRow)
@@ -554,14 +557,14 @@ def scanArtistDB(myMediaURL, myCSVFile):
 			bExtraInfo = True
 		Log.Debug('Starting to fetch the list of items in this section')
 		fetchURL = myMediaURL + '?type=10&X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=0'
-		medias = XML.ElementFromURL(fetchURL)
+		medias = XML.ElementFromURL(fetchURL, timeout=float(consts.PMSTIMEOUT))
 		if bScanStatusCount == 0:
 			bScanStatusCountOf = medias.get('totalSize')
 			Log.Debug('Amount of items in this section is %s' %bScanStatusCountOf)
 		Log.Debug("Walking medias")
 		while True:
 			fetchURL = myMediaURL + '?type=10&sort=artist.titleSort,album.titleSort:asc&X-Plex-Container-Start=' + str(bScanStatusCount) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEAUDIO)	
-			medias = XML.ElementFromURL(fetchURL)
+			medias = XML.ElementFromURL(fetchURL, timeout=float(consts.PMSTIMEOUT))
 			if medias.get('size') == '0':
 				break
 			# HERE WE DO STUFF
@@ -575,7 +578,7 @@ def scanArtistDB(myMediaURL, myCSVFile):
 					myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(track, 'ratingKey') + '?includeExtras=1'
 					if Prefs['Check_Files']:				
 						myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1'										
-					track = XML.ElementFromURL(myExtendedInfoURL).xpath('//Track')[0]
+					track = XML.ElementFromURL(myExtendedInfoURL, timeout=float(consts.PMSTIMEOUT)).xpath('//Track')[0]
 				audio.getAudioInfo(track, myRow)
 				csvwriter.writerow(myRow)	
 		csvfile.close
@@ -608,12 +611,12 @@ def scanPhotoDB(myMediaURL, myCSVFile):
 			bExtraInfo = True
 		Log.Debug('Starting to fetch the list of items in this section')
 		fetchURL = myMediaURL + '?type=10&X-Plex-Container-Start=' + str(iLocalCounter) + '&X-Plex-Container-Size=0'
-		medias = XML.ElementFromURL(fetchURL)
+		medias = XML.ElementFromURL(fetchURL, timeout=float(consts.PMSTIMEOUT))
 		bScanStatusCountOf = 'N/A'
 		Log.Debug("Walking medias")
 		while True:
 			fetchURL = myMediaURL + '?X-Plex-Container-Start=' + str(iLocalCounter) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEPHOTO)	
-			medias = XML.ElementFromURL(fetchURL)
+			medias = XML.ElementFromURL(fetchURL, timeout=float(consts.PMSTIMEOUT))
 			if medias.get('size') == '0':
 				break
 			getPhotoItems(medias, csvwriter, bExtraInfo)
@@ -650,7 +653,7 @@ def getPhotoItems(medias, csvwriter, bExtraInfo):
 #			if Prefs['Check_Files']:				
 #				myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1'										
 		# TODO: Make small steps here when req. photos
-		elements = XML.ElementFromURL(myExtendedInfoURL)
+		elements = XML.ElementFromURL(myExtendedInfoURL, timeout=float(consts.PMSTIMEOUT))
 #		if bExtraInfo:
 			
 		getPhotoItems(elements, csvwriter, bExtraInfo)
