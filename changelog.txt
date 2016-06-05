@@ -1,3 +1,11 @@
+v0.0.4.11:
+- Movies:
+  - Added support for the following metadata agents:
+    (data18)
+- TV-Shows:
+  - Added support for the following metadata agents:
+    (themoviedb, anidb)
+
 v0.0.4.10:
 - General:
 	- Added a timeout parameter to all PMS calls, to prevent problems on a slow PMS
