@@ -148,10 +148,19 @@ def GetRegInfo2(myMedia, myField, default = 'N/A'):
 						if 'com.plexapp.agents.imdb' in returnVal:
 							sTmp = 'http://www.imdb.com/title/' + linkID
 						elif 'com.plexapp.agents.themoviedb' in returnVal:
-							sTmp = 'https://www.themoviedb.org/movie/' + linkID
+							itemType = myMedia.xpath('@type')
+							if itemType[0] == 'movie':
+								sTmp = 'https://www.themoviedb.org/movie/' + linkID
+							elif itemType[0] == 'episode':
+								sTmp = 'https://www.themoviedb.org/tv/' + linkID[:linkID.index('/')]
 						elif 'com.plexapp.agents.thetvdb' in returnVal:
 							linkID = linkID[:returnVal.index('/')]
 							sTmp = 'https://thetvdb.com/?tab=series&id=' + linkID[:linkID.index('/')]
+						elif 'com.plexapp.agents.anidb' in returnVal:
+							linkID = linkID[:returnVal.index('/')]
+							sTmp = 'https://anidb.net/perl-bin/animedb.pl?show=anime&aid=' + linkID[:linkID.index('/')]
+						elif 'com.plexapp.agents.data18' in returnVal:
+							sTmp = 'http://www.data18.com/movies/' + linkID
 						else:
 							sTmp = 'N/A'
 						#returnVal = sTmp
