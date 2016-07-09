@@ -4,11 +4,11 @@
 ####################################################################################################
 
 # APP specific stuff
-VERSION = ' V0.0.4.11'
+VERSION = ' V0.0.4.12'
 NAME = 'plex2csv'
 DESCRIPTION = 'Export Plex libraries to CSV-Files'
 ART = 'art-default.jpg'
-ICON = 'icon-Plex2csv.png'
+ICON = 'icon-default.png'
 PREFIX = '/applications/Plex2csv'
 APPGUID = '7608cf36-742b-11e4-8b39-00089bd210b2'
 PLAYLIST = 'playlist.png'

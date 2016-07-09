@@ -12,6 +12,7 @@ from textwrap import wrap, fill
 import re
 import datetime
 import moviefields, audiofields, tvfields, photofields
+import dateutil.parser as parser
 
 ####################################################################################################
 # This function will return the version of the misc module
@@ -232,10 +233,10 @@ def ConvertTimeStamp(timeStamp):
 	return hours + ':' + minutes + ':' + seconds
 
 ####################################################################################################
-# This function will return a string in month, date, year format from a millisecond timestamp
+# This function will return a date string in ISO 8601 format from a millisecond timestamp
 ####################################################################################################
 def ConvertDateStamp(timeStamp):
-	return Datetime.FromTimestamp(float(timeStamp)).strftime('%m/%d/%Y')
+	return Datetime.FromTimestamp(float(timeStamp)).date().isoformat()
 
 ####################################################################################################
 # This function will return fieldnames for a level

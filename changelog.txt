@@ -1,3 +1,7 @@
+v0.0.4.12:
+	- General:
+		- made sure that all dates where following ISO 8601 format (Year-Month-Day)
+
 v0.0.4.11:
 - Movies:
   - Added support for the following metadata agents:
