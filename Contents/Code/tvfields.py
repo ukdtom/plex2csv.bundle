@@ -73,7 +73,6 @@ Level_4 = [
 		('Part Video Profile' , 'Media/Part/@videoProfile'),
 		('Part Optimized for Streaming' , 'Media/Part/@optimizedForStreaming'),
 		('Part Indexed' , 'Media/Part/@indexes'),
-		('Locked Fields' , 'Field/@name'),
 		('Extras' , 'Extras/@size'),
 		('Accessible' , 'Media/Part/@accessible'),	
 		('Exists' , 'Media/Part/@exists')	
