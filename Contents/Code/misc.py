@@ -176,7 +176,7 @@ def GetRegInfo2(myMedia, myField, default = 'N/A'):
 			for retVal2 in retVals:
 				try:
 					# Get attribute
-					retVal = retVal2.get(fieldsplit[1])
+					retVal = String.Unquote(retVal2.get(fieldsplit[1]))
 					# Did it exists?
 					if retVal == None:
 						retVal = default
