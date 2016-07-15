@@ -1,5 +1,10 @@
+v0.0.4.14:
+	- General:
+		- Exported file path of a part file was url safe, meaning extended characters was not readable to a human
+			- HUGE thanks goes to SvenErik1968 @ GitHub for not only finding this, but also for his support and dedication
+
 v0.0.4.13:
-	- TM-Shows:
+	- TV-Shows:
 		- Locked fields column was duplicated in level 4 and above
 
 v0.0.4.12:
