@@ -132,6 +132,7 @@ def ValidatePrefs():
 ####################################################################################################
 # Export Complete.
 ####################################################################################################
+@indirect
 @route(consts.PREFIX + '/complete')
 def complete(title=''):
 	global bScanStatus
@@ -171,7 +172,14 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 				x += 1
 				if bScanStatus == 2:
 					Log.Debug("************** Scan Done, stopping wait **************")
-					oc2 = complete(title=title)
+					Log.Debug("*******  All done, tell my Master  ***********")
+					title = ('Export Completed for %s' %(title))
+					message = 'Check the file: %s' %(EXPORTPATH) 
+					oc2 = ObjectContainer(title1=title, no_cache=True, message=message)
+					oc2.add(DirectoryObject(key=Callback(MainMenu, random=time.clock()), title="Go to the Main Menu"))
+					# Reset the scanner status
+					bScanStatus = 0
+					Log.Debug("*******  Ending complete  ***********")
 					return oc2
 					break
 				if bScanStatus >= 90:

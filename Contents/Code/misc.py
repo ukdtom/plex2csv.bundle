@@ -6,13 +6,17 @@
 #
 ####################################################################################################
 
-VERSION='0.0.0.4'
+VERSION='0.0.0.5'
 
 from textwrap import wrap, fill
 import re
 import datetime
 import moviefields, audiofields, tvfields, photofields
 import dateutil.parser as parser
+
+import sys, os
+import math
+
 
 ####################################################################################################
 # This function will return the version of the misc module
@@ -60,7 +64,6 @@ def GetLoopBack():
 		httpResponse = HTTP.Request('http://[::1]:32400/web', immediate=True, timeout=5)
 		return 'http://[::1]:32400'
 	except:
-		print 'Got IP v4'
 		return 'http://127.0.0.1:32400'
 
 ####################################################################################################
@@ -126,6 +129,8 @@ def GetRegInfo(myMedia, myField, default = ''):
 ####################################################################################################
 def GetRegInfo2(myMedia, myField, default = 'N/A'):
 	returnVal = ''	
+	global retVal
+	retVal = ''
 	try:
 		fieldsplit = myField.rsplit('@', 1)
 		# Single attribute lookup
@@ -163,7 +168,7 @@ def GetRegInfo2(myMedia, myField, default = 'N/A'):
 						elif 'com.plexapp.agents.data18' in returnVal:
 							sTmp = 'http://www.data18.com/movies/' + linkID
 						else:
-							sTmp = 'N/A'
+							sTmp = default
 						#returnVal = sTmp
 						return sTmp.encode('utf8')
 			except:
@@ -172,30 +177,40 @@ def GetRegInfo2(myMedia, myField, default = 'N/A'):
 				return WrapStr(fixCRLF(returnVal)).encode('utf8')
 		else:
 			# Attributes from xpath
-			retVals = myMedia.xpath(fieldsplit[0][:-1])
+			try:
+				retVals = myMedia.xpath(fieldsplit[0][:-1])
+			except:
+				retVals = []
+				retVals[0] = myField
+				pass
 			for retVal2 in retVals:
 				try:
 					# Get attribute
+					retVal = default
 					retVal = String.Unquote(retVal2.get(fieldsplit[1]))
 					# Did it exists?
 					if retVal == None:
 						retVal = default
 					# Is it a dateStamp?
-					elif fieldsplit[1] in moviefields.dateTimeFields:					
+					elif fieldsplit[1] in moviefields.dateTimeFields:	
 						retVal = ConvertDateStamp(retVal)
 					# Got a timestamp?
 					elif fieldsplit[1] in moviefields.timeFields:
 						retVal = ConvertTimeStamp(retVal)
 					# size conversion?
 					elif myField == 'Media/Part/@size':
-						retVal = (str(ConvertSize(retVal))+' GB')
+						retVal = ConvertSize(retVal)
 					if returnVal == '':
 						returnVal = retVal
 					else:
 						returnVal = returnVal + Prefs['Seperator'] + retVal
-				except:
-					Log.Exception('Exception happend in field: ' + myField)
-					returnVal = default		
+				except Exception, e:
+					if returnVal != '':
+						returnVal = returnVal + Prefs['Seperator'] + retVal
+						pass
+					else:
+						returnVal = default
+						pass
 		return WrapStr(fixCRLF(returnVal)).encode('utf8')
 	except:
 		returnVal = default
@@ -266,7 +281,7 @@ def getItemInfo(et, myRow, fieldList):
 ####################################################################################################
 def getMediaPath(myMedia, myRow):
 	# Get tree info for media
-	myMediaTreeInfoURL = 'http://127.0.0.1:32400/library/metadata/' + GetRegInfo(myMedia, 'ratingKey') + '/tree'
+	myMediaTreeInfoURL = GetLoopBack() + '/library/metadata/' + GetRegInfo(myMedia, 'ratingKey') + '/tree'
 	TreeInfo = XML.ElementFromURL(myMediaTreeInfoURL).xpath('//MediaPart')
 	for myPart in TreeInfo:
 		MediaHash = GetRegInfo(myPart, 'hash')
@@ -275,8 +290,15 @@ def getMediaPath(myMedia, myRow):
 	return myRow
 
 ####################################################################################################
-# This function converts Byte to Gigabyte
+# This function converts Byte to best readable string
 ####################################################################################################
 def ConvertSize(SizeAsString):
-	ConvertedSize = round(float(SizeAsString)/(1024**3),2)
-	return ConvertedSize
+	size = float(SizeAsString)
+	if (size == 0):
+		return '0B'
+	size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+	i = int(math.floor(math.log(size,1024)))
+	p = math.pow(1024,i)
+	s = round(size/p,2)
+	return '%s %s' % (s,size_name[i])
+
