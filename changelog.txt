@@ -1,3 +1,14 @@
+v0.0.4.15:
+	- Audio:
+		- 3 new fields has been added to level 5:
+			- Lyrics Codec
+			- Lyrics Provider
+			- Lyrics Timed
+	- General:
+		- File size nw no longer forced to GB size, but instead intelligently detected as KB, MB, TB etc. 
+	- Known issues:
+		- When returning to the main menu after a scan, another scan is sadly initiated. As such, it's for now recommended not to use the menu to go back, but instead the breadcrumbs
+
 v0.0.4.14:
 	- General:
 		- Exported file path of a part file was url safe, meaning extended characters was not readable to a human
