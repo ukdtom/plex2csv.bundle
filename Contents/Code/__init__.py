@@ -202,9 +202,6 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 		elif bScanStatus == 2:
 			# Show complete screen.
 			oc2 = complete(title=title)
-
-			Log.Debug('Ged 2')
-
 			return oc2
 		elif bScanStatus == 91:
 			# Unknown section type
@@ -237,7 +234,6 @@ def backgroundScan(title='', key='', sectiontype='', random=0, statusCheck=0):
 		Log.Critical("Detected an exception in backgroundScan")
 		raise
 	Log.Debug("******* Ending backgroundScan ***********")
-	Log.Debug('Ged 3')
 	return oc2
 
 ####################################################################################################
