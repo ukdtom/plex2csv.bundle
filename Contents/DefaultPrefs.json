@@ -7,7 +7,7 @@
 	},
 	{
 		"id":"Auto_Path",
-		"label":"Auto Select Export path to match the section exported. When used, Export Path is ignored",
+		"label":"Ignore export path and write output to the media storage instead",
 		"type":"bool",
 		"default":"true"
 	},
@@ -37,21 +37,21 @@
 	},	
 	{
 		"id": "Movie_Level",
-		"label": "Movie Export Level..",
+		"label": "Movie Export Level.......",
 		"type": "enum",
 		"values" : ["Level 1","Level 2","Level 3", "Level 4", "Level 5", "Level 6", "Special Level 1", "Level 666"],
 		"default": "Level 2"
 	},
 	{
 		"id": "TV_Level",
-		"label": "TV Export Level.........",
+		"label": "TV Export Level..........",
 		"type": "enum",
 		"values" : ["Level 1","Level 2","Level 3", "Level 4", "Level 5", "Level 6", "Level 666"],
 		"default": "Level 2"
 	},
 	{
 		"id": "Artist_Level",
-		"label": "Audio Export Level..",
+		"label": "Audio Export Level.......",
 		"type": "enum",
 		"values" : ["Level 1", "Level 2", "Level 3", "Level 4", "Level 5", "Level 666"],
 		"default": "Level 2"
@@ -59,7 +59,7 @@
 	},
 	{
 		"id": "Photo_Level",
-		"label": "Photo Export Level..",
+		"label": "Photo Export Level.......",
 		"type": "enum",
 		"values" : ["Level 1", "Level 2", "Level 3"],
 		"default": "Level 1"
@@ -67,14 +67,14 @@
 	},
 	{
 		"id": "PlayList_Level",
-		"label": "PlayList Export Level..",
+		"label": "PlayList Export Level....",
 		"type": "enum",
 		"values" : ["Simple", "Basic"],
 		"default": "Simple"
 	},
 	{
 		"id":"Check_Files",
-		"label":"Check if files actually exists",
+		"label":"Perform 'file present/accessibility' check. Requires more time. Useful when part of media file storage was accidentally lost",
 		"type":"bool",
 		"default":"false"
 	}
