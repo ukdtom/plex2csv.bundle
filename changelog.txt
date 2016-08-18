@@ -1,3 +1,18 @@
+v0.0.4.16:
+	- Audio:
+		- Added field "Part Size as Bytes" to level 4
+	- Photo:
+		- Added field "Part Size as Bytes" to level 3
+	- TV-Shows:
+		- Added field "Part Size as Bytes" to level 4
+		- Added new level named "Show Only 1", that only export TV-Show info on the show level, not seasons nor episodes.
+		- Added new level named "Show Only 2", that only export TV-Show info on the show level, not seasons nor episodes.
+	- Movies:
+		- Added field "Part Size as Bytes" to level 5
+	- Known issues:
+		- When returning to the main menu after a scan, another scan is sadly initiated. As such, it's for now recommended not to use the menu to go back, but instead the breadcrumbs
+
+
 v0.0.4.15:
 	- Audio:
 		- 3 new fields has been added to level 5:

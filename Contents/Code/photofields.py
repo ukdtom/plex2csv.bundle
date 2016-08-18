@@ -42,6 +42,7 @@ Level_2 = [
 Level_3 = [
 	('Part File', 'Media/Part/@file'),
 	('Part Size', 'Media/Part/@size'),
+	('Part Size as Bytes', 'Media/Part/@size'),
 	('Part Container', 'Media/Part/@container'),
 	('Part Orientation', 'Media/Part/@orientation')
 	]

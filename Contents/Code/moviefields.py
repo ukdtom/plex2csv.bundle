@@ -86,6 +86,7 @@ Level_4 = [
 Level_5 = [
 	('Part File' , 'Media/Part/@file'),
 	('Part Size' , 'Media/Part/@size'),
+	('Part Size as Bytes' , 'Media/Part/@size'),
 	('Part Indexed' , 'Media/Part/@indexes'),
 	('Part Duration' , 'Media/Part/@duration'),
 	('Part Container' , 'Media/Part/@container'),
