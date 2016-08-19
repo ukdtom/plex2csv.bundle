@@ -110,7 +110,10 @@ def getTvInfo(myMedia, myRow):
 def getShowOnly(myMedia, myRow, level):
 	prefsLevel = Prefs['TV_Level']
 	for key, value in tvfields.Show_1:
-		element = misc.WrapStr(myMedia.get(value[1:])).encode('utf8')
+		element = myMedia.get(value[1:])
+		if element == None:
+			element = 'N/A'
+		element = misc.WrapStr(misc.fixCRLF(element).encode('utf8'))
 		if key in myRow:
 			myRow[key] = myRow[key] + Prefs['Seperator'] + element
 		else:
