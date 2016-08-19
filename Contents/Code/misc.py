@@ -291,6 +291,9 @@ def ConvertSize(SizeAsString):
 # Returns a MetaDb link from a Guid
 ####################################################################################################
 def metaDBLink(guid, mediatype = 'episode', default = 'N/A'):
+	if 'local://' in guid:
+		sTmp = default
+		return sTmp
 	linkID = guid[guid.index('://')+3:guid.index('?lang')]
 	if 'com.plexapp.agents.imdb' in guid:
 		sTmp = 'http://www.imdb.com/title/' + linkID
@@ -298,7 +301,7 @@ def metaDBLink(guid, mediatype = 'episode', default = 'N/A'):
 		if mediatype == 'movie':
 			sTmp = 'https://www.themoviedb.org/movie/' + linkID
 		elif mediatype == 'episode':
-			sTmp = 'https://www.themoviedb.org/tv/' + linkID[:linkID.index('/')]
+			sTmp = 'https://www.themoviedb.org/tv/' + linkID
 	elif 'com.plexapp.agents.thetvdb' in guid:
 		sTmp = 'https://thetvdb.com/?tab=series&id=' + linkID
 	elif 'com.plexapp.agents.anidb' in guid:
@@ -308,6 +311,4 @@ def metaDBLink(guid, mediatype = 'episode', default = 'N/A'):
 	else:
 		sTmp = default
 	return sTmp
-
-
 
