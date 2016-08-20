@@ -127,7 +127,7 @@ def GetRegInfo(myMedia, myField, default = ''):
 ####################################################################################################
 #	Pull's a field from the xml
 ####################################################################################################
-def GetRegInfo2(myMedia, myField, default = 'N/A'):
+def GetRegInfo2(myMedia, myField, default = 'N/A', key = 'N/A'):
 	returnVal = ''	
 	global retVal
 	retVal = ''
@@ -150,27 +150,7 @@ def GetRegInfo2(myMedia, myField, default = 'N/A'):
 							returnVal = default
 					# IMDB or TheMovieDB?
 					elif fieldsplit[1] == 'guid':
-						linkID = returnVal[returnVal.index('://')+3:returnVal.index('?lang')]
-						if 'com.plexapp.agents.imdb' in returnVal:
-							sTmp = 'http://www.imdb.com/title/' + linkID
-						elif 'com.plexapp.agents.themoviedb' in returnVal:
-							itemType = myMedia.xpath('@type')
-							if itemType[0] == 'movie':
-								sTmp = 'https://www.themoviedb.org/movie/' + linkID
-							elif itemType[0] == 'episode':
-								sTmp = 'https://www.themoviedb.org/tv/' + linkID[:linkID.index('/')]
-						elif 'com.plexapp.agents.thetvdb' in returnVal:
-							linkID = linkID[:returnVal.index('/')]
-							sTmp = 'https://thetvdb.com/?tab=series&id=' + linkID[:linkID.index('/')]
-						elif 'com.plexapp.agents.anidb' in returnVal:
-							linkID = linkID[:returnVal.index('/')]
-							sTmp = 'https://anidb.net/perl-bin/animedb.pl?show=anime&aid=' + linkID[:linkID.index('/')]
-						elif 'com.plexapp.agents.data18' in returnVal:
-							sTmp = 'http://www.data18.com/movies/' + linkID
-						else:
-							sTmp = default
-						#returnVal = sTmp
-						return sTmp.encode('utf8')
+						return metaDBLink(returnVal, mediatype = myMedia.xpath('@type')[0]).encode('utf8')
 			except:
 				Log.Critical('Exception on field: ' + myField)
 				returnVal = default
@@ -198,7 +178,7 @@ def GetRegInfo2(myMedia, myField, default = 'N/A'):
 					elif fieldsplit[1] in moviefields.timeFields:
 						retVal = ConvertTimeStamp(retVal)
 					# size conversion?
-					elif myField == 'Media/Part/@size':
+					elif key == 'Part Size':
 						retVal = ConvertSize(retVal)
 					if returnVal == '':
 						returnVal = retVal
@@ -227,8 +207,10 @@ def fixCRLF(myString):
 ####################################################################################################
 #	Wraps a string if needed
 ####################################################################################################
-def WrapStr(myStr):
+def WrapStr(myStr, default = 'N/A'):
 	LineWrap = int(Prefs['Line_Length'])
+	if myStr == None:
+		myStr = default
 	if Prefs['Line_Wrap']:		
 		return fill(myStr, LineWrap)
 	else:
@@ -266,15 +248,18 @@ def getLevelFields(levelFields, fieldnames):
 # This function fetch the actual info for the element
 ####################################################################################################
 def getItemInfo(et, myRow, fieldList):
-	for item in fieldList:
-		key = str(item[0])
-		value = str(item[1])
-		element = GetRegInfo2(et, value, 'N/A')
-		if key in myRow:
-			myRow[key] = myRow[key] + Prefs['Seperator'] + element
-		else:
-			myRow[key] = element
-	return myRow
+	try:
+		for item in fieldList:
+			key = str(item[0])
+			value = str(item[1])			
+			element = GetRegInfo2(et, value, 'N/A', key = key)
+			if key in myRow:
+				myRow[key] = myRow[key] + Prefs['Seperator'] + element
+			else:
+				myRow[key] = element
+		return myRow
+	except Exception, e:
+		Log.Exception('Exception in getItemInfo: ' + str(e))
 
 ####################################################################################################
 # This function will return the media path info for movies
@@ -301,4 +286,29 @@ def ConvertSize(SizeAsString):
 	p = math.pow(1024,i)
 	s = round(size/p,2)
 	return '%s %s' % (s,size_name[i])
+
+####################################################################################################
+# Returns a MetaDb link from a Guid
+####################################################################################################
+def metaDBLink(guid, mediatype = 'episode', default = 'N/A'):
+	if 'local://' in guid:
+		sTmp = default
+		return sTmp
+	linkID = guid[guid.index('://')+3:guid.index('?lang')]
+	if 'com.plexapp.agents.imdb' in guid:
+		sTmp = 'http://www.imdb.com/title/' + linkID
+	elif 'com.plexapp.agents.themoviedb' in guid:
+		if mediatype == 'movie':
+			sTmp = 'https://www.themoviedb.org/movie/' + linkID
+		elif mediatype == 'episode':
+			sTmp = 'https://www.themoviedb.org/tv/' + linkID
+	elif 'com.plexapp.agents.thetvdb' in guid:
+		sTmp = 'https://thetvdb.com/?tab=series&id=' + linkID
+	elif 'com.plexapp.agents.anidb' in guid:
+		sTmp = 'https://anidb.net/perl-bin/animedb.pl?show=anime&aid=' + linkID
+	elif 'com.plexapp.agents.data18' in guid:
+		sTmp = 'http://www.data18.com/movies/' + linkID
+	else:
+		sTmp = default
+	return sTmp
 

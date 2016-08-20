@@ -69,6 +69,7 @@ Level_4 = [
 		('Part File' , 'Media/Part/@file'),
 		('Part Duration' , 'Media/Part/@duration'),
 		('Part Size' , 'Media/Part/@size'),
+		('Part Size as Bytes' , 'Media/Part/@size'),
 		('Part Container' , 'Media/Part/@container'),
 		('Part Video Profile' , 'Media/Part/@videoProfile'),
 		('Part Optimized for Streaming' , 'Media/Part/@optimizedForStreaming'),
@@ -141,5 +142,24 @@ Level_9 = [
 	]
 
 Level_666 = [
+	]
+
+# Define rows and element name for Show Only level 1 (one call for all shows....Note that this level only export on show level!, but is very fast)
+Show_1 = [
+	('Title' , '@title'),
+	('Sort Title' , '@titleSort'),
+	('Original Title', '@originalTitle'),
+	('Summary' , '@summary'),
+	('Originally Aired' , '@originallyAvailableAt'),
+	('Year' , '@year'),
+	('Rating' , '@rating'),
+	('Content Rating' , '@contentRating'),
+	('Studio' , '@studio'),
+	('Poster url' , '@thumb')
+	]
+
+# Define rows and element name for Show Only level 2 (two call for all shows....Note that this level only export on show level!)
+Show_2 = [
+	('MetaDB Link' , '@guid')
 	]
 

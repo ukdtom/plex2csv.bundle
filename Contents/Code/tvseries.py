@@ -3,7 +3,7 @@
 # This one handles TV-Shows
 ####################################################################################################
 
-import misc, tvfields
+import misc, tvfields, consts
 
 STACKEDLABELS = ['cd', 'disc', 'disk', 'dvd', 'part', 'pt']
 
@@ -11,7 +11,14 @@ STACKEDLABELS = ['cd', 'disc', 'disk', 'dvd', 'part', 'pt']
 # This function will return the header for the CSV file for TV-Shows
 ####################################################################################################
 def getTVHeader(PrefsLevel):
-	fieldnames = ()	
+	fieldnames = ()
+	# Show only stuff
+	if PrefsLevel.startswith('Show Only'):
+		fieldnames = misc.getLevelFields(tvfields.Show_1, fieldnames)
+		if PrefsLevel == 'Show Only 2':
+			fieldnames = misc.getLevelFields(tvfields.Show_2, fieldnames)
+		return fieldnames
+	# Special stuff
 	if PrefsLevel.startswith('Special Level'):
 		if PrefsLevel == 'Special Level 1':
 			fieldnames = misc.getLevelFields(tvfields.SLevel_1, fieldnames)
@@ -57,7 +64,12 @@ def getTVHeader(PrefsLevel):
 ####################################################################################################
 def getTvInfo(myMedia, myRow):
 	prefsLevel = Prefs['TV_Level']
-	if 'Special' in prefsLevel:
+	if prefsLevel in ['Show Only 1', 'Show Only 2']:
+		myRow = misc.getItemInfo(myMedia, myRow, tvfields.Show_1)
+		if prefsLevel == 'Show Only 2':
+			myRow = misc.getItemInfo(myMedia, myRow, tvfields.Show_2)
+		return myRow		
+	elif 'Special' in prefsLevel:
 		if prefsLevel == 'Special Level 1':
 			myRow = misc.getItemInfo(myMedia, myRow, tvfields.SLevel_1)
 		elif prefsLevel == 'Special Level 2':
@@ -93,4 +105,25 @@ def getTvInfo(myMedia, myRow):
 		if '666' in prefsLevel:
 			myRow = misc.getMediaPath(myMedia, myRow)	
 		return myRow
+
+''' Export TV Show info only '''
+def getShowOnly(myMedia, myRow, level):
+	prefsLevel = Prefs['TV_Level']
+	for key, value in tvfields.Show_1:
+		element = myMedia.get(value[1:])
+		if element == None:
+			element = 'N/A'
+		element = misc.WrapStr(misc.fixCRLF(element).encode('utf8'))
+		if key in myRow:
+			myRow[key] = myRow[key] + Prefs['Seperator'] + element
+		else:
+			myRow[key] = element
+	# Now we sadly needs to make a call for each show :-(
+	if '2' in prefsLevel:
+		myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + myMedia.get('ratingKey')
+		for key, value in tvfields.Show_2:
+			if key == 'MetaDB Link':
+				myRow[key] = misc.metaDBLink(XML.ElementFromURL(myExtendedInfoURL, timeout=float(consts.PMSTIMEOUT))[0].xpath('@guid')[0])
+
+	return myRow
 

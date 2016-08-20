@@ -51,6 +51,7 @@ Level_4 = [
 	('Part Duration' , 'Media/Part/@duration'),
 	('Part File' , 'Media/Part/@file'),
 	('Part Size' , 'Media/Part/@size'),
+	('Part Size as Bytes' , 'Media/Part/@size'),
 	('Part Container' , 'Media/Part/@container')
 	]
 

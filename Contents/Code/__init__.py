@@ -26,11 +26,6 @@ initialTimeOut = 12		# When starting a scan, how long in seconds to wait before 
 sectiontype = ''			# Type of section been exported
 bScanStatusCount = 0	# Number of item currently been investigated
 
-#LOOPBACK = ''					# Loopback address in use. Gets set from the misc module
-
-
-#MYHEADER={}						# Header to be used when accessing PMS
-
 EXPORTPATH = ''				# Path to export file
 
 ####################################################################################################
@@ -419,57 +414,71 @@ def scanShowDB(myMediaURL, myCSVFile):
 				iCount += 1
 				ratingKey = TVShows.get("ratingKey")
 				title = TVShows.get("title")
-				if Prefs['TV_Level'] in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
-					myURL = misc.GetLoopBack() + '/library/metadata/' + ratingKey
-					tvSeriesInfo = XML.ElementFromURL(myURL, timeout=float(consts.PMSTIMEOUT))
-					# Getting stuff from the main TV-Show page
-					# Grab collections
-					serieInfo = tvSeriesInfo.xpath('//Directory/Collection')
-					myCol = ''
-					for collection in serieInfo:
+				if 'Show Only' in Prefs['TV_Level']:
+					myRow = {}
+					# Export the info			
+					myRow = tvseries.getShowOnly(TVShows, myRow, Prefs['TV_Level'])
+					iCount += consts.CONTAINERSIZETV - 1
+					try:
+						csvwriter.writerow(myRow)
+					except Exception, e:
+						Log.Exception('Exception happend in ScanShowDB: ' + str(e))
+					continue					
+				else:
+					if Prefs['TV_Level'] in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+						myURL = misc.GetLoopBack() + '/library/metadata/' + ratingKey
+						tvSeriesInfo = XML.ElementFromURL(myURL, timeout=float(consts.PMSTIMEOUT))
+						# Getting stuff from the main TV-Show page
+						# Grab collections
+						serieInfo = tvSeriesInfo.xpath('//Directory/Collection')
+						myCol = ''
+						for collection in serieInfo:
+							if myCol == '':
+								myCol = collection.get('tag')
+							else:
+								myCol = myCol + Prefs['Seperator'] + collection.get('tag')
 						if myCol == '':
-							myCol = collection.get('tag')
-						else:
-							myCol = myCol + Prefs['Seperator'] + collection.get('tag')
-					if myCol == '':
-						myCol = 'N/A'
-					# Grab locked fields
-					serieInfo = tvSeriesInfo.xpath('//Directory/Field')
-					myField = ''
-					for Field in serieInfo:
+							myCol = 'N/A'
+						# Grab locked fields
+						serieInfo = tvSeriesInfo.xpath('//Directory/Field')
+						myField = ''
+						for Field in serieInfo:
+							if myField == '':
+								myField = Field.get('name')
+							else:
+								myField = myField + Prefs['Seperator'] + Field.get('name')
 						if myField == '':
-							myField = Field.get('name')
-						else:
-							myField = myField + Prefs['Seperator'] + Field.get('name')
-					if myField == '':
-						myField = 'N/A'
-				# Get size of TV-Show
-				episodeTotalSize = XML.ElementFromURL(misc.GetLoopBack() + '/library/metadata/' + ratingKey + '/allLeaves?X-Plex-Container-Start=0&X-Plex-Container-Size=0', timeout=float(consts.PMSTIMEOUT)).xpath('@totalSize')[0]
-				Log.Debug('Show: %s has %s episodes' %(title, episodeTotalSize))
-				episodeCounter = 0
-				baseURL = misc.GetLoopBack() + '/library/metadata/' + ratingKey + '/allLeaves'
-				while True:
-					myURL = baseURL + '?X-Plex-Container-Start=' + str(episodeCounter) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEEPISODES)
-					Log.Debug('Show %s of %s with a RatingKey of %s at myURL: %s with a title of "%s" episode %s of %s' %(iCount, bScanStatusCountOf, ratingKey, myURL, title, episodeCounter, episodeTotalSize))
-					MainEpisodes = XML.ElementFromURL(myURL, timeout=float(consts.PMSTIMEOUT))
-					Episodes = MainEpisodes.xpath('//Video')
-					for Episode in Episodes:
-						myRow = {}	
-						# Was extra info needed here?
-						if bExtraInfo:
-							myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(Episode, 'ratingKey') + '?includeExtras=1'
-							if Prefs['Check_Files']:				
-								myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1'							
-							Episode = XML.ElementFromURL(myExtendedInfoURL, timeout=float(consts.PMSTIMEOUT)).xpath('//Video')[0]
-						# Export the info			
-						myRow = tvseries.getTvInfo(Episode, myRow)
-						if Prefs['TV_Level'] in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
-							myRow['Collection'] = myCol
-							myRow['Locked Fields'] = myField		
-						csvwriter.writerow(myRow)								
-					episodeCounter += consts.CONTAINERSIZEEPISODES
-					if episodeCounter > int(episodeTotalSize):
-						break			
+							myField = 'N/A'
+					# Get size of TV-Show
+					episodeTotalSize = XML.ElementFromURL(misc.GetLoopBack() + '/library/metadata/' + ratingKey + '/allLeaves?X-Plex-Container-Start=0&X-Plex-Container-Size=0', timeout=float(consts.PMSTIMEOUT)).xpath('@totalSize')[0]
+					Log.Debug('Show: %s has %s episodes' %(title, episodeTotalSize))
+					episodeCounter = 0
+					baseURL = misc.GetLoopBack() + '/library/metadata/' + ratingKey + '/allLeaves'
+					while True:
+						myURL = baseURL + '?X-Plex-Container-Start=' + str(episodeCounter) + '&X-Plex-Container-Size=' + str(consts.CONTAINERSIZEEPISODES)
+						Log.Debug('Show %s of %s with a RatingKey of %s at myURL: %s with a title of "%s" episode %s of %s' %(iCount, bScanStatusCountOf, ratingKey, myURL, title, episodeCounter, episodeTotalSize))
+						MainEpisodes = XML.ElementFromURL(myURL, timeout=float(consts.PMSTIMEOUT))
+						Episodes = MainEpisodes.xpath('//Video')
+						for Episode in Episodes:
+							myRow = {}	
+							# Was extra info needed here?
+							if bExtraInfo:
+								myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(Episode, 'ratingKey') + '?includeExtras=1'
+								if Prefs['Check_Files']:				
+									myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1'							
+								Episode = XML.ElementFromURL(myExtendedInfoURL, timeout=float(consts.PMSTIMEOUT)).xpath('//Video')[0]
+							# Export the info			
+							myRow = tvseries.getTvInfo(Episode, myRow)
+							if Prefs['TV_Level'] in ['Level 2','Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 666']:
+								myRow['Collection'] = myCol
+								myRow['Locked Fields'] = myField		
+							csvwriter.writerow(myRow)								
+						episodeCounter += consts.CONTAINERSIZEEPISODES
+						if episodeCounter > int(episodeTotalSize):
+							break			
+
+
+
 			# Got to the end of the line?		
 			if int(partMedias.get('size')) == 0:
 				break
