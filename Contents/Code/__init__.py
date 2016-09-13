@@ -355,9 +355,9 @@ def scanMovieDB(myMediaURL, myCSVFile):
 				myRow = {}
 				# Was extra info needed here?
 				if bExtraInfo:
-					myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(media, 'ratingKey') + '?includeExtras=1'
+					myExtendedInfoURL = misc.GetLoopBack() + '/library/metadata/' + misc.GetRegInfo(media, 'ratingKey') + '?includeExtras=1&includeChapters=1'
 					if Prefs['Check_Files']:				
-						myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1'				
+						myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1&includeChapters=1'				
 					media = XML.ElementFromURL(myExtendedInfoURL, timeout=float(consts.PMSTIMEOUT)).xpath('//Video')[0]
 				# Export the info			
 				myRow = movies.getMovieInfo(media, myRow, csvwriter)
@@ -663,9 +663,6 @@ def getPhotoItems(medias, csvwriter, bExtraInfo):
 	et = medias.xpath('.//Directory')
 	for element in et:
 		myExtendedInfoURL = misc.GetLoopBack() + element.get('key') + '?includeExtras=1'
-
-
-
 #		if bExtraInfo:
 #			if Prefs['Check_Files']:				
 #				myExtendedInfoURL = myExtendedInfoURL + '&checkFiles=1'										

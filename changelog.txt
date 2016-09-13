@@ -1,3 +1,12 @@
+v0.0.4.17:
+	- General:
+		- Some exports was missing the default (N/A) and showed as empty instead
+	- Movies:
+		- Added "Chapter Source" to level 3		(This is where chapters was fetched from)
+			- Can be one of the following: 
+				- N/A, agent, media, mixed
+		- Added "Chapter Title"
+
 v0.0.4.16:
 	- Audio:
 		- Added field "Part Size as Bytes" to level 4
