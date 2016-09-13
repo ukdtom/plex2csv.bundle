@@ -65,7 +65,9 @@ Level_3 = [
 	('Exists' , 'Media/Part/@exists'),
 	('MetaDB Link' , '@guid'),
 	('Poster url' , '@thumb'),
-	('Art url' , '@art')
+	('Art url' , '@art'),
+	('Chapter Source', '@chapterSource'),
+	('Chapter Title' , 'Chapter/@tag')
 	]
 
 # Define rows and element name for level 4 (One call pr. movie)

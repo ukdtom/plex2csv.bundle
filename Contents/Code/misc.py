@@ -16,6 +16,7 @@ import dateutil.parser as parser
 
 import sys, os
 import math
+import consts
 
 
 ####################################################################################################
@@ -127,7 +128,7 @@ def GetRegInfo(myMedia, myField, default = ''):
 ####################################################################################################
 #	Pull's a field from the xml
 ####################################################################################################
-def GetRegInfo2(myMedia, myField, default = 'N/A', key = 'N/A'):
+def GetRegInfo2(myMedia, myField, default = consts.DEFAULT, key = 'N/A'):
 	returnVal = ''	
 	global retVal
 	retVal = ''
@@ -138,7 +139,7 @@ def GetRegInfo2(myMedia, myField, default = 'N/A', key = 'N/A'):
 			try:
 				if len(fieldsplit) == 2:
 					returnVal = myMedia.get(fieldsplit[1])
-					if returnVal == None:
+					if returnVal in [None, '']:
 						returnVal = default
 					elif fieldsplit[1] in moviefields.dateTimeFields:
 						returnVal = ConvertDateStamp(returnVal)
@@ -169,7 +170,7 @@ def GetRegInfo2(myMedia, myField, default = 'N/A', key = 'N/A'):
 					retVal = default
 					retVal = String.Unquote(retVal2.get(fieldsplit[1]))
 					# Did it exists?
-					if retVal == None:
+					if retVal in [None, '']:
 						retVal = default
 					# Is it a dateStamp?
 					elif fieldsplit[1] in moviefields.dateTimeFields:	
@@ -252,7 +253,10 @@ def getItemInfo(et, myRow, fieldList):
 		for item in fieldList:
 			key = str(item[0])
 			value = str(item[1])			
-			element = GetRegInfo2(et, value, 'N/A', key = key)
+			element = GetRegInfo2(et, value, consts.DEFAULT, key = key)
+			# Empty fields are still present, but with a length of 0
+			if element == '':
+				element = consts.DEFAULT
 			if key in myRow:
 				myRow[key] = myRow[key] + Prefs['Seperator'] + element
 			else:
