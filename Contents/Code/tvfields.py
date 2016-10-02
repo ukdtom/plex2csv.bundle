@@ -123,6 +123,7 @@ Level_6 = [
 	('Audio Stream Profile' , 'Media/Part/Stream[@streamType=2]/@profile'),
 	('Audio Stream Sampling Rate' , 'Media/Part/Stream[@streamType=2]/@samplingRate'),
 	('Subtitle Stream Codec' , 'Media/Part/Stream[@streamType=3]/@codec'),
+	('Subtitle Stream Forced' , 'Media/Part/Stream[@streamType=3]/@forced'),
 	('Subtitle Stream Index' , 'Media/Part/Stream[@streamType=3]/@index'),
 	('Subtitle Stream Language' , 'Media/Part/Stream[@streamType=3]/@language'),
 	('Subtitle Stream Language Code' , 'Media/Part/Stream[@streamType=3]/@languageCode'),
