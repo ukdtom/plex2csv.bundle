@@ -61,6 +61,7 @@ Level_3 = [
 	('Subtitle Languages' , 'Media/Part/Stream[@streamType=3]/@languageCode'),
 	('Subtitle Title' , 'Media/Part/Stream[@streamType=3]/@title'),
 	('Subtitle Codec' , 'Media/Part/Stream[@streamType=3]/@codec'),
+	('Subtitle Forced' , 'Media/Part/Stream[@streamType=3]/@forced'),
 	('Accessible' , 'Media/Part/@accessible'),	
 	('Exists' , 'Media/Part/@exists'),
 	('MetaDB Link' , '@guid'),
