@@ -76,7 +76,9 @@ Level_4 = [
 		('Part Indexed' , 'Media/Part/@indexes'),
 		('Extras' , 'Extras/@size'),
 		('Accessible' , 'Media/Part/@accessible'),	
-		('Exists' , 'Media/Part/@exists')	
+		('Exists' , 'Media/Part/@exists'),
+		('Part Deep Analysis Version' , 'Media/Part/@deepAnalysisVersion'),
+		('Required Bandwidths' , 'Media/Part/@requiredBandwidths')	
 	]
 
 Level_5 = [
@@ -103,7 +105,8 @@ Level_5 = [
 	('Video Stream Pixel Format' , 'Media/Part/Stream[@streamType=1]/@pixelFormat'),
 	('Video Stream Profile' , 'Media/Part/Stream[@streamType=1]/@profile'),
 	('Video Stream Ref Frames' , 'Media/Part/Stream[@streamType=1]/@refFrames'),
-	('Video Stream Scan Type' , 'Media/Part/Stream[@streamType=1]/@scanType')
+	('Video Stream Scan Type' , 'Media/Part/Stream[@streamType=1]/@scanType'),
+	('Video Stream Required Bandwidths' , 'Media/Part/Stream[@streamType=1]/@requiredBandwidths')
 	]
 
 Level_6 = [
@@ -122,6 +125,7 @@ Level_6 = [
 	('Audio Stream Duration' , 'Media/Part/Stream[@streamType=2]/@duration'),
 	('Audio Stream Profile' , 'Media/Part/Stream[@streamType=2]/@profile'),
 	('Audio Stream Sampling Rate' , 'Media/Part/Stream[@streamType=2]/@samplingRate'),
+	('Audio Stream Required Bandwidths' , 'Media/Part/Stream[@streamType=2]/@requiredBandwidths'),
 	('Subtitle Stream Codec' , 'Media/Part/Stream[@streamType=3]/@codec'),
 	('Subtitle Stream Forced' , 'Media/Part/Stream[@streamType=3]/@forced'),
 	('Subtitle Stream Index' , 'Media/Part/Stream[@streamType=3]/@index'),
@@ -130,7 +134,8 @@ Level_6 = [
 	('Subtitle Stream Codec ID' , 'Media/Part/Stream[@streamType=3]/@codecID'),
 	('Subtitle Stream Format' , 'Media/Part/Stream[@streamType=3]/@format'),
 	('Subtitle Stream Title' , 'Media/Part/Stream[@streamType=3]/@title'),
-	('Subtitle Stream Selected' , 'Media/Part/Stream[@streamType=3]/@selected')
+	('Subtitle Stream Selected' , 'Media/Part/Stream[@streamType=3]/@selected'),
+	('Subtitle Stream Required Bandwidths' , 'Media/Part/Stream[@streamType=3]/@requiredBandwidths')
 	]
 
 Level_7 = [
