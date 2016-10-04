@@ -93,7 +93,9 @@ Level_5 = [
 	('Part Indexed' , 'Media/Part/@indexes'),
 	('Part Duration' , 'Media/Part/@duration'),
 	('Part Container' , 'Media/Part/@container'),
-	('Part Optimized for Streaming' , 'Media/Part/@optimizedForStreaming')
+	('Part Optimized for Streaming' , 'Media/Part/@optimizedForStreaming'),
+	('Part Deep Analysis Version' , 'Media/Part/@deepAnalysisVersion'),
+	('Required Bandwidths' , 'Media/Part/@requiredBandwidths')
 	]
 
 # Define rows and element name for level 6 (Video Stream Info) (One call pr. movie)
@@ -122,6 +124,7 @@ Level_6 = [
 	('Video Stream Bitrate' , 'Media/Part/Stream[@streamType=1]/@bitrate'),
 	('Video Stream Bit Depth' , 'Media/Part/Stream[@streamType=1]/@bitDepth'),
 	('Video Stream Duration' , 'Media/Part/Stream[@streamType=1]/@duration'),
+	('Video Stream Required Bandwidths' , 'Media/Part/Stream[@streamType=1]/@requiredBandwidths'),
 	('Video Stream Level' , 'Media/Part/Stream[@streamType=1]/@level'),
 	('Audio Stream Selected' , 'Media/Part/Stream[@streamType=2]/@selected'),
 	('Audio Stream Default' , 'Media/Part/Stream[@streamType=2]/@default'),
@@ -138,6 +141,7 @@ Level_6 = [
 	('Audio Stream Duration' , 'Media/Part/Stream[@streamType=2]/@duration'),
 	('Audio Stream Profile' , 'Media/Part/Stream[@streamType=2]/@profile'),
 	('Audio Stream Sampling Rate' , 'Media/Part/Stream[@streamType=2]/@samplingRate'),
+	('Audio Stream Required Bandwidths' , 'Media/Part/Stream[@streamType=2]/@requiredBandwidths'),
 	('Subtitle Stream Codec' , 'Media/Part/Stream[@streamType=3]/@codec'),
 	('Subtitle Stream Index' , 'Media/Part/Stream[@streamType=3]/@index'),
 	('Subtitle Stream Language' , 'Media/Part/Stream[@streamType=3]/@language'),
@@ -145,7 +149,8 @@ Level_6 = [
 	('Subtitle Stream Codec ID' , 'Media/Part/Stream[@streamType=3]/@codecID'),
 	('Subtitle Stream Format' , 'Media/Part/Stream[@streamType=3]/@format'),
 	('Subtitle Stream Title' , 'Media/Part/Stream[@streamType=3]/@title'),
-	('Subtitle Stream Selected' , 'Media/Part/Stream[@streamType=3]/@selected')
+	('Subtitle Stream Selected' , 'Media/Part/Stream[@streamType=3]/@selected'),
+	('Subtitle Stream Required Bandwidths' , 'Media/Part/Stream[@streamType=3]/@requiredBandwidths')
 	]
 
 # Define rows and element name for extreme level 7 (One call pr. movie)
